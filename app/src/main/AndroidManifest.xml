@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+
+    <application
+        android:name=".MasroufApplication"
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:localeConfig="@xml/locales_config"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Masrouf1">
+        <activity android:name=".MainActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
+        <activity android:name="com.masrouf.controller.WelcomeActivity" android:exported="true" android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity android:name="com.masrouf.controller.LoginActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
+        <activity android:name="com.masrouf.controller.RegisterActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
+        <activity android:name="com.masrouf.controller.OnboardingActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
+        <activity android:name="com.masrouf.controller.BudgetPeriodActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
+        <activity android:name="com.masrouf.controller.AllocateBudgetActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
+        <activity android:name="com.masrouf.controller.ChildrenManagementActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
+        <activity android:name="com.masrouf.controller.AddProductActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
+        <activity android:name="com.masrouf.controller.AddExpenseActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
+        <activity android:name="com.masrouf.controller.ComparePriceActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
+        <activity android:name="com.masrouf.controller.ProductDetailsActivity" android:exported="false" />
+        <activity android:name="com.masrouf.controller.ConfirmationActivity" android:exported="false" />
+        <activity android:name="com.example.masrouf1.UserManualActivity" android:exported="false" />
+        <activity android:name="com.masrouf.controller.ManageCategoriesActivity" android:exported="false" />
+        <activity android:name="com.masrouf.controller.EditPurchaseActivity" android:exported="false" />
+        <activity android:name="com.masrouf.controller.EditExpenseActivity" android:exported="false" />
+        <activity android:name=".ProductsActivity" android:exported="false" />
+        <activity android:name=".CalendarActivity" android:exported="false" />
+        <activity android:name=".AnalyticsActivity" android:exported="false" />
+        <activity android:name=".FamilyBudgetsAnalyticsActivity" android:exported="false" />
+        <activity android:name=".RewardsActivity" android:exported="false" />
+        <activity android:name=".NotificationsActivity" android:exported="false" />
+        <activity android:name=".SettingsActivity" android:exported="false" />
+        <receiver android:name=".BudgetAllocationReceiver" android:exported="false" />
+        <service android:name="com.masrouf.service.BudgetEvaluationService" android:exported="false" android:foregroundServiceType="dataSync" />
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+    </application>
+
+</manifest>

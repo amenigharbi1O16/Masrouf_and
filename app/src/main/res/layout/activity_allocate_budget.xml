@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@color/cream" android:fillViewport="true">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="20dp">
+        <TextView android:id="@+id/allocate_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/your_categories" android:textColor="@color/forest" android:textSize="24sp" android:textStyle="bold" />
+        <com.google.android.material.card.MaterialCardView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="14dp" app:cardBackgroundColor="@color/alabaster" app:cardCornerRadius="16dp" app:strokeColor="@color/card_border" app:strokeWidth="1dp">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
+                <TextView android:id="@+id/allocate_total_row" android:layout_width="match_parent" android:layout_height="36dp" android:text="@string/allocation_total_row" android:textColor="@color/forest" android:textStyle="bold" />
+                <TextView android:id="@+id/allocate_sum_row" android:layout_width="match_parent" android:layout_height="32dp" android:text="@string/allocation_sum_row" android:textColor="@color/muted_green" />
+                <TextView android:id="@+id/allocate_unallocated_row" android:layout_width="match_parent" android:layout_height="32dp" android:text="@string/allocation_unassigned_row" android:textColor="@color/emerald" />
+                <TextView android:id="@+id/allocate_child_locked" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingTop="6dp" android:text="@string/child_budget_locked" android:textColor="@color/muted_green" android:visibility="gone" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+        <com.google.android.material.card.MaterialCardView android:id="@+id/allocate_overflow_banner" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:visibility="gone" app:cardBackgroundColor="@color/coral" app:cardCornerRadius="16dp" app:cardElevation="0dp">
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:padding="14dp" android:text="@string/allocation_cap_error" android:textColor="@color/alabaster" android:textStyle="bold" />
+        </com.google.android.material.card.MaterialCardView>
+        <LinearLayout android:id="@+id/allocate_category_rows" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="14dp" android:orientation="vertical" />
+        <com.google.android.material.button.MaterialButton android:id="@+id/allocate_save" android:layout_width="match_parent" android:layout_height="56dp" android:layout_marginTop="18dp" android:text="@string/save" app:backgroundTint="@color/forest" app:cornerRadius="16dp" />
+    </LinearLayout>
+</ScrollView>

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@color/cream" android:clipToPadding="false" android:fillViewport="true">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingStart="20dp" android:paddingTop="26dp" android:paddingEnd="20dp" android:paddingBottom="96dp">
+        <!-- 1. Header and current period -->
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal">
+            <TextView android:id="@+id/home_open_drawer" android:layout_width="42dp" android:layout_height="48dp" android:contentDescription="@string/nav_settings" android:gravity="center" android:text="☰" android:textColor="@color/forest" android:textSize="20sp" />
+            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                <TextView android:id="@+id/home_greeting" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Bonjour" android:textColor="@color/forest" android:textSize="24sp" android:textStyle="bold" />
+                <TextView android:id="@+id/home_period" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="@string/period_november" android:textColor="@color/muted_green" android:textSize="10sp" android:textStyle="bold" />
+            </LinearLayout>
+            <TextView android:id="@+id/home_calendar_link" android:layout_width="wrap_content" android:layout_height="48dp" android:gravity="center" android:text="@string/calendar_link" android:textColor="@color/emerald" android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- 2. Main budget card -->
+        <com.google.android.material.card.MaterialCardView android:id="@+id/home_budget_card" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="18dp" app:cardBackgroundColor="@color/forest" app:cardCornerRadius="24dp" app:cardElevation="0dp">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="20dp">
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/remaining_to_live" android:textColor="@color/mint" android:textSize="13sp" />
+                <TextView android:id="@+id/home_remaining" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="0,000 DT" android:textColor="@color/alabaster" android:textSize="34sp" android:textStyle="bold" />
+                <ProgressBar android:id="@+id/home_budget_progress" style="@android:style/Widget.ProgressBar.Horizontal" android:layout_width="match_parent" android:layout_height="8dp" android:layout_marginTop="14dp" android:max="100" android:progress="0" android:progressBackgroundTint="#49615B" android:progressTint="@color/mint" />
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:orientation="horizontal">
+                    <TextView android:id="@+id/home_spent" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Dépensé  0,000 DT" android:textColor="@color/alabaster" android:textSize="12sp" />
+                    <TextView android:id="@+id/home_total" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Budget  0,000 DT" android:textColor="@color/mint" android:textSize="12sp" />
+                </LinearLayout>
+                <com.google.android.material.button.MaterialButton android:id="@+id/home_partition_child_budget" style="@style/Widget.Material3.Button.TonalButton" android:layout_width="match_parent" android:layout_height="48dp" android:layout_marginTop="12dp" android:text="@string/partition_child_budget" android:textColor="@color/forest" android:visibility="gone" app:backgroundTint="@color/mint" app:cornerRadius="16dp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- 3. The only add-category control: directly beneath the hero card -->
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="end|center_vertical" android:layoutDirection="locale" android:orientation="horizontal">
+            <com.google.android.material.button.MaterialButton android:id="@+id/home_add_category" style="@style/Widget.Material3.Button.TonalButton" android:layout_width="wrap_content" android:layout_height="44dp" android:layout_marginTop="8dp" android:text="@string/add_category" android:textColor="@color/emerald" android:textStyle="bold" app:icon="@drawable/ic_add_circle" app:iconTint="@color/emerald" app:backgroundTint="@color/mint" app:cornerRadius="28dp" />
+        </LinearLayout>
+
+        <!-- 4. Empty budget callout (hidden once a budget exists) -->
+        <com.google.android.material.card.MaterialCardView android:id="@+id/home_no_budget" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" app:cardBackgroundColor="@color/alabaster" app:cardCornerRadius="16dp" app:strokeColor="@color/card_border" app:strokeWidth="1dp">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="vertical" android:padding="16dp">
+                <TextView android:id="@+id/home_no_budget_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/no_budget" android:textColor="@color/ink" android:textStyle="bold" />
+                <TextView android:id="@+id/home_child_no_budget_message" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="@string/no_child_budget" android:textColor="@color/muted_green" android:visibility="gone" />
+                <com.google.android.material.button.MaterialButton android:id="@+id/home_define_budget" android:layout_width="match_parent" android:layout_height="48dp" android:layout_marginTop="8dp" android:text="@string/define_budget" app:backgroundTint="@color/emerald" app:cornerRadius="16dp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- 5. Dynamic threshold alert -->
+        <com.google.android.material.card.MaterialCardView android:id="@+id/home_threshold_card" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" app:cardBackgroundColor="@color/mint" app:cardCornerRadius="16dp" app:cardElevation="0dp">
+            <TextView android:id="@+id/home_threshold_text" android:layout_width="match_parent" android:layout_height="wrap_content" android:padding="14dp" android:text="@string/healthy_budget" android:textColor="@color/forest" android:textStyle="bold" />
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- 6. Two equal primary actions -->
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="14dp" android:orientation="horizontal">
+            <com.google.android.material.button.MaterialButton android:id="@+id/home_add_purchase" android:layout_width="0dp" android:layout_height="56dp" android:layout_marginEnd="6dp" android:layout_weight="1" android:ellipsize="end" android:maxLines="2" android:text="@string/add_purchase_product" android:textColor="@color/alabaster" android:textSize="12sp" app:icon="@drawable/ic_cart" app:iconTint="@color/mint" app:backgroundTint="@color/forest" app:cornerRadius="16dp" />
+            <com.google.android.material.button.MaterialButton android:id="@+id/home_add_expense" style="@style/Widget.Material3.Button.OutlinedButton" android:layout_width="0dp" android:layout_height="56dp" android:layout_marginStart="6dp" android:layout_weight="1" android:ellipsize="end" android:maxLines="2" android:text="@string/add_expense" android:textColor="@color/forest" android:textSize="12sp" app:icon="@drawable/ic_receipt" app:iconTint="@color/forest" app:cornerRadius="16dp" app:strokeColor="@color/forest" app:strokeWidth="1.5dp" />
+        </LinearLayout>
+
+        <!-- 7. User categories -->
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="22dp" android:gravity="center_vertical" android:orientation="horizontal">
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/your_categories" android:textColor="@color/forest" android:textSize="18sp" android:textStyle="bold" />
+            <TextView android:id="@+id/home_manage_categories" android:layout_width="wrap_content" android:layout_height="44dp" android:gravity="center" android:text="@string/category_manage" android:textColor="@color/emerald" android:textStyle="bold" />
+        </LinearLayout>
+        <androidx.recyclerview.widget.RecyclerView android:id="@+id/home_categories" android:layout_width="match_parent" android:layout_height="wrap_content" android:clipToPadding="false" android:nestedScrollingEnabled="false" android:paddingTop="4dp" />
+
+        <!-- 8. Family children tracking stays hidden for a personal account -->
+        <com.google.android.material.card.MaterialCardView android:id="@+id/home_children_tracking" android:layout_width="match_parent" android:layout_height="wrap_content" android:visibility="gone" app:cardBackgroundColor="@color/alabaster" app:cardCornerRadius="16dp" app:strokeColor="@color/card_border" app:strokeWidth="1dp">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal">
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/children_tracking" android:textColor="@color/forest" android:textSize="18sp" android:textStyle="bold" />
+                    <TextView android:id="@+id/home_manage_children" android:layout_width="wrap_content" android:layout_height="44dp" android:gravity="center" android:text="@string/manage_children" android:textColor="@color/emerald" android:textStyle="bold" />
+                </LinearLayout>
+                <LinearLayout android:id="@+id/home_children_rows" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- 9. Five most recent local operations -->
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="22dp" android:text="@string/recent_transactions" android:textColor="@color/forest" android:textSize="18sp" android:textStyle="bold" />
+        <androidx.recyclerview.widget.RecyclerView android:id="@+id/home_recent_transactions" android:layout_width="match_parent" android:layout_height="wrap_content" android:nestedScrollingEnabled="false" android:paddingTop="6dp" />
+    </LinearLayout>
+</ScrollView>

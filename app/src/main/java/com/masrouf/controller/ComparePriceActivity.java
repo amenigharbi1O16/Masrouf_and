@@ -1,0 +1,67 @@
+package com.masrouf.controller;
+
+import android.content.Intent;
+import android.os.Bundle;
+import android.text.TextWatcher;
+import android.widget.ArrayAdapter;
+import android.widget.EditText;
+import android.widget.Spinner;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.example.masrouf1.BudgetNotificationManager;
+import com.example.masrouf1.CurrencyFormatter;
+import com.example.masrouf1.MasroufViewModel;
+import com.example.masrouf1.MasroufViewModelFactory;
+import com.example.masrouf1.MoneyMath;
+import com.example.masrouf1.ProductFormData;
+import com.example.masrouf1.R;
+import com.example.masrouf1.db.MasroufEntities.BudgetEntity;
+import com.example.masrouf1.db.MasroufEntities.BudgetLineEntity;
+import com.example.masrouf1.db.MasroufEntities.CategoryEntity;
+import com.example.masrouf1.db.MasroufEntities.ProductEntity;
+import com.example.masrouf1.db.MasroufEntities.PurchaseEntity;
+import com.example.masrouf1.db.MasroufEntities.PurchaseItemEntity;
+import com.google.android.material.button.MaterialButton;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public final class ComparePriceActivity extends BaseFeatureActivity {
+    private MasroufViewModel viewModel;
+    private EditText name,brand,price,quantity,store;
+    private Spinner unit,category;
+    private TextView perUnit,indicator,impact;
+    private List<CategoryEntity> categories=new ArrayList<>(); private BudgetEntity budget;
+    private long unitMilli,totalMilli,quantityMilli; private Long previous;
+    @Override protected void onCreate(Bundle state) {
+        super.onCreate(state); showPage(R.string.compare_price_title);viewModel=new androidx.lifecycle.ViewModelProvider(this,new MasroufViewModelFactory(this)).get(MasroufViewModel.class); content.addView(getLayoutInflater().inflate(R.layout.activity_compare_price,content,false));
+        name=findViewById(R.id.compare_name); brand=findViewById(R.id.compare_brand); price=findViewById(R.id.compare_price); quantity=findViewById(R.id.compare_quantity); store=findViewById(R.id.compare_store);
+        unit=findViewById(R.id.compare_unit); category=findViewById(R.id.compare_category); perUnit=findViewById(R.id.compare_unit_price); indicator=findViewById(R.id.price_indicator); impact=findViewById(R.id.envelope_impact);
+        unit.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,getResources().getStringArray(R.array.measure_units)));
+        FormPriceTextWatcher watcher=new FormPriceTextWatcher(price,quantity,perUnit); price.addTextChangedListener(watcher); quantity.addTextChangedListener(watcher);
+        TextWatcher queryWatcher=new android.text.TextWatcher(){ public void beforeTextChanged(CharSequence s,int st,int c,int a){} public void onTextChanged(CharSequence s,int st,int before,int count){scheduleComparison();} public void afterTextChanged(android.text.Editable e){} };
+        name.addTextChangedListener(queryWatcher); brand.addTextChangedListener(queryWatcher); price.addTextChangedListener(queryWatcher); quantity.addTextChangedListener(queryWatcher);
+        unit.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener(){ public void onNothingSelected(android.widget.AdapterView<?> p){} public void onItemSelected(android.widget.AdapterView<?> p,android.view.View v,int pos,long id){scheduleComparison();} });
+        category.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener(){public void onNothingSelected(android.widget.AdapterView<?> p){}public void onItemSelected(android.widget.AdapterView<?> p,android.view.View v,int pos,long id){loadEnvelopeImpact();}});
+        findViewById(R.id.compare_save).setOnClickListener(v->savePurchase()); loadFormData();
+    }
+    private void loadFormData(){long userId=SessionStore.userId(this);viewModel.<ProductFormData>request(repository->repository.productForm(userId),state->{if(state.data==null)return;ArrayList<CategoryEntity> products=new ArrayList<>();for(CategoryEntity c:state.data.categories)if("product".equalsIgnoreCase(c.type))products.add(c);if(products.isEmpty())products.addAll(state.data.categories);budget=state.data.budget;categories=products;ArrayList<String> labels=new ArrayList<>();for(CategoryEntity c:products)labels.add(c.name);category.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,labels));});}
+    private void scheduleComparison(){ String productName=name==null?"":name.getText().toString().trim(); String maker=brand==null?"":brand.getText().toString().trim(); if(productName.isEmpty()||unit==null||unit.getSelectedItem()==null)return; String selectedUnit=unit.getSelectedItem().toString(); long userId=SessionStore.userId(this);
+        viewModel.<Long>request(repository->repository.latestUnitPrice(userId,productName,maker,selectedUnit),state->{previous=state.data;updatePriceIndicator();loadEnvelopeImpact();}); }
+    private void updatePriceIndicator(){ try { totalMilli=MoneyInput.toMilli(price.getText().toString()); quantityMilli=MoneyInput.toMilli(quantity.getText().toString()); if(totalMilli<=0||quantityMilli<=0)throw new NumberFormatException(); unitMilli=MoneyMath.pricePerUnitMilli(totalMilli,quantityMilli); } catch(RuntimeException e){unitMilli=0;return;}
+        if(previous==null){ indicator.setText(R.string.no_previous_price); indicator.setTextColor(getColor(R.color.muted_green)); return; }
+        int change=MoneyMath.percentChangeRounded(unitMilli,previous);
+        if(MoneyMath.increasedMoreThanTenPercent(unitMilli,previous)){indicator.setText(getString(R.string.price_inflation,CurrencyFormatter.formatMilli(previous),CurrencyFormatter.formatMilli(unitMilli),change));indicator.setTextColor(getColor(R.color.coral));}
+        else if(unitMilli<=previous){int saving=change==Integer.MIN_VALUE?Integer.MAX_VALUE:-change;indicator.setText(getString(R.string.price_saving,CurrencyFormatter.formatMilli(previous),CurrencyFormatter.formatMilli(unitMilli),saving));indicator.setTextColor(getColor(R.color.emerald));}
+        else {indicator.setText(getString(R.string.price_change_small,change));indicator.setTextColor(getColor(R.color.amber));}
+    }
+    private void loadEnvelopeImpact(){if(categories.isEmpty()||budget==null||category.getSelectedItemPosition()<0)return;long categoryId=categories.get(category.getSelectedItemPosition()).id;long userId=SessionStore.userId(this),budgetId=budget.id;viewModel.<BudgetLineEntity>request(repository->repository.envelope(userId,budgetId,categoryId),state->{BudgetLineEntity line=state.data;long left=line==null?0:MoneyMath.subtract(line.limitMilli,line.spentMilli);long after=MoneyMath.subtract(left,totalMilli);impact.setText(getString(R.string.envelope_impact_value,CurrencyFormatter.formatMilli(left),CurrencyFormatter.formatMilli(after)));impact.setTextColor(getColor(after<0?R.color.coral:R.color.muted_green));});}
+    private void savePurchase(){ if(categories.isEmpty()||budget==null){Toast.makeText(this,R.string.budget_required_for_entry,Toast.LENGTH_SHORT).show();return;} String itemName=name.getText().toString().trim(); if(itemName.isEmpty()){name.setError(getString(R.string.product_name));return;}
+        try{totalMilli=MoneyInput.toMilli(price.getText().toString());quantityMilli=MoneyInput.toMilli(quantity.getText().toString());if(totalMilli<=0||quantityMilli<=0||quantityMilli>Integer.MAX_VALUE)throw new NumberFormatException();unitMilli=MoneyMath.pricePerUnitMilli(totalMilli,quantityMilli);if(unitMilli<=0)throw new NumberFormatException();}catch(RuntimeException e){price.setError(getString(R.string.money_invalid));return;}
+        CategoryEntity selected=categories.get(category.getSelectedItemPosition()); ProductEntity product=new ProductEntity(); product.name=itemName;product.brand=brand.getText().toString().trim();product.unit=unit.getSelectedItem().toString();product.categoryId=selected.id;product.currentPriceMilli=unitMilli;product.currency="TND";product.updatedAt=System.currentTimeMillis();
+        PurchaseEntity purchase=new PurchaseEntity();purchase.userId=SessionStore.userId(this);purchase.occurredAt=System.currentTimeMillis();purchase.totalMilli=totalMilli;purchase.storeName=store.getText().toString().trim();
+        PurchaseItemEntity item=new PurchaseItemEntity();item.description=itemName;item.quantityMilli=(int)quantityMilli;item.unit=product.unit;item.unitPriceMilli=unitMilli;
+        MaterialButton button=findViewById(R.id.compare_save);button.setEnabled(false);long ownerId=purchase.userId,budgetId=budget.id,amountToConfirm=totalMilli;viewModel.<BudgetEntity>request(repository->{repository.savePurchase(product,purchase,item,ownerId,budgetId);return repository.budget(budgetId,ownerId);},state->{BudgetEntity updated=state.data;if(updated==null){button.setEnabled(true);Toast.makeText(this,R.string.transaction_saved_error,Toast.LENGTH_SHORT).show();return;}BudgetNotificationManager.reportBudgetProgress(this,updated.spentMilli,updated.monthlyLimitMilli,(int)(updated.id&0x7fffffff));startActivity(new Intent(this,ConfirmationActivity.class).putExtra("LABEL",itemName).putExtra("AMOUNT",amountToConfirm).putExtra("KIND","purchase"));finish();});
+    }
+}

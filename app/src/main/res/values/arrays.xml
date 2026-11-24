@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="measure_units"><item>kg</item><item>g</item><item>L</item><item>cl</item><item>pièce</item><item>pack</item></string-array>
+</resources>

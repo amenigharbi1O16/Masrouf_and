@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/cream">
+    <TextView android:layout_width="220dp" android:layout_height="220dp" android:layout_gravity="top|end"
+        android:alpha="0.08" android:rotation="-25" android:text="❧" android:textColor="@color/emerald" android:textSize="190sp" />
+    <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:padding="24dp">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="end" android:orientation="horizontal">
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center_vertical" android:text="FR  ·  AR  ·  EN" android:textColor="@color/muted_green" android:textSize="12sp" />
+            <LinearLayout android:id="@+id/welcome_languages" android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="horizontal" />
+        </LinearLayout>
+        <FrameLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1">
+            <LinearLayout android:id="@+id/phase_welcome" android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center" android:orientation="vertical">
+                <ImageView android:layout_width="72dp" android:layout_height="72dp" android:contentDescription="@string/app_name" android:src="@drawable/ic_masrouf_logo" />
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="28dp" android:gravity="center" android:text="@string/welcome_title" android:textColor="@color/forest" android:textSize="29sp" android:textStyle="bold" />
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:gravity="center" android:text="@string/welcome_subtitle" android:textColor="@color/muted_green" android:textSize="16sp" />
+                <VideoView android:id="@+id/welcome_video" android:layout_width="match_parent" android:layout_height="150dp" android:layout_marginTop="16dp" android:contentDescription="@string/onboarding_video" />
+                <com.google.android.material.button.MaterialButton android:id="@+id/start_welcome" android:layout_width="match_parent" android:layout_height="56dp" android:layout_marginTop="38dp" android:text="@string/start" android:textColor="@color/alabaster" app:backgroundTint="@color/forest" app:cornerRadius="16dp" />
+                <TextView android:id="@+id/open_login" android:layout_width="wrap_content" android:layout_height="48dp" android:layout_marginTop="8dp" android:gravity="center" android:paddingHorizontal="10dp" android:text="@string/already_account" android:textColor="@color/emerald" android:textStyle="bold" />
+            </LinearLayout>
+            <LinearLayout android:id="@+id/phase_slides" android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center" android:orientation="vertical" android:visibility="gone">
+                <androidx.viewpager2.widget.ViewPager2 android:id="@+id/welcome_pager" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" />
+                <com.google.android.material.tabs.TabLayout android:id="@+id/welcome_tabs" android:layout_width="wrap_content" android:layout_height="wrap_content" app:tabIndicatorColor="@color/emerald" app:tabIndicatorHeight="4dp" app:tabRippleColor="@color/mint" />
+                <com.google.android.material.button.MaterialButton android:id="@+id/slide_next" android:layout_width="match_parent" android:layout_height="56dp" android:layout_marginTop="14dp" android:text="@string/welcome_next" app:backgroundTint="@color/forest" app:cornerRadius="16dp" />
+            </LinearLayout>
+            <LinearLayout android:id="@+id/phase_select_type" android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center" android:orientation="vertical" android:visibility="gone">
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="22dp" android:gravity="center" android:text="@string/choose_account_type" android:textColor="@color/forest" android:textSize="23sp" android:textStyle="bold" />
+                <com.google.android.material.card.MaterialCardView android:id="@+id/personal_card" android:layout_width="match_parent" android:layout_height="130dp" android:layout_marginBottom="14dp" android:clickable="true" android:focusable="true" app:cardBackgroundColor="@color/alabaster" app:cardCornerRadius="16dp" app:strokeColor="@color/card_border" app:strokeWidth="1dp">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center_vertical" android:orientation="vertical" android:padding="22dp"><TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="♧" android:textColor="@color/emerald" android:textSize="24sp"/><TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/personal_account" android:textColor="@color/forest" android:textSize="18sp" android:textStyle="bold"/></LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+                <com.google.android.material.card.MaterialCardView android:id="@+id/family_card" android:layout_width="match_parent" android:layout_height="130dp" android:clickable="true" android:focusable="true" app:cardBackgroundColor="@color/alabaster" app:cardCornerRadius="16dp" app:strokeColor="@color/card_border" app:strokeWidth="1dp">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center_vertical" android:orientation="vertical" android:padding="22dp"><TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="⌂" android:textColor="@color/emerald" android:textSize="24sp"/><TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/family_account" android:textColor="@color/forest" android:textSize="18sp" android:textStyle="bold"/></LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+            </LinearLayout>
+        </FrameLayout>
+    </LinearLayout>
+</FrameLayout>

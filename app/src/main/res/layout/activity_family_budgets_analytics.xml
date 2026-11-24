@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@color/cream">
+    <com.google.android.material.appbar.AppBarLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@color/forest">
+        <com.google.android.material.appbar.MaterialToolbar android:id="@+id/family_analytics_toolbar" android:layout_width="match_parent" android:layout_height="?attr/actionBarSize" app:title="@string/family_analytics_title" app:titleTextColor="@color/alabaster" app:navigationIconTint="@color/alabaster" />
+    </com.google.android.material.appbar.AppBarLayout>
+    <androidx.core.widget.NestedScrollView android:layout_width="match_parent" android:layout_height="match_parent" android:fillViewport="true" app:layout_behavior="@string/appbar_scrolling_view_behavior">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="20dp">
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/family_analytics_summary" android:textColor="@color/muted_green" android:textSize="15sp" />
+            <TextView android:id="@+id/family_global_summary" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:background="@drawable/badge_background" android:padding="14dp" android:textColor="@color/forest" android:textStyle="bold" />
+            <com.example.masrouf1.PillBarChartView android:id="@+id/family_child_pills" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:padding="8dp" />
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="22dp" android:text="@string/family_trend_title" android:textColor="@color/forest" android:textSize="18sp" android:textStyle="bold" />
+            <com.example.masrouf1.ChildrenBudgetAnalyticsView android:id="@+id/family_monthly_trend" android:layout_width="match_parent" android:layout_height="210dp" android:layout_marginTop="8dp" />
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
