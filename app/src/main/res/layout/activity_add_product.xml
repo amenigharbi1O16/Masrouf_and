@@ -6,16 +6,24 @@
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
         <com.google.android.material.card.MaterialCardView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="10dp" app:cardBackgroundColor="@color/alabaster" app:cardCornerRadius="16dp" app:strokeColor="@color/card_border" app:strokeWidth="1dp">
             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="12dp">
-                <EditText android:id="@+id/product_name" android:layout_width="match_parent" android:layout_height="52dp" android:hint="@string/product_name" android:singleLine="true" />
-                <EditText android:id="@+id/product_brand" android:layout_width="match_parent" android:layout_height="52dp" android:hint="@string/product_brand" android:singleLine="true" />
+                <TextView style="@style/FormFieldLabel" android:labelFor="@id/product_name" android:text="@string/product_name" />
+                <EditText android:id="@+id/product_name" android:layout_width="match_parent" android:layout_height="52dp" android:hint="@string/hint_product_name" android:singleLine="true" />
+                <TextView style="@style/FormFieldLabel" android:labelFor="@id/product_brand" android:text="@string/product_brand" />
+                <EditText android:id="@+id/product_brand" android:layout_width="match_parent" android:layout_height="52dp" android:hint="@string/hint_product_brand" android:singleLine="true" />
                 <com.google.android.material.button.MaterialButton android:id="@+id/product_photo" android:layout_width="match_parent" android:layout_height="48dp" android:text="@string/product_photo_optional" app:cornerRadius="16dp" />
-                <Spinner android:id="@+id/product_category" android:layout_width="match_parent" android:layout_height="52dp" />
-                <EditText android:id="@+id/product_price" android:layout_width="match_parent" android:layout_height="52dp" android:hint="@string/total_price_dt" android:inputType="numberDecimal" />
-                <EditText android:id="@+id/product_quantity" android:layout_width="match_parent" android:layout_height="52dp" android:hint="@string/quantity" android:inputType="numberDecimal" android:text="1" />
-                <Spinner android:id="@+id/product_unit" android:layout_width="match_parent" android:layout_height="52dp" />
+                <TextView style="@style/FormFieldLabel" android:labelFor="@id/product_category" android:text="@string/field_category" />
+                <Spinner android:id="@+id/product_category" android:layout_width="match_parent" android:layout_height="52dp" android:contentDescription="@string/field_category" />
+                <TextView style="@style/FormFieldLabel" android:labelFor="@id/product_price" android:text="@string/total_price_dt" />
+                <EditText android:id="@+id/product_price" android:layout_width="match_parent" android:layout_height="52dp" android:hint="@string/hint_price" android:inputType="numberDecimal" />
+                <TextView style="@style/FormFieldLabel" android:labelFor="@id/product_quantity" android:text="@string/quantity" />
+                <EditText android:id="@+id/product_quantity" android:layout_width="match_parent" android:layout_height="52dp" android:hint="@string/hint_quantity" android:inputType="numberDecimal" />
+                <TextView style="@style/FormFieldLabel" android:labelFor="@id/product_unit" android:text="@string/field_unit" />
+                <Spinner android:id="@+id/product_unit" android:layout_width="match_parent" android:layout_height="52dp" android:contentDescription="@string/field_unit" />
                 <TextView android:id="@+id/product_unit_price" android:layout_width="match_parent" android:layout_height="wrap_content" android:padding="8dp" android:textColor="@color/forest" android:textStyle="bold" />
-                <EditText android:id="@+id/product_store" android:layout_width="match_parent" android:layout_height="52dp" android:hint="@string/store_name" android:singleLine="true" />
-                <TextView android:id="@+id/product_date" android:layout_width="match_parent" android:layout_height="52dp" android:gravity="center_vertical" android:hint="@string/purchase_date" android:paddingHorizontal="10dp" android:textColor="@color/ink" />
+                <TextView style="@style/FormFieldLabel" android:labelFor="@id/product_store" android:text="@string/store_name" />
+                <EditText android:id="@+id/product_store" android:layout_width="match_parent" android:layout_height="52dp" android:hint="@string/hint_store" android:singleLine="true" />
+                <TextView style="@style/FormFieldLabel" android:labelFor="@id/product_date" android:text="@string/purchase_date" />
+                <TextView android:id="@+id/product_date" android:layout_width="match_parent" android:layout_height="52dp" android:gravity="center_vertical" android:hint="@string/hint_date" android:paddingHorizontal="10dp" android:textColor="@color/ink" />
                 <com.google.android.material.button.MaterialButton android:id="@+id/save_product" android:layout_width="match_parent" android:layout_height="54dp" android:layout_marginTop="8dp" android:text="@string/save_product_purchase" app:backgroundTint="@color/forest" app:cornerRadius="16dp" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>

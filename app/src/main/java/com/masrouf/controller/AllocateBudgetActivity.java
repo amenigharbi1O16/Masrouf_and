@@ -81,8 +81,7 @@ public final class AllocateBudgetActivity extends AppCompatActivity {
             List<BudgetLineEntity> lines=data.lines;for(BudgetLineEntity line:lines)oldLines.put(line.categoryId,line.limitMilli);
             categories=loaded;budget=loadedBudget;savedLines=new ArrayList<>(lines);
             ((TextView)findViewById(R.id.allocate_total_row)).setText(getString(R.string.allocation_total_row)+"  "+CurrencyFormatter.formatMilli(totalMilli));
-            Map<Long,Long> initial=oldLines.isEmpty()?computeAutomatedBudgetAllocations(categories,data.previousSpending,totalMilli):new HashMap<>(oldLines);
-            renderRows(initial);loading=false;recalculate();
+            renderRows(oldLines);loading=false;recalculate();
         });
     }
 
@@ -129,11 +128,12 @@ public final class AllocateBudgetActivity extends AppCompatActivity {
     private void renderRows(Map<Long,Long> initial) {
         rows.removeAllViews(); entries.clear();
         for(CategoryEntity category:categories) {
-            LinearLayout line=new LinearLayout(this); line.setGravity(Gravity.CENTER_VERTICAL); line.setOrientation(LinearLayout.HORIZONTAL); line.setPadding(dp(12),dp(5),dp(8),dp(5));
+            LinearLayout line=new LinearLayout(this); line.setGravity(Gravity.CENTER_VERTICAL); line.setOrientation(LinearLayout.HORIZONTAL); line.setPaddingRelative(dp(12),dp(5),dp(8),dp(5));
             TextView name=new TextView(this); name.setText(category.name); name.setTextColor(getColor(R.color.forest)); name.setTextSize(15);
             line.addView(name,new LinearLayout.LayoutParams(0,dp(54),1));
-            EditText amount=new EditText(this); amount.setSingleLine(true); amount.setInputType(InputType.TYPE_CLASS_NUMBER|InputType.TYPE_NUMBER_FLAG_DECIMAL); amount.setHint("0,000"); amount.setGravity(Gravity.END);
-            long value=initial.getOrDefault(category.id,0L); amount.setText(CurrencyFormatter.formatMilli(value).replace(" DT",""));
+            EditText amount=new EditText(this); amount.setId(View.generateViewId());amount.setSingleLine(true); amount.setInputType(InputType.TYPE_CLASS_NUMBER|InputType.TYPE_NUMBER_FLAG_DECIMAL); amount.setHint(R.string.hint_allocation_amount); amount.setGravity(Gravity.END);
+            name.setLabelFor(amount.getId());
+            if(initial.containsKey(category.id)){long value=initial.get(category.id);amount.setText(CurrencyFormatter.formatMilli(value).replace(" DT",""));}
             line.addView(amount,new LinearLayout.LayoutParams(dp(130),dp(54)));
             rows.addView(line,new LinearLayout.LayoutParams(-1,dp(64)));
             AllocationEntry entry=new AllocationEntry(category,amount); entries.add(entry);

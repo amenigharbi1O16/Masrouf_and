@@ -37,7 +37,7 @@ public final class AddProductActivity extends BaseFeatureActivity implements Pho
     private List<CategoryEntity> categories=new ArrayList<>();
     private BudgetEntity budget;
     private String photoPath;
-    private long occurredAt=System.currentTimeMillis();
+    private long occurredAt;
 
     @Override protected void onCreate(Bundle state) {
         super.onCreate(state); showPage(R.string.add_purchase_product);viewModel=new androidx.lifecycle.ViewModelProvider(this,new MasroufViewModelFactory(this)).get(MasroufViewModel.class);
@@ -45,11 +45,15 @@ public final class AddProductActivity extends BaseFeatureActivity implements Pho
         name=findViewById(R.id.product_name); brand=findViewById(R.id.product_brand); price=findViewById(R.id.product_price);
         quantity=findViewById(R.id.product_quantity); store=findViewById(R.id.product_store); unitPrice=findViewById(R.id.product_unit_price);
         categorySpinner=findViewById(R.id.product_category); unitSpinner=findViewById(R.id.product_unit); date=findViewById(R.id.product_date); save=findViewById(R.id.save_product);
-        unitSpinner.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,getResources().getStringArray(R.array.measure_units)));
+        ArrayList<String> unitChoices=new ArrayList<>();unitChoices.add(getString(R.string.select_unit));java.util.Collections.addAll(unitChoices,getResources().getStringArray(R.array.measure_units));
+        unitSpinner.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,unitChoices));
+        categorySpinner.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,new String[]{getString(R.string.select_product_category)}));
         FormPriceTextWatcher watcher=new FormPriceTextWatcher(price,quantity,unitPrice); price.addTextChangedListener(watcher); quantity.addTextChangedListener(watcher); watcher.afterTextChanged(null);
-        setDateLabel(); date.setOnClickListener(v->chooseDate());
+        date.setOnClickListener(v->chooseDate());
         findViewById(R.id.product_photo).setOnClickListener(v->new PhotoSourceBottomSheetDialog().show(getSupportFragmentManager(),"product-photo"));
         getSupportFragmentManager().setFragmentResultListener("masrouf-photo-selected",this,(key,result)->photoPath=result.getString("photoPath"));
+        if(getIntent().hasExtra("VOICE_LABEL"))name.setText(getIntent().getStringExtra("VOICE_LABEL"));
+        if(getIntent().hasExtra("VOICE_AMOUNT"))price.setText(getIntent().getStringExtra("VOICE_AMOUNT"));
         save.setOnClickListener(v->savePurchase()); loadFormData();
     }
     private void loadFormData() {
@@ -57,23 +61,24 @@ public final class AddProductActivity extends BaseFeatureActivity implements Pho
         viewModel.<ProductFormData>request(repository->repository.productForm(userId),state->{if(state.data==null)return;
             ArrayList<CategoryEntity> productCategories=new ArrayList<>();for(CategoryEntity item:state.data.categories)if("product".equalsIgnoreCase(item.type))productCategories.add(item);
             if(productCategories.isEmpty())productCategories.addAll(state.data.categories);
-            categories=productCategories;budget=state.data.budget;ArrayList<String> labels=new ArrayList<>();for(CategoryEntity row:categories)labels.add(row.name);categorySpinner.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,labels));
+            categories=productCategories;budget=state.data.budget;ArrayList<String> labels=new ArrayList<>();labels.add(getString(R.string.select_product_category));for(CategoryEntity row:categories)labels.add(row.name);categorySpinner.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,labels));
         });
     }
     private void chooseDate() {
-        Calendar c=Calendar.getInstance(); c.setTimeInMillis(occurredAt);
-        new DatePickerDialog(this,(picker,year,month,day)->{ Calendar selected=Calendar.getInstance(); selected.set(year,month,day,12,0,0); selected.set(Calendar.MILLISECOND,0); occurredAt=selected.getTimeInMillis(); setDateLabel(); },c.get(Calendar.YEAR),c.get(Calendar.MONTH),c.get(Calendar.DAY_OF_MONTH)).show();
+        Calendar c=Calendar.getInstance(); if(occurredAt>0)c.setTimeInMillis(occurredAt);
+        new DatePickerDialog(this,(picker,year,month,day)->{ Calendar selected=Calendar.getInstance(); selected.set(year,month,day,12,0,0); selected.set(Calendar.MILLISECOND,0); occurredAt=selected.getTimeInMillis(); date.setError(null); setDateLabel(); },c.get(Calendar.YEAR),c.get(Calendar.MONTH),c.get(Calendar.DAY_OF_MONTH)).show();
     }
-    private void setDateLabel() { date.setText(new SimpleDateFormat("dd/MM/yyyy",Locale.getDefault()).format(occurredAt)); }
+    private void setDateLabel() { if(occurredAt>0)date.setText(new SimpleDateFormat("dd/MM/yyyy",Locale.getDefault()).format(occurredAt));else date.setText(null); }
     private void savePurchase() {
-        if(categories.isEmpty()) { Toast.makeText(this,R.string.select_category_first,Toast.LENGTH_SHORT).show(); return; }
+        if(occurredAt<=0){date.setError(getString(R.string.date_required));return;}
+        if(categories.isEmpty()||categorySpinner.getSelectedItemPosition()<=0||unitSpinner.getSelectedItemPosition()<=0) { Toast.makeText(this,R.string.select_category_first,Toast.LENGTH_SHORT).show(); return; }
         if(budget==null) { Toast.makeText(this,R.string.budget_required_for_entry,Toast.LENGTH_LONG).show(); return; }
         String productName=name.getText().toString().trim(); if(productName.isEmpty()) { name.setError(getString(R.string.product_name)); return; }
         long total,quantityMilli;
         try { total=MoneyInput.toMilli(price.getText().toString()); quantityMilli=MoneyInput.toMilli(quantity.getText().toString()); if(total<=0||quantityMilli<=0||quantityMilli>Integer.MAX_VALUE) throw new NumberFormatException(); }
         catch(NumberFormatException ex) { price.setError(getString(R.string.money_invalid)); return; }
         long perUnit=MoneyMath.pricePerUnitMilli(total,quantityMilli); if(perUnit<=0) { price.setError(getString(R.string.money_invalid)); return; }
-        CategoryEntity category=categories.get(categorySpinner.getSelectedItemPosition()); long userId=SessionStore.userId(this);
+        CategoryEntity category=categories.get(categorySpinner.getSelectedItemPosition()-1); long userId=SessionStore.userId(this);
         ProductEntity product=new ProductEntity(); product.categoryId=category.id; product.name=productName; product.brand=brand.getText().toString().trim(); product.unit=unitSpinner.getSelectedItem().toString(); product.photoPath=photoPath; product.currency="TND"; product.currentPriceMilli=perUnit; product.updatedAt=occurredAt;
         PurchaseEntity purchase=new PurchaseEntity(); purchase.userId=userId; purchase.occurredAt=occurredAt; purchase.totalMilli=total; purchase.storeName=store.getText().toString().trim(); purchase.receiptPath=photoPath;
         PurchaseItemEntity item=new PurchaseItemEntity(); item.description=productName; item.quantityMilli=(int)quantityMilli; item.unit=product.unit; item.unitPriceMilli=perUnit;
@@ -81,7 +86,7 @@ public final class AddProductActivity extends BaseFeatureActivity implements Pho
         long budgetId=budget.id;
         viewModel.<BudgetEntity>request(repository->{repository.savePurchase(product,purchase,item,userId,budgetId);return repository.budget(budgetId,userId);},state->{
             if(state.data==null){save.setEnabled(true);Toast.makeText(this,R.string.transaction_saved_error,Toast.LENGTH_SHORT).show();return;}
-            BudgetEntity updated=state.data;BudgetNotificationManager.reportBudgetProgress(this,updated.spentMilli,updated.monthlyLimitMilli,(int)(updated.id&0x7fffffff));
+            BudgetEntity updated=state.data;BudgetNotificationManager.reportBudgetProgress(this,updated.spentMilli,updated.monthlyLimitMilli,userId,updated.id,updated.periodStart);
             Intent next=new Intent(this,ProductDetailsActivity.class).putExtra("PRODUCT_ID",product.id).putExtra("PURCHASE_ID",purchase.id);startActivity(next);finish();
         });
     }

@@ -19,6 +19,9 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Callable;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 /** MVVM boundary: exposes Room LiveData through repositories and survives configuration changes. */
 public final class MasroufViewModel extends ViewModel {
@@ -31,6 +34,7 @@ public final class MasroufViewModel extends ViewModel {
     private final MediatorLiveData<DataState<List<TransactionRow>>> transactions=new MediatorLiveData<>();
     private final MediatorLiveData<DataState<UserEntity>> user=new MediatorLiveData<>();
     private final MutableLiveData<DataState<HomeDashboardData>> home=new MutableLiveData<>();
+    private final MutableLiveData<Set<String>> categorySelection=new MutableLiveData<>();
     private final MediatorLiveData<DataState<List<NotificationEntity>>> notifications=new MediatorLiveData<>();
     private LiveData<List<ProductEntity>> productSource;
     private LiveData<List<CategoryEntity>> categoriesSource;
@@ -57,6 +61,10 @@ public final class MasroufViewModel extends ViewModel {
     public LiveData<DataState<List<TransactionRow>>> transactions(){return transactions;}
     public LiveData<DataState<UserEntity>> user(){return user;}
     public LiveData<DataState<HomeDashboardData>> home(){return home;}
+    public LiveData<Set<String>> categorySelection(){return categorySelection;}
+    public Set<String> currentCategorySelection(){Set<String> value=categorySelection.getValue();return value==null?Collections.emptySet():Collections.unmodifiableSet(new HashSet<>(value));}
+    public void initializeCategorySelection(Set<String> defaults){if(categorySelection.getValue()==null)categorySelection.setValue(Collections.unmodifiableSet(new HashSet<>(defaults)));}
+    public void toggleCategorySelection(String key){if(key==null)return;Set<String> next=new HashSet<>(currentCategorySelection());if(!next.add(key))next.remove(key);categorySelection.setValue(Collections.unmodifiableSet(next));}
     public LiveData<DataState<List<NotificationEntity>>> notifications(){return notifications;}
 
     public void loadProducts(long userId){products.setValue(DataState.loading());if(productSource!=null)products.removeSource(productSource);productSource=repository.observeProducts(userId);products.addSource(productSource,rows->products.setValue(DataState.success(rows)));}
@@ -75,6 +83,7 @@ public final class MasroufViewModel extends ViewModel {
     public void loadHome(long userId,boolean parentMode,boolean childMode){home.setValue(DataState.loading());IO.execute(()->{try{home.postValue(DataState.success(repository.loadHome(userId,parentMode,childMode)));}catch(RuntimeException failure){home.postValue(DataState.failure());}});}
     public void loadNotifications(long userId){notifications.setValue(DataState.loading());if(notificationSource!=null)notifications.removeSource(notificationSource);notificationSource=repository.observeNotifications(userId);notifications.addSource(notificationSource,rows->notifications.setValue(DataState.success(rows)));}
     public void markNotificationRead(long notificationId,long userId){IO.execute(()->{try{repository.markNotificationRead(notificationId,userId);}catch(RuntimeException ignored){}});}
+    public void markAllNotificationsRead(long userId){IO.execute(()->{try{repository.markAllNotificationsRead(userId);}catch(RuntimeException ignored){}});}
 
     public <T> void request(RepositoryRequest<T> request,RequestCallback<T> callback){
         IO.execute(()->{

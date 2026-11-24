@@ -38,8 +38,6 @@ public final class BudgetPeriodActivity extends AppCompatActivity {
         startInput=findViewById(R.id.budget_start_date); endInput=findViewById(R.id.budget_end_date); totalInput=findViewById(R.id.budget_total_input); error=findViewById(R.id.budget_period_error);
         startInput.setOnClickListener(v->showDatePicker(startInput)); endInput.setOnClickListener(v->showDatePicker(endInput));
         findViewById(R.id.budget_period_continue).setOnClickListener(v->continueToAllocation());
-        Calendar first=Calendar.getInstance(); first.set(Calendar.DAY_OF_MONTH,1); Calendar last=(Calendar)first.clone(); last.add(Calendar.MONTH,1); last.add(Calendar.DAY_OF_MONTH,-1);
-        startInput.setText(dateFormat.format(first.getTime())); endInput.setText(dateFormat.format(last.getTime()));
         if(getIntent().getStringExtra("MODE")!=null) loadExisting();
     }
 
@@ -64,6 +62,7 @@ public final class BudgetPeriodActivity extends AppCompatActivity {
     }
 
     private void continueToAllocation() {
+        if(startInput.getText().toString().trim().isEmpty()||endInput.getText().toString().trim().isEmpty()){error.setText(R.string.date_required);return;}
         Date start,end; long total;
         try { start=dateFormat.parse(startInput.getText().toString().trim()); end=dateFormat.parse(endInput.getText().toString().trim()); total=MoneyInput.toMilli(totalInput.getText().toString()); }
         catch(Exception exception) { error.setText(R.string.money_invalid); return; }

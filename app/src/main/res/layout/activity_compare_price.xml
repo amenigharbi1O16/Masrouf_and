@@ -3,13 +3,20 @@
     android:layout_width="match_parent" android:layout_height="match_parent" android:fillViewport="true" android:background="@color/cream">
     <com.google.android.material.card.MaterialCardView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_margin="16dp" app:cardBackgroundColor="@color/alabaster" app:cardCornerRadius="16dp" app:strokeColor="@color/card_border" app:strokeWidth="1dp">
         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
-            <EditText android:id="@+id/compare_name" android:layout_width="match_parent" android:layout_height="52dp" android:hint="@string/product_name" />
-            <EditText android:id="@+id/compare_brand" android:layout_width="match_parent" android:layout_height="52dp" android:hint="@string/product_brand" />
-            <EditText android:id="@+id/compare_price" android:layout_width="match_parent" android:layout_height="52dp" android:hint="@string/total_price_dt" android:inputType="numberDecimal" />
-            <EditText android:id="@+id/compare_quantity" android:layout_width="match_parent" android:layout_height="52dp" android:hint="@string/quantity" android:inputType="numberDecimal" android:text="1" />
-            <Spinner android:id="@+id/compare_unit" android:layout_width="match_parent" android:layout_height="52dp" />
-            <Spinner android:id="@+id/compare_category" android:layout_width="match_parent" android:layout_height="52dp" />
-            <EditText android:id="@+id/compare_store" android:layout_width="match_parent" android:layout_height="52dp" android:hint="@string/store_name" />
+            <TextView style="@style/FormFieldLabel" android:labelFor="@id/compare_name" android:text="@string/product_name" />
+            <EditText android:id="@+id/compare_name" android:layout_width="match_parent" android:layout_height="52dp" android:hint="@string/hint_product_name" />
+            <TextView style="@style/FormFieldLabel" android:labelFor="@id/compare_brand" android:text="@string/product_brand" />
+            <EditText android:id="@+id/compare_brand" android:layout_width="match_parent" android:layout_height="52dp" android:hint="@string/hint_product_brand" />
+            <TextView style="@style/FormFieldLabel" android:labelFor="@id/compare_price" android:text="@string/total_price_dt" />
+            <EditText android:id="@+id/compare_price" android:layout_width="match_parent" android:layout_height="52dp" android:hint="@string/hint_price" android:inputType="numberDecimal" />
+            <TextView style="@style/FormFieldLabel" android:labelFor="@id/compare_quantity" android:text="@string/quantity" />
+            <EditText android:id="@+id/compare_quantity" android:layout_width="match_parent" android:layout_height="52dp" android:hint="@string/hint_quantity" android:inputType="numberDecimal" />
+            <TextView style="@style/FormFieldLabel" android:labelFor="@id/compare_unit" android:text="@string/field_unit" />
+            <Spinner android:id="@+id/compare_unit" android:layout_width="match_parent" android:layout_height="52dp" android:contentDescription="@string/field_unit" />
+            <TextView style="@style/FormFieldLabel" android:labelFor="@id/compare_category" android:text="@string/field_category" />
+            <Spinner android:id="@+id/compare_category" android:layout_width="match_parent" android:layout_height="52dp" android:contentDescription="@string/field_category" />
+            <TextView style="@style/FormFieldLabel" android:labelFor="@id/compare_store" android:text="@string/store_name" />
+            <EditText android:id="@+id/compare_store" android:layout_width="match_parent" android:layout_height="52dp" android:hint="@string/hint_store" />
             <TextView android:id="@+id/compare_unit_price" android:layout_width="match_parent" android:layout_height="wrap_content" android:padding="8dp" android:textColor="@color/forest" android:textStyle="bold" />
             <TextView android:id="@+id/price_indicator" android:layout_width="match_parent" android:layout_height="wrap_content" android:padding="12dp" android:textColor="@color/forest" android:textStyle="bold" />
             <TextView android:id="@+id/envelope_impact" android:layout_width="match_parent" android:layout_height="wrap_content" android:padding="8dp" android:textColor="@color/muted_green" />

@@ -1,0 +1,13 @@
+<resources>
+    <item name="tab_home" type="id" />
+    <item name="tab_products" type="id" />
+    <item name="tab_calendar" type="id" />
+    <item name="tab_analytics" type="id" />
+    <item name="tab_settings" type="id" />
+    <item name="home_remaining" type="id" />
+    <item name="home_budget_progress" type="id" />
+    <item name="home_spent" type="id" />
+    <item name="home_total" type="id" />
+    <item name="home_partition_child_budget" type="id" />
+    <item name="home_budget_period" type="id" />
+</resources>

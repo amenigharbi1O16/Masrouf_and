@@ -129,6 +129,10 @@
     <string name="category_health">الصحة</string>
     <string name="category_leisure">الترفيه</string>
     <string name="category_school">التعليم</string>
+    <string name="category_clothing">الملابس</string>
+    <string name="category_bills">الفواتير والاشتراكات</string>
+    <string name="category_savings">الادخار والاحتياطي</string>
+    <string name="category_other">مصاريف أخرى</string>
     <string name="budget_start_date">تاريخ البداية (يوم/شهر/سنة)</string>
     <string name="budget_end_date">تاريخ النهاية (يوم/شهر/سنة)</string>
     <string name="date_order_error">يجب أن يكون تاريخ النهاية بعد البداية أو في اليوم نفسه.</string>
@@ -212,7 +216,7 @@
     <string name="voice_transaction_hint">أملِ العملية؛ يفضّل التعرف وضع عدم الاتصال.</string><string name="voice_text_preview">النص المتعرف عليه</string><string name="voice_permission_denied">يلزم السماح باستخدام الميكروفون للإملاء.</string>
     <string name="voice_listening">جارٍ الاستماع…</string><string name="voice_processing">جارٍ تحليل العبارة…</string><string name="voice_recognition_error">توقف التعرف. حاول مجدداً أو اختر لغة أخرى.</string>
     <string name="voice_preview_editable">راجع الوصف والمبلغ وعدلهما قبل المتابعة.</string><string name="voice_parsed_type">النوع: %1$s · %2$s</string><string name="choose_allowance_child">اختر الطفل</string>
-    <string name="allocation_cap_live">المخصص: %1$d%% · الجديد: %2$d%% · المتبقي: %3$d%%</string><string name="onboarding_video">فيديو تعريفي بمصروف</string>
+    <string name="allocation_cap_live">المخصص: %1$d%% · الجديد: %2$d%% · المتبقي: %3$d%%</string>
     <string name="chart_price_stats">الأدنى %1$s · المتوسط %2$s · الأعلى %3$s</string>
     <string name="monthly_spending_analysis">المصروف حسب الفئة هذا الشهر</string>
     <string name="product_price_history">سجل الأسعار الفعلي للمنتجات</string>
@@ -222,4 +226,137 @@
     <string name="budget_not_configured">لم يتم إعداد ميزانية فعلية بعد.</string>
     <string name="category_budget_required">حدد ميزانية نشطة أولاً لإنشاء مخصص هذه الفئة.</string>
     <string name="save_email">حفظ البريد الإلكتروني</string><string name="email_saved">تم تحديث البريد الإلكتروني.</string><string name="email_already_used">هذا البريد مستخدم بالفعل.</string>
+    <string name="category_other_required">اختر أيضاً فئة المصاريف الأخرى المحمية للاستخدام عند الحاجة.</string>
+    <string name="category_selection_failed">لم يتم حفظ اختيارك. أعد المحاولة قبل مغادرة هذه الخطوة.</string>
+    <string name="categories_confirmed_summary">ستظل فئاتك التي أكدت اختيارها سابقاً مفعّلة.</string>
+    <string name="create_local_backup">إنشاء نسخة احتياطية محلية</string>
+    <string name="backup_created">تم إنشاء نسخة محلية في مساحة التطبيق الخاصة.</string>
+    <string name="backup_failed">تعذر إنشاء النسخة الاحتياطية. أعد المحاولة عندما تكون قاعدة البيانات غير مشغولة.</string>
+    <string name="onboarding_customize_title">لنخصص مساحتك</string>
+    <string name="onboarding_customize_description">اختر الفئات التي تريد استخدامها في مصروف. يمكنك تعديلها لاحقاً.</string>
+    <string name="onboarding_confirm_selection">تأكيد اختياري</string>
+    <plurals name="category_selection_count"><item quantity="zero">لم يتم اختيار أي فئة</item><item quantity="one">فئة واحدة مختارة</item><item quantity="two">فئتان مختارتان</item><item quantity="few">%1$d فئات مختارة</item><item quantity="many">%1$d فئة مختارة</item><item quantity="other">%1$d فئة مختارة</item></plurals>
+    <string name="category_selected">تم الاختيار</string><string name="category_choose">اضغط للاختيار</string>
+    <string name="category_planned_percent">المخطط: %1$d٪ من الميزانية</string><string name="category_allocated">المخصص %1$s</string>
+    <string name="category_spent">المصروف %1$s</string><string name="category_consumed_percent">تم استخدام %1$d٪</string><string name="category_unallocated">لا يوجد مخصص لهذه الفئة</string>
+    <string name="budget_status_healthy_detail">الإنفاق أقل من حد التنبيه.</string><string name="budget_status_warning_detail">تم استخدام %1$d٪ من هذه الميزانية.</string>
+    <string name="budget_status_danger_detail">تم تجاوز الميزانية بمقدار %1$s.</string><string name="no_budget_period">لم يتم تحديد ميزانية لهذه الفترة.</string>
+    <string name="language_choose_drawer">اختر اللغة من أسفل القائمة الجانبية.</string>
+    <string name="hint_full_name">أدخل اسمك الكامل</string><string name="hint_email">name@gmail.com</string>
+    <string name="hint_password">أدخل كلمة المرور</string><string name="hint_confirm_password">أكد كلمة المرور</string>
+    <string name="hint_child_name">أدخل اسم الطفل</string><string name="hint_child_email">name@gmail.com</string>
+    <string name="hint_temporary_password">أدخل كلمة مرور مؤقتة</string><string name="hint_phone">أدخل رقم الهاتف</string>
+    <string name="hint_initial_allocation">أدخل المبلغ (د.ت)، اختياري</string><string name="hint_amount">أدخل المبلغ (د.ت)</string>
+    <string name="hint_note">أدخل ملاحظة</string><string name="hint_product_name">أدخل اسم المنتج</string>
+    <string name="hint_product_brand">أدخل العلامة التجارية</string><string name="hint_price">أدخل سعر المنتج (د.ت)</string>
+    <string name="hint_quantity">أدخل الكمية</string><string name="hint_store">أدخل اسم المتجر</string>
+    <string name="hint_category_name">أدخل اسم الفئة</string><string name="hint_allocation_percent">أدخل نسبة التخصيص (%)</string>
+    <string name="hint_transaction_name">أدخل وصفاً</string><string name="hint_expense_note">أدخل ملاحظة توضيحية</string>
+    <string name="hint_budget_start_date">أدخل التاريخ (يوم/شهر/سنة)</string><string name="hint_budget_end_date">أدخل التاريخ (يوم/شهر/سنة)</string>
+    <string name="hint_date">اختر تاريخاً</string><string name="hint_voice_text">أمْلِ المعاملة أو أدخلها</string>
+    <string name="hint_allocation_amount">أدخل مبلغ هذا الظرف</string>
+    <string name="field_category">الفئة</string><string name="field_unit">الوحدة</string>
+    <string name="select_product_category">اختر فئة المنتج</string>
+    <string name="select_expense_category">اختر فئة المصروف</string>
+    <string name="select_unit">اختر وحدة</string><string name="voice_language_label">لغة الإملاء</string>
+    <string name="date_required">اختر تاريخاً</string>
+    <string name="budget_value_unavailable">—</string>
+    <string name="spent_value_unavailable">المصروف —</string>
+    <string name="budget_total_unavailable">%1$s —</string>
+    <string name="dashboard_loading">جارٍ تحميل البيانات…</string>
+    <string name="dashboard_read_error">تعذرت قراءة البيانات المحلية. حاول مرة أخرى.</string>
+    <string name="dashboard_transactions_empty">لا توجد معاملات مسجلة لهذه الفترة.</string>
+    <string name="dashboard_personal_summary">المصروف: %1$s · المعاملات: %2$d</string>
+    <string name="dashboard_family_summary">المصروف الفعلي: %1$s · المتبقي من الميزانية: %2$s · الأطفال: %3$d · المعاملات: %4$d · الطلبات المعلقة: %5$d</string>
+    <string name="child_money_summary_title">الأموال المستلمة والهدف</string>
+    <string name="child_received_summary">إجمالي المستلم: %1$s · آخر تحويل: %2$s</string>
+    <string name="no_recent_allowance">لا يوجد تحويل بعد</string>
+    <string name="child_goal_missing">لم يتم تسجيل هدف ادخار.</string>
+    <string name="child_goal_summary">%1$s — تم ادخار %2$s من %3$s</string>
+    <string name="savings_goal">هدف الادخار</string>
+    <string name="child_request_money">طلب المال</string>
+    <string name="money_request_page_title">طلب مال</string>
+    <string name="money_request_amount">المبلغ المطلوب (DT)</string>
+    <string name="money_amount_hint">أدخل المبلغ بالدينار</string>
+    <string name="money_request_reason">السبب</string>
+    <string name="money_request_reason_hint">اشرح طلبك</string>
+    <string name="money_request_submit">إرسال الطلب</string>
+    <string name="money_request_history">طلباتي الأخيرة</string>
+    <string name="money_request_notification_title">طلب مال جديد</string>
+    <string name="money_request_notification_body">طلب %1$s مبلغ %2$s.</string>
+    <string name="money_request_accepted">تم قبول الطلب</string>
+    <string name="money_request_rejected">تم رفض الطلب</string>
+    <string name="money_request_accepted_body">تم قبول طلبك بمبلغ %1$s.</string>
+    <string name="money_request_rejected_body">تم رفض طلب المال.</string>
+    <string name="money_request_pending">قيد الانتظار</string>
+    <string name="money_request_sent">تم إرسال الطلب إلى الوالد.</string>
+    <string name="money_request_failed">تعذر حفظ الطلب.</string>
+    <string name="money_request_insufficient_funds">الميزانية المتاحة لا تكفي لهذا التحويل.</string>
+    <string name="money_request_approve">قبول</string>
+    <string name="money_request_reject">رفض</string>
+    <string name="pending_money_requests">طلبات المال المعلقة</string>
+    <string name="money_request_from_child">طلب %1$s مبلغ %2$s</string>
+    <string name="filter_all">الكل</string>
+    <string name="search_products_label">البحث عن منتج</string>
+    <string name="search_products_hint">ابحث عن المنتجات…</string>
+    <string name="product_image">صورة المنتج</string>
+    <string name="products_empty">لا توجد منتجات مسجلة.</string>
+    <string name="products_filter_empty">لا توجد منتجات تطابق البحث.</string>
+    <string name="no_brand_recorded">العلامة التجارية غير محددة</string>
+    <string name="no_store_recorded">المتجر غير مسجل</string>
+    <string name="product_catalog_meta">%1$s · %2$s · %3$s</string>
+    <string name="product_catalog_price">%1$s · %2$s</string>
+    <string name="price_trend_new">لا يوجد سجل أسعار قابل للمقارنة</string>
+    <string name="price_trend_up">↑ ارتفاع %1$d%%</string>
+    <string name="price_trend_down">↓ انخفاض %1$d%%</string>
+    <string name="price_trend_stable">تغير طفيف: +%1$d%%</string>
+    <string name="calendar_previous">الشهر السابق</string>
+    <string name="calendar_next">الشهر التالي</string>
+    <string name="calendar_no_transactions">لا توجد حركات مسجلة هذا الشهر.</string>
+    <string name="calendar_transactions_hint">اضغط على يوم لعرض معاملاته.</string>
+    <string name="calendar_day_accessibility">اليوم %1$d، الإجمالي %2$s</string>
+    <string name="calendar_day_total">إجمالي اليوم: %1$s</string>
+    <string name="calendar_day_empty">لا توجد معاملات في هذا اليوم.</string>
+    <string name="points_balance_title">رصيد النقاط</string>
+    <string name="rewards_available_title">المكافآت</string>
+    <string name="rewards_empty">لم يضف الوالد أي مكافأة.</string>
+    <string name="points_history_title">سجل النقاط</string>
+    <string name="points_history_empty">لا توجد حركة نقاط مسجلة.</string>
+    <string name="points_level_beginner">مبتدئ</string>
+    <string name="points_level_saver">مقتصد</string>
+    <string name="points_level_expert">خبير</string>
+    <string name="points_next_level">تحتاج إلى %1$d نقطة للمستوى التالي</string>
+    <string name="points_level_max">وصلت إلى مستوى الخبير</string>
+    <string name="reward_points_cost">التكلفة: %1$d نقطة</string>
+    <string name="reward_redeemed">تم الحصول عليها</string>
+    <string name="reward_redeem">استبدال</string>
+    <string name="reward_locked">مقفلة</string>
+    <string name="points_history_row">%1$d نقطة · %2$s · %3$s</string>
+    <string name="points_reason_budget">تم الالتزام بميزانية الفترة</string>
+    <string name="points_reason_reward">تم استبدال المكافأة</string>
+    <string name="reward_redeemed_title">تم الحصول على مكافأة</string>
+    <string name="reward_redeemed_body">تم استبدال مكافأة باستخدام نقاطك.</string>
+    <string name="reward_redeem_failed">تعذر استبدال هذه المكافأة.</string>
+    <string name="notifications_mark_all_read">تحديد الكل كمقروء</string>
+    <string name="notifications_filter_all">الكل</string>
+    <string name="notifications_filter_unread">غير المقروءة</string>
+    <string name="notifications_unread_count">%1$d إشعار غير مقروء</string>
+    <string name="notifications_no_unread">لا توجد إشعارات غير مقروءة.</string>
+    <string name="notification_unread">غير مقروء</string>
+    <string name="notification_private_preview">افتح مصروف لعرض هذا الإشعار.</string>
+    <string name="product_details_unavailable">تعذر تحميل هذا المنتج.</string>
+    <string name="product_price_stats">الأدنى %1$s · المتوسط %2$s · الأعلى %3$s</string>
+    <string name="purchase_history_title">سجل المشتريات</string>
+    <string name="purchase_history_empty">لا توجد مشتريات مسجلة لهذا المنتج.</string>
+    <string name="purchase_history_item">%1$s · %2$s · %3$s</string>
+    <string name="analytics_comparison_loading">جارٍ تحميل المقارنة الشهرية…</string>
+    <string name="analytics_comparison_unavailable">المقارنة الشهرية غير متاحة.</string>
+    <string name="analytics_comparison_no_previous">هذا الشهر: %1$s · الشهر السابق: %2$s · لا توجد قاعدة للمقارنة</string>
+    <string name="analytics_comparison">هذا الشهر: %1$s · الشهر السابق: %2$s · التغير %3$d%%</string>
+    <string name="analytics_essentials">المصاريف الأساسية: %1$s</string>
+    <string name="analytics_leisure">مصاريف أخرى: %1$s</string>
+    <string name="voice_action_purchase">شراء</string><string name="voice_action_expense">مصروف</string><string name="voice_action_donation">تبرع</string><string name="voice_action_allowance">مصروف للطفل</string>
+    <string name="voice_product_bread">خبز</string><string name="voice_product_milk">حليب</string><string name="voice_product_meat">لحم</string><string name="voice_product_chicken">دجاج</string><string name="voice_product_oil">زيت</string><string name="voice_product_sugar">سكر</string><string name="voice_product_coffee">قهوة</string><string name="voice_product_vegetables">خضروات</string><string name="voice_product_fruit">فاكهة</string>
+    <string name="voice_ambiguous_title">راجع نتيجة الإملاء الصوتي</string><string name="voice_ambiguous_review">قد تحتمل العبارة أكثر من معنى. راجع المبلغ والتفاصيل قبل المتابعة.</string><string name="voice_continue_editing">المتابعة إلى النموذج</string><string name="voice_confirm_allocation">تأكيد المصروف</string><string name="voice_allowance_confirmation">تأكيد مبلغ %2$s د.ت لـ %1$s؟</string>
+    <string name="transaction_details">تفاصيل المعاملة</string><string name="transaction_details_unavailable">المعاملة غير موجودة أو لا تخص هذا الحساب.</string>
 </resources>

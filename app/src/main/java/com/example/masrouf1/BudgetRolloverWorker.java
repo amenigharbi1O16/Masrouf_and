@@ -28,12 +28,14 @@ public final class BudgetRolloverWorker extends Worker {
                     start = end;
                     end = (Calendar) start.clone(); end.add(Calendar.MONTH, 1);
                 }
+                Context context=getApplicationContext();
                 boolean updated = database.masroufDao().rolloverBudget(
-                        budget.id, start.getTimeInMillis(), end.getTimeInMillis(), now - 92L * 24L * 60L * 60L * 1000L);
+                        budget.id, start.getTimeInMillis(), end.getTimeInMillis(), now - 92L * 24L * 60L * 60L * 1000L,now,
+                        context.getString(R.string.points_awarded_title),context.getString(R.string.points_awarded_message));
                 if (updated) {
                     int notificationId=(int)(budget.id&0x7fffffff);
-                    BudgetNotificationManager.budgetClosed(getApplicationContext(),notificationId);
-                    if(budget.spentMilli<=budget.monthlyLimitMilli) { BudgetNotificationManager.pointsAwarded(getApplicationContext(),notificationId+1); AchievementPlayer.play(getApplicationContext()); }
+                    BudgetNotificationManager.budgetClosed(context,notificationId,budget.userId,budget.id,budget.periodStart);
+                    if(budget.spentMilli<=budget.monthlyLimitMilli) BudgetNotificationManager.pointsAwarded(context,notificationId+1,"budget-close:"+budget.id+":"+budget.periodStart);
                 }
             }
             return Result.success();

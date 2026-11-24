@@ -5,8 +5,9 @@ import androidx.room.ColumnInfo;
 import androidx.room.ForeignKey;
 import androidx.room.Index;
 import androidx.room.PrimaryKey;
+import androidx.annotation.NonNull;
 
-/** Room's normalized offline data model: exactly thirteen relational tables. */
+/** Room's normalized offline data model; catalogue rows and per-user selections are separate. */
 public final class MasroufEntities {
     private MasroufEntities() { }
 
@@ -21,6 +22,7 @@ public final class MasroufEntities {
         public String parentPhone;
         public String passwordHash;
         @ColumnInfo(defaultValue = "0") public boolean onboarded;
+        @ColumnInfo(defaultValue = "0") public boolean categoriesSelected;
         @ColumnInfo(defaultValue = "0") public long balanceMilli;
         public int points;
         public long createdAt;
@@ -29,13 +31,14 @@ public final class MasroufEntities {
     @Entity(tableName = "child_profiles", foreignKeys = {
             @ForeignKey(entity = UserEntity.class, parentColumns = "id", childColumns = "parentUserId", onDelete = ForeignKey.CASCADE),
             @ForeignKey(entity = UserEntity.class, parentColumns = "id", childColumns = "childUserId", onDelete = ForeignKey.CASCADE)},
-            indices = {@Index("parentUserId"), @Index(value = {"childUserId"}, unique = true)})
+            indices = {@Index("parentUserId"), @Index(value = {"parentUserId", "allocationPeriodStart"}), @Index(value = {"childUserId"}, unique = true)})
     public static class ChildProfileEntity {
         @PrimaryKey(autoGenerate = true) public long id;
         public long parentUserId;
         public long childUserId;
         public String nickname;
         @ColumnInfo(defaultValue = "0") public long allocatedTotalMilli;
+        @ColumnInfo(defaultValue = "0") public long allocationPeriodStart;
         public String parentPhone;
         public long weeklyLimitMilli;
         public long createdAt;
@@ -159,7 +162,7 @@ public final class MasroufEntities {
     }
 
     @Entity(tableName = "notifications", foreignKeys = @ForeignKey(entity = UserEntity.class,
-            parentColumns = "id", childColumns = "userId", onDelete = ForeignKey.CASCADE), indices = {@Index("userId"), @Index("createdAt")})
+            parentColumns = "id", childColumns = "userId", onDelete = ForeignKey.CASCADE), indices = {@Index("userId"), @Index("createdAt"), @Index(value = {"userId", "eventKey"}, unique = true)})
     public static class NotificationEntity {
         @PrimaryKey(autoGenerate = true) public long id;
         public long userId;
@@ -168,6 +171,35 @@ public final class MasroufEntities {
         public String kind;
         public long createdAt;
         public boolean read;
+        public String eventKey;
+    }
+
+    @Entity(tableName = "money_requests", foreignKeys = {
+            @ForeignKey(entity = UserEntity.class, parentColumns = "id", childColumns = "childUserId", onDelete = ForeignKey.CASCADE),
+            @ForeignKey(entity = UserEntity.class, parentColumns = "id", childColumns = "parentUserId", onDelete = ForeignKey.CASCADE)},
+            indices = {@Index(value = {"parentUserId", "status", "createdAt"}), @Index(value = {"childUserId", "createdAt"})})
+    public static class MoneyRequestEntity {
+        @PrimaryKey(autoGenerate = true) public long id;
+        public long childUserId;
+        public long parentUserId;
+        public long amountMilli;
+        public String reason;
+        @NonNull @ColumnInfo(defaultValue = "'pending'") public String status = "pending";
+        public long createdAt;
+        public long updatedAt;
+        public String responseNote;
+    }
+
+    @Entity(tableName = "points_log", foreignKeys = @ForeignKey(entity = UserEntity.class,
+            parentColumns = "id", childColumns = "userId", onDelete = ForeignKey.CASCADE),
+            indices = {@Index("userId"), @Index("createdAt"), @Index(value = {"userId", "eventKey"}, unique = true)})
+    public static class PointsLogEntity {
+        @PrimaryKey(autoGenerate = true) public long id;
+        public long userId;
+        @NonNull public String eventKey;
+        public int points;
+        @NonNull public String reason;
+        public long createdAt;
     }
 
     @Entity(tableName = "price_history", foreignKeys = @ForeignKey(entity = ProductEntity.class,
@@ -178,5 +210,49 @@ public final class MasroufEntities {
         public long priceMilli;
         public long observedAt;
         public String storeName;
+    }
+
+    /** App-wide catalog; rows here are available options, never a user's selection. */
+    @Entity(tableName = "system_categories", indices = @Index(value = {"key"}, unique = true))
+    public static class SystemCategoryEntity {
+        @PrimaryKey public long id;
+        public String key;
+        public String name;
+        public String type;
+        public String colorHex;
+        public String iconName;
+        public int recommendedPercent;
+        @ColumnInfo(defaultValue = "0") public boolean protectedCategory;
+    }
+
+    /** Explicit user-to-category selection relation. CategoryEntity remains the ledger-facing row. */
+    @Entity(tableName = "user_categories", foreignKeys = {
+            @ForeignKey(entity = UserEntity.class, parentColumns = "id", childColumns = "userId", onDelete = ForeignKey.CASCADE),
+            @ForeignKey(entity = CategoryEntity.class, parentColumns = "id", childColumns = "categoryId", onDelete = ForeignKey.CASCADE),
+            @ForeignKey(entity = SystemCategoryEntity.class, parentColumns = "id", childColumns = "catalogId", onDelete = ForeignKey.SET_NULL)},
+            indices = {@Index(value = {"userId", "categoryId"}, unique = true), @Index("categoryId"), @Index("catalogId")})
+    public static class UserCategoryEntity {
+        @PrimaryKey(autoGenerate = true) public long id;
+        public long userId;
+        public long categoryId;
+        public Long catalogId;
+        @ColumnInfo(defaultValue = "1") public boolean active;
+    }
+
+    /** Single global configuration row (id=1), with Room defaults for fresh and migrated stores. */
+    @Entity(tableName = "settings")
+    public static class SettingEntity {
+        @PrimaryKey(autoGenerate = true) public long id;
+        @ColumnInfo(defaultValue = "100") public int pointsPerPeriod;
+        @ColumnInfo(defaultValue = "10") public int pointsPerCategory;
+        @ColumnInfo(defaultValue = "50") public int pointsMonthlyBonus;
+        @ColumnInfo(defaultValue = "20") public int pointsStreakBonus;
+        @ColumnInfo(defaultValue = "3") public int streakLength;
+        @ColumnInfo(defaultValue = "0") public int thresholdBeginner;
+        @ColumnInfo(defaultValue = "100") public int thresholdSaver;
+        @ColumnInfo(defaultValue = "300") public int thresholdExpert;
+        @ColumnInfo(defaultValue = "79") public int greenUntil;
+        @ColumnInfo(defaultValue = "80") public int orangeFrom;
+        @ColumnInfo(defaultValue = "100") public int redFrom;
     }
 }

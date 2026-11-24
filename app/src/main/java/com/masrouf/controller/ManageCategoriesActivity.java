@@ -10,7 +10,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.masrouf1.R;
 import com.example.masrouf1.MasroufViewModel;
 import com.example.masrouf1.MasroufViewModelFactory;
-import com.example.masrouf1.db.MasroufEntities.CategoryEntity;
+import com.example.masrouf1.AppRole;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,11 +25,11 @@ public final class ManageCategoriesActivity extends BaseFeatureActivity {
         getSupportFragmentManager().setFragmentResultListener("masrouf-categories-updated",this,(key,result)->load());
         RecyclerView list=new RecyclerView(this); list.setLayoutManager(new GridLayoutManager(this,1)); adapter=new HomeCategoryAdapter(); list.setAdapter(adapter); page.addView(list,new LinearLayout.LayoutParams(-1,0,1));
         content.addView(page,new android.widget.FrameLayout.LayoutParams(-1,-1));
-        viewModel.categories().observe(this,dataState->{if(dataState!=null&&dataState.data!=null&&adapter!=null)adapter.submit(dataState.data);});
+        viewModel.home().observe(this,dataState->{if(dataState!=null&&dataState.data!=null&&adapter!=null)adapter.submitProgress(dataState.data.categoryProgress);});
     }
     @Override protected void onResume() { super.onResume(); load(); }
     private void load() {
         if(adapter==null) return;
-        viewModel.loadCategories(SessionStore.userId(this));
+        AppRole role=SessionStore.role(this);viewModel.loadHome(SessionStore.userId(this),role==AppRole.PARENT,role==AppRole.CHILD);
     }
 }

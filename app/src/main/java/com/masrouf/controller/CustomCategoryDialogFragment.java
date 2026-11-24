@@ -30,8 +30,8 @@ public final class CustomCategoryDialogFragment extends DialogFragment {
         viewModel=new androidx.lifecycle.ViewModelProvider(this,new MasroufViewModelFactory(requireContext())).get(MasroufViewModel.class);
         LinearLayout form=new LinearLayout(requireContext());form.setOrientation(LinearLayout.VERTICAL);form.setPadding(dp(22),dp(8),dp(22),0);
         TabLayout tabs=new TabLayout(requireContext());tabs.addTab(tabs.newTab().setText(R.string.category_type_products));tabs.addTab(tabs.newTab().setText(R.string.category_type_expenses));form.addView(tabs,new LinearLayout.LayoutParams(-1,dp(48)));
-        EditText name=new EditText(requireContext());name.setHint(R.string.category_name);form.addView(name,new LinearLayout.LayoutParams(-1,dp(54)));
-        EditText allocation=new EditText(requireContext());allocation.setHint(R.string.allocation_percent);allocation.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);form.addView(allocation,new LinearLayout.LayoutParams(-1,dp(54)));
+        EditText name=new EditText(requireContext());name.setId(View.generateViewId());name.setHint(R.string.hint_category_name);addLabeledField(form,name,R.string.category_name);
+        EditText allocation=new EditText(requireContext());allocation.setId(View.generateViewId());allocation.setHint(R.string.hint_allocation_percent);allocation.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);addLabeledField(form,allocation,R.string.allocation_percent);
         TextView cap=new TextView(requireContext());cap.setPadding(0,dp(5),0,dp(4));form.addView(cap);
         TextView error=new TextView(requireContext());error.setTextColor(requireContext().getColor(R.color.coral));form.addView(error);
         AlertDialog dialog=new AlertDialog.Builder(requireContext()).setTitle(R.string.add_category).setView(form).setNegativeButton(android.R.string.cancel,null).setPositiveButton(R.string.save,null).create();
@@ -46,4 +46,5 @@ public final class CustomCategoryDialogFragment extends DialogFragment {
         viewModel.<Boolean>request(repository->repository.addCategory(category,userId),state->{if(!isAdded())return;if(Boolean.TRUE.equals(state.data)){android.widget.Toast.makeText(requireContext(),R.string.category_saved,android.widget.Toast.LENGTH_SHORT).show();getParentFragmentManager().setFragmentResult("masrouf-categories-updated",new Bundle());dialog.dismiss();}else{error.setText(R.string.allocation_overflow);dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);}});
     }
     private int dp(int value){return(int)(value*getResources().getDisplayMetrics().density+.5f);}
+    private void addLabeledField(LinearLayout parent,EditText input,int labelResource){TextView label=new TextView(requireContext());label.setText(labelResource);label.setLabelFor(input.getId());label.setTextColor(requireContext().getColor(R.color.muted_green));label.setTextSize(12);parent.addView(label,new LinearLayout.LayoutParams(-1,dp(22)));parent.addView(input,new LinearLayout.LayoutParams(-1,dp(54)));}
 }

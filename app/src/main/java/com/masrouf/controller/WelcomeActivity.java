@@ -5,7 +5,6 @@ import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.VideoView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -17,13 +16,13 @@ import com.example.masrouf1.R;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
+import java.util.Locale;
 
 public final class WelcomeActivity extends AppCompatActivity {
     private LinearLayout welcomePhase, slidePhase, accountPhase;
     private ViewPager2 pager;
     private MaterialButton next;
     private TabLayoutMediator mediator;
-    private VideoView introVideo;
 
     @Override protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -31,8 +30,6 @@ public final class WelcomeActivity extends AppCompatActivity {
         setContentView(R.layout.activity_welcome);
         welcomePhase = findViewById(R.id.phase_welcome); slidePhase = findViewById(R.id.phase_slides); accountPhase = findViewById(R.id.phase_select_type);
         pager = findViewById(R.id.welcome_pager); next = findViewById(R.id.slide_next);
-        introVideo=findViewById(R.id.welcome_video);
-        if(introVideo!=null){introVideo.setVideoURI(android.net.Uri.parse("android.resource://"+getPackageName()+"/"+R.raw.onboarding_intro));introVideo.setOnPreparedListener(player->{player.setLooping(true);player.setVolume(0f,0f);introVideo.start();});}
         buildLanguages();
         findViewById(R.id.start_welcome).setOnClickListener(v -> showPhase2());
         findViewById(R.id.open_login).setOnClickListener(v -> startActivity(new Intent(this, LoginActivity.class)));
@@ -50,7 +47,7 @@ public final class WelcomeActivity extends AppCompatActivity {
         });
     }
 
-    private void showPhase2() { if(introVideo!=null)introVideo.pause(); welcomePhase.setVisibility(View.GONE); slidePhase.setVisibility(View.VISIBLE); }
+    private void showPhase2() { welcomePhase.setVisibility(View.GONE); slidePhase.setVisibility(View.VISIBLE); }
     private void showPhase3() { slidePhase.setVisibility(View.GONE); accountPhase.setVisibility(View.VISIBLE); }
     private void openRegister(String type) {
         Intent intent = new Intent(this, RegisterActivity.class); intent.putExtra("TYPE", type); startActivity(intent);
@@ -59,7 +56,7 @@ public final class WelcomeActivity extends AppCompatActivity {
     private void buildLanguages() {
         LinearLayout row = findViewById(R.id.welcome_languages);
         for (String tag : new String[]{"fr", "ar", "en"}) {
-            TextView language = new TextView(this); language.setText(tag.toUpperCase()); language.setGravity(Gravity.CENTER);
+            TextView language = new TextView(this); language.setText(tag.toUpperCase(Locale.ROOT)); language.setGravity(Gravity.CENTER);
             language.setTextColor(getColor(R.color.emerald)); language.setTextSize(11); language.setPadding(8, 8, 8, 8);
             language.setOnClickListener(v -> LocaleController.apply(tag)); row.addView(language);
         }
@@ -73,7 +70,7 @@ public final class WelcomeActivity extends AppCompatActivity {
             LinearLayout page = new LinearLayout(WelcomeActivity.this); page.setGravity(Gravity.CENTER); page.setOrientation(LinearLayout.VERTICAL); page.setPadding(20, 24, 20, 24);
             TextView icon = new TextView(WelcomeActivity.this); icon.setGravity(Gravity.CENTER); icon.setTextColor(getColor(R.color.emerald)); icon.setTextSize(76);
             page.addView(icon, new LinearLayout.LayoutParams(-1, dp(130)));
-            TextView title = new TextView(WelcomeActivity.this); title.setGravity(Gravity.CENTER); title.setTextColor(getColor(R.color.forest)); title.setTextSize(24); title.setTypeface(null, 1);
+            TextView title = new TextView(WelcomeActivity.this); title.setGravity(Gravity.CENTER); title.setTextColor(getColor(R.color.forest)); title.setTextSize(24); title.setTypeface(null, android.graphics.Typeface.BOLD);
             page.addView(title, new LinearLayout.LayoutParams(-1, ViewGroup.LayoutParams.WRAP_CONTENT));
             TextView body = new TextView(WelcomeActivity.this); body.setGravity(Gravity.CENTER); body.setTextColor(getColor(R.color.muted_green)); body.setTextSize(15); body.setPadding(8, 12, 8, 12);
             page.addView(body, new LinearLayout.LayoutParams(-1, ViewGroup.LayoutParams.WRAP_CONTENT));
@@ -89,7 +86,5 @@ public final class WelcomeActivity extends AppCompatActivity {
         }
     }
     private int dp(int value) { return (int)(value * getResources().getDisplayMetrics().density + .5f); }
-    @Override protected void onPause(){if(introVideo!=null&&introVideo.isPlaying())introVideo.pause();super.onPause();}
-    @Override protected void onResume(){super.onResume();if(introVideo!=null&&welcomePhase!=null&&welcomePhase.getVisibility()==View.VISIBLE)introVideo.start();}
-    @Override protected void onDestroy() { if (mediator != null) mediator.detach(); if(introVideo!=null)introVideo.stopPlayback(); super.onDestroy(); }
+    @Override protected void onDestroy() { if (mediator != null) mediator.detach(); super.onDestroy(); }
 }

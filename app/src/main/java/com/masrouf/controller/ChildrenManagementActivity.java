@@ -1,6 +1,5 @@
 package com.masrouf.controller;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.text.InputType;
 import android.view.LayoutInflater;
@@ -16,6 +15,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import com.google.android.material.textfield.TextInputLayout;
 
 import com.example.masrouf1.AppRole;
 import com.example.masrouf1.BudgetAllocationReceiver;
@@ -32,6 +32,7 @@ import com.example.masrouf1.db.MasroufEntities.BudgetEntity;
 import com.example.masrouf1.db.MasroufEntities.CategoryEntity;
 import com.example.masrouf1.db.MasroufEntities.ChildProfileEntity;
 import com.example.masrouf1.db.MasroufEntities.UserEntity;
+import com.example.masrouf1.db.MoneyRequestSummary;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -46,11 +47,14 @@ public final class ChildrenManagementActivity extends AppCompatActivity {
     private ChildAdapter adapter;
     private long parentId;
     private boolean authorizedParent;
+    private LinearLayout requestRows;
+    private View requestCard;
 
     @Override protected void onCreate(Bundle state) {
         super.onCreate(state);
         if(SessionStore.role(this)!=AppRole.PARENT) { finish(); return; }
         setContentView(R.layout.activity_children_management); parentId=SessionStore.userId(this);
+        requestRows=findViewById(R.id.parent_money_requests_rows);requestCard=findViewById(R.id.parent_money_requests_card);
         viewModel=new androidx.lifecycle.ViewModelProvider(this,new MasroufViewModelFactory(this)).get(MasroufViewModel.class);
         recycler=findViewById(R.id.children_management_list); recycler.setLayoutManager(new LinearLayoutManager(this));
         adapter=new ChildAdapter(new ChildActions() {
@@ -79,12 +83,13 @@ public final class ChildrenManagementActivity extends AppCompatActivity {
         AlertDialog dialog=new AlertDialog.Builder(this).setTitle(R.string.add_child).setView(form)
                 .setNegativeButton(android.R.string.cancel,null).setPositiveButton(R.string.save,null).create();
         dialog.setOnShowListener(ignored->dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v->{
-            String childName=name.getText().toString().trim(),childEmail=email.getText().toString();
+            String childName=name.getText().toString().trim(),childEmail=InputValidation.normalizeGmail(email.getText().toString());
             String secret=password.getText().toString(),parentPhone=phone.getText().toString().trim(); long initial;
             try { String text=allocation.getText().toString().trim(); initial=text.isEmpty()?0:MoneyInput.toMilli(text); }
             catch(NumberFormatException exception) { error.setText(R.string.money_invalid); return; }
             if(childName.isEmpty()||parentPhone.isEmpty()||initial<0) { error.setText(R.string.child_creation_invalid); return; }
-            if(!InputValidation.isValidGmail(childEmail)) { error.setText(R.string.email_error); return; }
+            if(!InputValidation.isStrictGmail(childEmail)) { error.setText(R.string.email_error); return; }
+            if(!email.getText().toString().equals(childEmail))email.setText(childEmail);
             if(!InputValidation.isValidPassword(secret)) { error.setText(InputValidation.passwordError(this,secret)); return; }
             createChildAccount(dialog,error,childName,childEmail,secret,parentPhone,initial);
         }));
@@ -93,7 +98,7 @@ public final class ChildrenManagementActivity extends AppCompatActivity {
 
     private void createChildAccount(AlertDialog dialog,TextView error,String childName,String childEmail,String secret,String parentPhone,long initial) {
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
-        UserEntity child=new UserEntity();child.name=childName;child.email=childEmail;child.role=AppRole.CHILD.value();child.accountType="child";child.onboarded=true;child.balanceMilli=0;child.createdAt=System.currentTimeMillis();
+        UserEntity child=new UserEntity();child.name=childName;child.email=childEmail;child.role=AppRole.CHILD.value();child.accountType="family";child.onboarded=false;child.categoriesSelected=false;child.balanceMilli=0;child.createdAt=System.currentTimeMillis();
         ChildProfileEntity profile=new ChildProfileEntity();profile.parentUserId=parentId;profile.nickname=childName;profile.parentPhone=parentPhone;profile.allocatedTotalMilli=initial;profile.createdAt=System.currentTimeMillis();
         BudgetEntity initialBudget=null;
         if(initial>0){initialBudget=new BudgetEntity();initialBudget.name="Dotation familiale";initialBudget.monthlyLimitMilli=initial;initialBudget.status="ACTIVE";setCurrentPeriod(initialBudget);}
@@ -160,14 +165,17 @@ public final class ChildrenManagementActivity extends AppCompatActivity {
         long occurredAt=System.currentTimeMillis();
         viewModel.<Integer>request(repository->repository.giveMoney(parentId,child.childProfileId,amount,note,occurredAt),state->{
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);Integer result=state.data;
-            if(result!=null&&result==0){dialog.dismiss();Toast.makeText(this,R.string.family_gift_saved,Toast.LENGTH_SHORT).show();sendAllowanceNotice(child.childUserId,amount);loadChildren();return;}
+            if(result!=null&&result==0){dialog.dismiss();Toast.makeText(this,R.string.family_gift_saved,Toast.LENGTH_SHORT).show();loadChildren();return;}
             if(result!=null&&result==-2)error.setText(R.string.parent_allocation_cap);else if(result!=null&&result==-3)error.setText(R.string.parent_budget_required);else error.setText(R.string.transaction_saved_error);
         });
     }
 
     private void showResetPasswordDialog(ChildSpendingSummary child) {
-        EditText password=new EditText(this); password.setSingleLine(true); password.setInputType(InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_VARIATION_PASSWORD); password.setHint(R.string.child_temporary_password);
-        AlertDialog dialog=new AlertDialog.Builder(this).setTitle(R.string.reset_child_password).setMessage(R.string.password_rules).setView(password)
+        EditText password=new EditText(this); password.setId(View.generateViewId());password.setSingleLine(true); password.setInputType(InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_VARIATION_PASSWORD); password.setHint(R.string.hint_temporary_password);
+        LinearLayout passwordField=new LinearLayout(this);passwordField.setOrientation(LinearLayout.VERTICAL);
+        TextView passwordLabel=new TextView(this);passwordLabel.setText(R.string.child_temporary_password);passwordLabel.setLabelFor(password.getId());passwordField.addView(passwordLabel);
+        TextInputLayout passwordInput=new TextInputLayout(this);passwordInput.setEndIconMode(TextInputLayout.END_ICON_PASSWORD_TOGGLE);passwordInput.addView(password);passwordField.addView(passwordInput);
+        AlertDialog dialog=new AlertDialog.Builder(this).setTitle(R.string.reset_child_password).setMessage(R.string.password_rules).setView(passwordField)
                 .setNegativeButton(android.R.string.cancel,null).setPositiveButton(R.string.save,null).create();
         dialog.setOnShowListener(ignored->dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v->{
             String secret=password.getText().toString(); if(!InputValidation.isValidPassword(secret)) { password.setError(InputValidation.passwordError(this,secret)); return; }
@@ -197,13 +205,39 @@ public final class ChildrenManagementActivity extends AppCompatActivity {
     private void loadChildren() {
         if(!authorizedParent)return;
         viewModel.<List<ChildSpendingSummary>>request(repository->repository.familyChildren(parentId),state->{if(state.data!=null&&adapter!=null)adapter.submit(state.data);});
+        loadMoneyRequests();
     }
 
-    private void sendAllowanceNotice(long childUserId,long amountMilli) {
-        Intent notice=new Intent(this,BudgetAllocationReceiver.class).setAction(BudgetAllocationReceiver.ACTION_CHILD_ALLOCATION)
-                .putExtra(BudgetAllocationReceiver.EXTRA_CHILD_USER_ID,childUserId)
-                .putExtra(BudgetAllocationReceiver.EXTRA_AMOUNT_MILLI,amountMilli);
-        sendBroadcast(notice);
+    private void loadMoneyRequests(){
+        viewModel.<List<MoneyRequestSummary>>request(repository->repository.moneyRequestSummariesForParent(parentId),state->{
+            if(requestRows==null||state.loading)return;requestRows.removeAllViews();
+            List<MoneyRequestSummary> rows=state.data;if(state.failed||rows==null)rows=new ArrayList<>();
+            int pending=0;for(MoneyRequestSummary request:rows)if("pending".equalsIgnoreCase(request.status))pending++;
+            requestCard.setVisibility(pending>0?View.VISIBLE:View.GONE);
+            for(MoneyRequestSummary request:rows){if(!"pending".equalsIgnoreCase(request.status))continue;requestRows.addView(createRequestCard(request));}
+        });
+    }
+
+    private View createRequestCard(MoneyRequestSummary request){
+        LinearLayout card=new LinearLayout(this);card.setOrientation(LinearLayout.VERTICAL);card.setPadding(dp(8),dp(10),dp(8),dp(10));
+        TextView title=new TextView(this);title.setText(getString(R.string.money_request_from_child,request.childName==null?"":request.childName,CurrencyFormatter.formatMilli(request.amountMilli)));title.setTextColor(getColor(R.color.forest));title.setTypeface(null,android.graphics.Typeface.BOLD);card.addView(title);
+        if(request.reason!=null&&!request.reason.trim().isEmpty()){TextView reason=new TextView(this);reason.setText(request.reason);reason.setTextColor(getColor(R.color.ink));reason.setPadding(0,dp(4),0,dp(4));card.addView(reason);}
+        LinearLayout actions=new LinearLayout(this);actions.setOrientation(LinearLayout.HORIZONTAL);actions.setLayoutDirection(View.LAYOUT_DIRECTION_LOCALE);
+        com.google.android.material.button.MaterialButton accept=new com.google.android.material.button.MaterialButton(this);accept.setText(R.string.money_request_approve);accept.setAllCaps(false);
+        com.google.android.material.button.MaterialButton reject=new com.google.android.material.button.MaterialButton(this);reject.setText(R.string.money_request_reject);reject.setAllCaps(false);reject.setBackgroundTintList(android.content.res.ColorStateList.valueOf(getColor(R.color.coral)));
+        actions.addView(accept,new LinearLayout.LayoutParams(0,dp(44),1));LinearLayout.LayoutParams rejectParams=new LinearLayout.LayoutParams(0,dp(44),1);rejectParams.setMarginStart(dp(8));actions.addView(reject,rejectParams);card.addView(actions);
+        accept.setOnClickListener(v->resolveMoneyRequest(request,true,accept,reject));reject.setOnClickListener(v->resolveMoneyRequest(request,false,accept,reject));
+        return card;
+    }
+
+    private void resolveMoneyRequest(MoneyRequestSummary request,boolean approve,View accept,View reject){
+        accept.setEnabled(false);reject.setEnabled(false);
+        viewModel.<Integer>request(repository->repository.resolveMoneyRequest(parentId,request.id,approve,""),state->{
+            accept.setEnabled(true);reject.setEnabled(true);Integer result=state.data;
+            if(result!=null&&result==0){Toast.makeText(this,approve?R.string.money_request_accepted:R.string.money_request_rejected,Toast.LENGTH_SHORT).show();loadMoneyRequests();loadChildren();}
+            else if(result!=null&&(result==-2||result==-3))Toast.makeText(this,R.string.money_request_insufficient_funds,Toast.LENGTH_LONG).show();
+            else Toast.makeText(this,R.string.transaction_saved_error,Toast.LENGTH_SHORT).show();
+        });
     }
 
     private static void setCurrentPeriod(BudgetEntity budget) {

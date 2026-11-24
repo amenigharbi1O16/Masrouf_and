@@ -17,7 +17,7 @@ public final class GmailValidationWatcher implements TextWatcher {
         String email = s == null ? "" : s.toString();
         if (email.isEmpty()) feedback.setText("");
         else {
-            boolean valid = InputValidation.isValidGmail(email);
+            boolean valid = InputValidation.isStrictGmail(email);
             feedback.setText(valid ? R.string.gmail_valid : R.string.gmail_invalid);
             feedback.setTextColor(feedback.getResources().getColor(valid ? R.color.emerald : R.color.coral, feedback.getContext().getTheme()));
         }

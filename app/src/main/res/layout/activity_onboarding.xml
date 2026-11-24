@@ -1,20 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@color/cream">
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@drawable/bg_botanical_page">
     <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:padding="20dp">
         <TextView android:id="@+id/onboarding_step_label" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="@color/muted_green" android:textSize="12sp" />
         <FrameLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1">
             <LinearLayout android:id="@+id/onboarding_step_one" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:paddingTop="14dp">
                 <com.google.android.material.card.MaterialCardView android:layout_width="match_parent" android:layout_height="wrap_content" app:cardBackgroundColor="@color/forest" app:cardCornerRadius="24dp" app:cardElevation="0dp">
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="22dp">
-                        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/onboarding_discover" android:textColor="@color/alabaster" android:textSize="24sp" android:textStyle="bold" />
+                        <TextView style="@style/TextAppearance.Masrouf.Title" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/onboarding_discover" android:textColor="@color/alabaster" android:textSize="24sp" />
                         <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="@string/onboarding_discover_body" android:textColor="@color/mint" />
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
                 <com.google.android.material.card.MaterialCardView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="18dp" app:cardBackgroundColor="@color/alabaster" app:cardCornerRadius="16dp" app:strokeColor="@color/card_border" app:strokeWidth="1dp"><TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:minHeight="90dp" android:padding="18dp" android:text="@string/onboarding_transactions_empty" android:textColor="@color/muted_green" /></com.google.android.material.card.MaterialCardView>
             </LinearLayout>
             <LinearLayout android:id="@+id/onboarding_step_two" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:visibility="gone">
-                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingVertical="16dp" android:text="@string/onboarding_categories" android:textColor="@color/forest" android:textSize="20sp" android:textStyle="bold" />
-                <androidx.recyclerview.widget.RecyclerView android:id="@+id/onboarding_category_list" android:layout_width="match_parent" android:layout_height="match_parent" android:clipToPadding="false" android:paddingBottom="12dp" />
+                <TextView style="@style/TextAppearance.Masrouf.Title" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingTop="12dp" android:text="@string/onboarding_customize_title" android:textSize="24sp" />
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="7dp" android:layout_marginBottom="12dp" android:text="@string/onboarding_customize_description" android:textColor="@color/muted_green" android:textSize="14sp" />
+                <ProgressBar android:id="@+id/onboarding_category_loading" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="4dp" android:indeterminate="true" android:visibility="gone" />
+                <androidx.recyclerview.widget.RecyclerView android:id="@+id/onboarding_category_list" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:clipToPadding="false" android:paddingBottom="8dp" />
+                <TextView android:id="@+id/onboarding_category_count" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingVertical="10dp" android:textColor="@color/muted_green" android:textSize="14sp" />
             </LinearLayout>
             <LinearLayout android:id="@+id/onboarding_step_three" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:visibility="gone">
                 <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingVertical="16dp" android:text="@string/onboarding_summary" android:textColor="@color/forest" android:textSize="22sp" android:textStyle="bold" />
@@ -22,6 +25,9 @@
                 <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="18dp" android:text="@string/no_budget" android:textColor="@color/muted_green" />
             </LinearLayout>
         </FrameLayout>
-        <com.google.android.material.button.MaterialButton android:id="@+id/onboarding_next" android:layout_width="match_parent" android:layout_height="56dp" android:text="@string/choose_categories" app:backgroundTint="@color/forest" app:cornerRadius="16dp" />
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal">
+            <com.google.android.material.button.MaterialButton android:id="@+id/onboarding_next" style="@style/Widget.Masrouf.Button.Primary" android:layout_width="0dp" android:layout_height="56dp" android:layout_weight="1" android:text="@string/choose_categories" />
+            <ProgressBar android:id="@+id/onboarding_save_progress" android:layout_width="28dp" android:layout_height="28dp" android:layout_marginStart="12dp" android:indeterminateTint="@color/emerald" android:visibility="gone" />
+        </LinearLayout>
     </LinearLayout>
 </FrameLayout>

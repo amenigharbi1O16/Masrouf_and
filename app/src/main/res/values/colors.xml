@@ -1,14 +1,21 @@
 <resources>
     <color name="forest">#112B28</color>
     <color name="emerald">#2E7D43</color>
+    <color name="mint_accent">#85B8A5</color>
     <color name="mint">#D9EEDD</color>
+    <color name="mint_light">#D9EEDD</color>
     <color name="cream">#FBFAF6</color>
     <color name="alabaster">#FFFFFF</color>
     <color name="card_border">#E2E7DF</color>
     <color name="amber">#E9B66B</color>
     <color name="coral">#DC7770</color>
     <color name="muted_green">#61746D</color>
-    <color name="ink">#20342E</color>
+    <color name="ink">#112B28</color>
+    <color name="success_surface">#EBF5EA</color>
+    <color name="warning_surface">#FDF6E2</color>
+    <color name="warning_text">#9C6A16</color>
+    <color name="danger_surface">#FCEAE9</color>
+    <color name="danger_text">#C0392B</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 </resources>

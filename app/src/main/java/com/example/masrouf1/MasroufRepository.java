@@ -20,6 +20,14 @@ import com.example.masrouf1.db.MasroufEntities.BudgetLineEntity;
 import com.example.masrouf1.db.MasroufEntities.PurchaseEntity;
 import com.example.masrouf1.db.MasroufEntities.PurchaseItemEntity;
 import com.example.masrouf1.db.MasroufEntities.TransactionEntity;
+import com.example.masrouf1.db.MasroufEntities.SystemCategoryEntity;
+import com.example.masrouf1.db.MasroufEntities.SettingEntity;
+import com.example.masrouf1.db.MasroufEntities.GoalEntity;
+import com.example.masrouf1.db.MasroufEntities.MoneyRequestEntity;
+import com.example.masrouf1.db.MasroufEntities.PointsLogEntity;
+import com.example.masrouf1.db.CategoryPresentationRow;
+import com.example.masrouf1.db.MoneyRequestSummary;
+import com.example.masrouf1.db.ProductCatalogRow;
 import com.masrouf.controller.InputValidation;
 import com.masrouf.controller.PasswordHasher;
 import com.example.masrouf1.AppRole;
@@ -29,51 +37,112 @@ import java.util.Collections;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.TreeMap;
 
 /** Repository boundary for dashboard screens; all records remain in the local Room database. */
 public final class MasroufRepository {
     private final MasroufDao dao;
-    public MasroufRepository(Context context){dao=MasroufDatabase.getInstance(context.getApplicationContext()).masroufDao();}
+    private final Context appContext;
+    public MasroufRepository(Context context){appContext=context.getApplicationContext();dao=MasroufDatabase.getInstance(appContext).masroufDao();}
     public UserEntity user(long userId){return dao.findUser(userId);}
     public LiveData<UserEntity> observeUser(long userId){return dao.observeUser(userId);}
     public List<CategoryEntity> categories(long userId){return dao.categoriesForUser(userId);}
+    public List<SystemCategoryEntity> onboardingCategories(long userId){
+        UserEntity owner=requireUserExists(userId);
+        if("child".equalsIgnoreCase(owner.role)){
+            if(dao.childProfileForUser(userId)==null)throw new SecurityException("child account has no family link");
+            return dao.allowedSystemCategoriesForChild(userId);
+        }
+        return dao.systemCategories();
+    }
+    public List<Long> selectedCatalogIds(long userId){requireUserExists(userId);return dao.selectedCatalogIds(userId);}
+    public SettingEntity systemSettings(){return dao.systemSettings();}
     public LiveData<List<CategoryEntity>> observeCategories(long userId){return dao.observeCategoriesForUser(userId);}
     public List<CategorySpendRow> categorySpending(long userId,long from,long to){return dao.categorySpendingBetween(userId,from,to);}
+    public MonthlyComparison monthlyComparison(long userId,long currentFrom,long currentTo,long previousFrom,long previousTo){
+        requireUserExists(userId);return new MonthlyComparison(dao.totalSpendingBetween(userId,currentFrom,currentTo),dao.totalSpendingBetween(userId,previousFrom,previousTo));
+    }
     public LiveData<List<CategorySpendRow>> observeCategorySpending(long userId,long from,long to){return dao.observeCategorySpendingBetween(userId,from,to);}
     public List<ProductEntity> products(long userId){return dao.productsForUser(userId);}
+    public List<ProductCatalogRow> productCatalog(long userId){requireUserExists(userId);return dao.productCatalog(userId);}
     public LiveData<List<ProductEntity>> observeProducts(long userId){return dao.observeProductsForUser(userId);}
     public List<PriceHistoryEntity> priceHistory(long userId,long productId){return dao.priceHistory(userId,productId);}
     public LiveData<List<PriceHistoryEntity>> observePriceHistory(long userId,long productId){return dao.observePriceHistory(userId,productId);}
     public List<TransactionRow> transactions(long userId,long from,long to){return dao.transactionsBetween(userId,from,to);}
+    public TransactionEntity transactionForUser(long userId,long transactionId){requireUserExists(userId);TransactionEntity row=dao.findTransaction(transactionId);return row!=null&&row.userId==userId?row:null;}
     public LiveData<List<TransactionRow>> observeTransactions(long userId,long from,long to){return dao.observeTransactionsBetween(userId,from,to);}
     public LiveData<List<NotificationEntity>> observeNotifications(long userId){return dao.observeNotificationsForUser(userId);}
     public void markNotificationRead(long notificationId,long userId){dao.markNotificationRead(notificationId,userId);}
+    public void markAllNotificationsRead(long userId){requireUserExists(userId);dao.markAllNotificationsRead(userId);}
+    public List<MoneyRequestEntity> moneyRequestsForParent(long parentId){requireParent(parentId);return dao.moneyRequestsForParent(parentId);}
+    public List<MoneyRequestSummary> moneyRequestSummariesForParent(long parentId){requireParent(parentId);return dao.moneyRequestSummariesForParent(parentId);}
+    public List<MoneyRequestEntity> moneyRequestsForChild(long childId){UserEntity child=requireUserExists(childId);if(!AppRole.CHILD.value().equalsIgnoreCase(child.role))throw new SecurityException("child role required");return dao.moneyRequestsForChild(childId);}
+    public long requestMoney(long childId,long amountMilli,String reason){
+        UserEntity child=requireUserExists(childId);if(!AppRole.CHILD.value().equalsIgnoreCase(child.role)||amountMilli<=0)return -1L;
+        ChildProfileEntity profile=dao.childProfileForUser(childId);if(profile==null)return -1L;
+        MoneyRequestEntity request=new MoneyRequestEntity();request.childUserId=childId;request.parentUserId=profile.parentUserId;
+        request.amountMilli=amountMilli;request.reason=reason==null?"":reason.trim();request.createdAt=System.currentTimeMillis();
+        String title=appContext.getString(R.string.money_request_notification_title);
+        String message=appContext.getString(R.string.money_request_notification_body,child.name,CurrencyFormatter.formatMilli(amountMilli));
+        long requestId=dao.createMoneyRequest(request,title,message);
+        if(requestId>0)BudgetNotificationManager.moneyRequestReceived(appContext,(int)(requestId&0x7fffffff),"money-request:"+requestId,message);
+        return requestId;
+    }
+    public int resolveMoneyRequest(long parentId,long requestId,boolean approve,String responseNote){
+        requireParent(parentId);MoneyRequestEntity request=dao.findMoneyRequest(requestId);
+        if(request==null||request.parentUserId!=parentId)return -1;
+        long now=System.currentTimeMillis();String status=approve?appContext.getString(R.string.money_request_accepted):appContext.getString(R.string.money_request_rejected);
+        String message=approve?appContext.getString(R.string.money_request_accepted_body,CurrencyFormatter.formatMilli(request.amountMilli)):
+                appContext.getString(R.string.money_request_rejected_body);
+        int result=dao.resolveMoneyRequest(requestId,parentId,approve,responseNote,now,status,message);
+        if(result==0)BudgetNotificationManager.moneyRequestResolved(appContext,(int)(requestId&0x7fffffff),"money-request-response:"+requestId+":"+(approve?"accepted":"rejected"),status,message);
+        return result;
+    }
+    public GoalEntity primaryGoal(long userId){requireUserExists(userId);return dao.primaryGoal(userId);}
+    public TransactionRow latestAllowanceReceived(long userId){requireUserExists(userId);return dao.latestAllowanceReceived(userId);}
+    public long totalAllowanceReceived(long userId){requireUserExists(userId);return dao.totalAllowanceReceived(userId);}
+    public List<PointsLogEntity> pointsHistory(long userId){requireUserExists(userId);return dao.pointsHistory(userId);}
+    public List<com.example.masrouf1.db.MasroufEntities.RewardEntity> rewardsForUser(long userId){
+        UserEntity user=requireUserExists(userId);if(!AppRole.CHILD.value().equalsIgnoreCase(user.role))return Collections.emptyList();
+        ChildProfileEntity profile=dao.childProfileForUser(userId);return profile==null?Collections.emptyList():dao.rewardsForChild(profile.id);
+    }
+    public boolean redeemReward(long childUserId,long rewardId){
+        UserEntity child=requireUserExists(childUserId);if(!AppRole.CHILD.value().equalsIgnoreCase(child.role))throw new SecurityException("child role required");
+        return dao.redeemReward(childUserId,rewardId,System.currentTimeMillis(),appContext.getString(R.string.reward_redeemed_title),appContext.getString(R.string.reward_redeemed_body));
+    }
     public UserEntity authenticate(String email,String password){
-        if(!InputValidation.isValidGmail(email)||password==null||password.isEmpty())return null;
-        UserEntity candidate=dao.findUserByEmail(email);return candidate!=null&&PasswordHasher.verify(password,candidate.passwordHash)?candidate:null;
+        String normalizedEmail=InputValidation.normalizeGmail(email);
+        if(!InputValidation.isStrictGmail(normalizedEmail)||password==null||password.isEmpty())return null;
+        UserEntity candidate=dao.findUserByEmail(normalizedEmail);return candidate!=null&&PasswordHasher.verify(password,candidate.passwordHash)?candidate:null;
     }
     public OperationResult<Long> register(String name,String email,String password,String role,String accountType){
-        if(!InputValidation.isValidGmail(email))return OperationResult.failure("gmail");
+        email=InputValidation.normalizeGmail(email);
+        if(!InputValidation.isStrictGmail(email))return OperationResult.failure("gmail");
         if(!InputValidation.isValidPassword(password))return OperationResult.failure("password");
         if(name==null||name.trim().isEmpty())return OperationResult.failure("name");
         if(!AppRole.USER.value().equals(role)&&!AppRole.PARENT.value().equals(role))return OperationResult.failure("role");
         if(dao.findUserByEmail(email)!=null)return OperationResult.failure("duplicate");
         UserEntity user=new UserEntity();user.householdId=System.currentTimeMillis();user.name=name.trim();user.email=email;user.role=role;user.accountType=accountType;
-        user.passwordHash=PasswordHasher.hash(password);user.onboarded=false;user.balanceMilli=0;user.createdAt=System.currentTimeMillis();
+        user.passwordHash=PasswordHasher.hash(password);user.onboarded=false;user.categoriesSelected=false;user.balanceMilli=0;user.createdAt=System.currentTimeMillis();
         try{return OperationResult.success(dao.insertNewUser(user));}
         catch(RuntimeException duplicate){return OperationResult.failure("duplicate");}
     }
-    public boolean saveOnboarding(long userId,List<CategoryEntity> categories){return dao.finishOnboarding(userId,categories);}
+    public boolean saveOnboarding(long userId,List<SystemCategoryEntity> categories){return dao.finishOnboarding(userId,categories);}
+    public boolean deleteExpenseTransaction(long transactionId,long userId){
+        requireUserExists(userId);TransactionEntity row=dao.findTransaction(transactionId);
+        return row!=null&&row.userId==userId&&dao.deleteExpenseTransaction(transactionId);
+    }
     public OperationResult<Long> createChildAccount(UserEntity child,ChildProfileEntity profile,BudgetEntity initialBudget,List<CategoryEntity> categories,String password){
         if(profile==null)return OperationResult.failure("parent");
         UserEntity parent=dao.findUser(profile.parentUserId);
         if(parent==null||!(AppRole.PARENT.value().equalsIgnoreCase(parent.role)||"admin".equalsIgnoreCase(parent.role)))return OperationResult.failure("parent");
         if(child==null||!AppRole.CHILD.value().equals(child.role))return OperationResult.failure("role");
-        if(!InputValidation.isValidGmail(child.email))return OperationResult.failure("gmail");
+        child.email=InputValidation.normalizeGmail(child.email);
+        if(!InputValidation.isStrictGmail(child.email))return OperationResult.failure("gmail");
         if(!InputValidation.isValidPassword(password))return OperationResult.failure("password");
         if(dao.findUserByEmail(child.email)!=null)return OperationResult.failure("duplicate");
-        child.householdId=parent.householdId;child.passwordHash=PasswordHasher.hash(password);
+        child.householdId=parent.householdId;child.passwordHash=PasswordHasher.hash(password);child.onboarded=false;child.categoriesSelected=false;
         try{long id=dao.createChildAccount(child,profile,initialBudget,categories);return id>0?OperationResult.success(id):OperationResult.failure("parent");}
         catch(RuntimeException failure){String message=failure.getMessage();return OperationResult.failure(message==null?"save":message);}
     }
@@ -84,7 +153,8 @@ public final class MasroufRepository {
     }
     public String childEmail(long parentId,long profileId){requireParent(parentId);return dao.childEmailForProfile(profileId,parentId);}
     public OperationResult<Boolean> updateEmail(long userId,String email){
-        if(!InputValidation.isValidGmail(email))return OperationResult.failure("gmail");
+        email=InputValidation.normalizeGmail(email);
+        if(!InputValidation.isStrictGmail(email))return OperationResult.failure("gmail");
         UserEntity existing=dao.findUserByEmail(email);if(existing!=null&&existing.id!=userId)return OperationResult.failure("duplicate");
         try{return dao.updateEmail(userId,email)>0?OperationResult.success(true):OperationResult.failure("save");}
         catch(RuntimeException duplicate){return OperationResult.failure("duplicate");}
@@ -110,7 +180,8 @@ public final class MasroufRepository {
     public ProductDetailsData productDetails(long userId,long productId){
         requireUserExists(userId);
         ProductEntity product=dao.findProductForUser(productId,userId);
-        return new ProductDetailsData(product,product==null?Collections.emptyList():dao.priceHistory(userId,productId));
+        return product==null?new ProductDetailsData(null,Collections.emptyList(),Collections.emptyList()):
+                new ProductDetailsData(product,dao.priceHistory(userId,productId),dao.productPurchaseHistory(userId,productId));
     }
     public Long latestUnitPrice(long userId,String name,String brand,String unit){requireUserExists(userId);return dao.latestUnitPrice(userId,name,brand,unit);}
     public BudgetLineEntity envelope(long userId,long budgetId,long categoryId){
@@ -140,7 +211,13 @@ public final class MasroufRepository {
         long remaining=line==null?0:MoneyMath.subtract(line.limitMilli,spent);
         return new GiftEnvelopeData(budget,remaining,true);
     }
-    public int giveMoney(long parentId,long profileId,long amountMilli,String note,long occurredAt){requireParent(parentId);return dao.giveMoneyToChild(profileId,parentId,amountMilli,note,occurredAt);}
+    public int giveMoney(long parentId,long profileId,long amountMilli,String note,long occurredAt){
+        requireParent(parentId);String title=appContext.getString(R.string.notification_gift_received);
+        String message=appContext.getString(R.string.allowance_received,CurrencyFormatter.formatMilli(amountMilli));
+        int result=dao.giveMoneyToChild(profileId,parentId,amountMilli,note,occurredAt,title,message,true);
+        if(result==0){ChildProfileEntity profile=dao.childProfile(profileId);if(profile!=null){TransactionRow receipt=dao.latestAllowanceReceived(profile.childUserId);if(receipt!=null)BudgetNotificationManager.allowanceReceived(appContext,(int)(receipt.id&0x7fffffff),profile.childUserId,amountMilli,"allowance:"+receipt.id);}}
+        return result;
+    }
     public String parentPhone(long childUserId){
         UserEntity child=requireUserExists(childUserId);if(!"child".equalsIgnoreCase(child.role))return "";
         String phone=dao.parentPhoneForChild(childUserId);return phone==null?"":phone;
@@ -175,6 +252,30 @@ public final class MasroufRepository {
         List<ChildSpendingSummary> children=parentMode?dao.childSpendingSummaries(userId):Collections.emptyList();
         long allocated=parentMode?dao.totalChildAllocations(userId):0;
         long parentSpent=parentMode&&budget!=null?dao.personalSpendingBetween(userId,budget.periodStart,budget.periodEnd):0;
-        return new HomeDashboardData(user,budget,categories,recent,profile,children,allocated,parentSpent);
+        long periodStart=budget==null?monthStartMillis():budget.periodStart;
+        long periodEndExclusive=budget==null?nextMonthStartMillis(periodStart):safeExclusiveEnd(budget.periodEnd);
+        GoalEntity goal=childMode?dao.primaryGoal(userId):null;
+        TransactionRow latestAllowance=childMode?dao.latestAllowanceReceived(userId):null;
+        long totalAllowance=childMode?dao.totalAllowanceReceived(userId):0L;
+        int transactionCount=parentMode?dao.familyTransactionCount(userId,periodStart,periodEndExclusive):dao.transactionCount(userId,periodStart,periodEndExclusive);
+        int pendingRequests=parentMode?dao.pendingMoneyRequestCount(userId):0;
+        Map<Long,Long> envelopes=new HashMap<>();
+        if(budget!=null)for(BudgetLineEntity line:dao.budgetLines(budget.id))envelopes.put(line.categoryId,line.limitMilli);
+        Map<Long,Long> spending=new HashMap<>();
+        for(CategorySpendRow row:dao.categorySpendingBetween(userId,periodStart,periodEndExclusive))spending.put(row.categoryId,row.amountMilli);
+        long percentBase=budget==null?0:budget.monthlyLimitMilli;
+        ArrayList<HomeCategoryProgress> progress=new ArrayList<>();
+        for(CategoryPresentationRow row:dao.selectedCategoryPresentations(userId)){
+            long envelope=envelopes.containsKey(row.categoryId)?envelopes.get(row.categoryId):0;
+            long spent=spending.containsKey(row.categoryId)?spending.get(row.categoryId):0;
+            int planned=percentBase<=0?0:Math.max(0,MoneyMath.percentOf(envelope,percentBase));
+            int consumed=envelope<=0?(spent>0?100:0):Math.max(0,MoneyMath.percentOf(spent,envelope));
+            progress.add(new HomeCategoryProgress(row.categoryId,row.name,row.colorHex,row.type,row.catalogKey,row.iconName,envelope,spent,planned,consumed));
+        }
+        SettingEntity settings=dao.systemSettings();
+        return new HomeDashboardData(user,budget,categories,recent,profile,children,allocated,parentSpent,progress,settings,goal,latestAllowance,totalAllowance,transactionCount,pendingRequests);
     }
+    private static long monthStartMillis(){Calendar month=Calendar.getInstance();month.set(Calendar.DAY_OF_MONTH,1);month.set(Calendar.HOUR_OF_DAY,0);month.set(Calendar.MINUTE,0);month.set(Calendar.SECOND,0);month.set(Calendar.MILLISECOND,0);return month.getTimeInMillis();}
+    private static long nextMonthStartMillis(long start){Calendar next=Calendar.getInstance();next.setTimeInMillis(start);next.add(Calendar.MONTH,1);return next.getTimeInMillis();}
+    private static long safeExclusiveEnd(long inclusiveEnd){return inclusiveEnd==Long.MAX_VALUE?Long.MAX_VALUE:inclusiveEnd+1;}
 }

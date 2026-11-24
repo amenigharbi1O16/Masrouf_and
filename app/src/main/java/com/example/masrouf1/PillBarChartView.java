@@ -22,6 +22,7 @@ public final class PillBarChartView extends View {
     private final List<ChildSpendingSummary> children=new ArrayList<>();
     private final List<RectF> hitRows=new ArrayList<>();
     private OnChildTapListener listener;
+    private int pendingChildTap=-1;
     private int forest,ink,mint,emerald,amber,coral,muted,trackColor;
     private float density;
 
@@ -32,7 +33,7 @@ public final class PillBarChartView extends View {
         emerald=context.getColor(R.color.emerald); amber=context.getColor(R.color.amber); coral=context.getColor(R.color.coral); muted=context.getColor(R.color.muted_green); trackColor=context.getColor(R.color.card_border);
         detector=new GestureDetector(context,new GestureDetector.SimpleOnGestureListener() {
             @Override public boolean onSingleTapUp(MotionEvent event) {
-                for(int i=0;i<hitRows.size();i++) if(hitRows.get(i).contains(event.getX(),event.getY())) { if(listener!=null) listener.onChildTap(children.get(i)); return true; }
+                for(int i=0;i<hitRows.size();i++) if(hitRows.get(i).contains(event.getX(),event.getY())) { pendingChildTap=i; performClick(); return true; }
                 return false;
             }
         }); setClickable(true);
@@ -62,6 +63,13 @@ public final class PillBarChartView extends View {
             canvas.drawText(ratioLabel,left,trackTop+trackHeight+16*density,paint);
             hitRows.add(new RectF(0,startY,right,trackTop+trackHeight+21*density)); y+=68*density;
         }
+    }
+
+    @Override public boolean performClick() {
+        super.performClick();
+        if(pendingChildTap>=0&&pendingChildTap<children.size()&&listener!=null)listener.onChildTap(children.get(pendingChildTap));
+        pendingChildTap=-1;
+        return true;
     }
 
     @Override public boolean onTouchEvent(MotionEvent event) { return detector.onTouchEvent(event)||super.onTouchEvent(event); }

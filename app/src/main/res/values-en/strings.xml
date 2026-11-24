@@ -8,8 +8,8 @@
     <string name="spent_label">Spent</string>
     <string name="limit_label">Limit</string>
     <string name="recent_activity">Your spending rhythm</string>
-    <string name="category_food">Groceries</string>
-    <string name="category_home">Home</string>
+    <string name="category_food">Food &amp; groceries</string>
+    <string name="category_home">Housing &amp; utilities</string>
     <string name="category_transport">Transport</string>
     <string name="drawer_personal">Personal account</string>
     <string name="drawer_child">Child account</string>
@@ -102,7 +102,7 @@
     <string name="children_tracking">Children budget</string>
     <string name="remaining_to_live">Remaining</string>
     <string name="healthy_budget">Healthy</string>
-    <string name="budget_alert_80">80% alert</string>
+    <string name="budget_alert_80">80 percent alert</string>
     <string name="budget_over_100">Over 100%</string>
     <string name="period_november">NOVEMBER 2026 · NOV 01–30</string>
     <string name="amount_dinars">Amount (DT)</string>
@@ -129,6 +129,10 @@
     <string name="category_health">Health</string>
     <string name="category_leisure">Leisure</string>
     <string name="category_school">Education</string>
+    <string name="category_clothing">Clothing</string>
+    <string name="category_bills">Bills &amp; subscriptions</string>
+    <string name="category_savings">Savings &amp; reserve</string>
+    <string name="category_other">Other expenses</string>
     <string name="budget_start_date">Start date (dd/mm/yyyy)</string>
     <string name="budget_end_date">End date (dd/mm/yyyy)</string>
     <string name="date_order_error">End date must be on or after the start date.</string>
@@ -212,7 +216,7 @@
     <string name="voice_transaction_hint">Dictate an entry. Recognition prefers offline mode.</string><string name="voice_text_preview">Recognized text</string><string name="voice_permission_denied">Microphone access is required for dictation.</string>
     <string name="voice_listening">Listening…</string><string name="voice_processing">Parsing the phrase…</string><string name="voice_recognition_error">Recognition stopped. Try again or choose another language.</string>
     <string name="voice_preview_editable">Review and edit the label and amount before continuing.</string><string name="voice_parsed_type">Type: %1$s · %2$s</string><string name="choose_allowance_child">Choose the child</string>
-    <string name="allocation_cap_live">Already allocated: %1$d%% · New: %2$d%% · Remaining: %3$d%%</string><string name="onboarding_video">Masrouf introduction video</string>
+    <string name="allocation_cap_live">Already allocated: %1$d%% · New: %2$d%% · Remaining: %3$d%%</string>
     <string name="chart_price_stats">Min %1$s · Avg %2$s · Max %3$s</string>
     <string name="monthly_spending_analysis">Monthly spending by category</string>
     <string name="product_price_history">Recorded product price history</string>
@@ -222,4 +226,137 @@
     <string name="budget_not_configured">No actual budget has been set up.</string>
     <string name="category_budget_required">Set an active budget first so this category can receive an envelope.</string>
     <string name="save_email">Save email address</string><string name="email_saved">Email address updated.</string><string name="email_already_used">This address is already in use.</string>
+    <string name="category_other_required">Also choose “Other expenses”, the protected fallback category.</string>
+    <string name="category_selection_failed">Your selection was not saved. Please retry before leaving this step.</string>
+    <string name="categories_confirmed_summary">Your previously confirmed categories remain active.</string>
+    <string name="create_local_backup">Create local backup</string>
+    <string name="backup_created">A local backup was created in the app’s private storage.</string>
+    <string name="backup_failed">The backup could not be created. Retry when the database is idle.</string>
+    <string name="onboarding_customize_title">Let’s personalize your space</string>
+    <string name="onboarding_customize_description">Choose the categories you want to use in Masrouf. You can change them later.</string>
+    <string name="onboarding_confirm_selection">Confirm my selection</string>
+    <plurals name="category_selection_count"><item quantity="one">%1$d category selected</item><item quantity="other">%1$d categories selected</item></plurals>
+    <string name="category_selected">Selected</string><string name="category_choose">Tap to select</string>
+    <string name="category_planned_percent">Planned: %1$d%% of budget</string><string name="category_allocated">Allocated %1$s</string>
+    <string name="category_spent">Spent %1$s</string><string name="category_consumed_percent">%1$d%% used</string><string name="category_unallocated">No envelope set</string>
+    <string name="budget_status_healthy_detail">Spending is below the attention threshold.</string><string name="budget_status_warning_detail">You have used %1$d%% of this budget.</string>
+    <string name="budget_status_danger_detail">The budget is exceeded by %1$s.</string><string name="no_budget_period">No budget is set for this period.</string>
+    <string name="language_choose_drawer">Choose a language from the drawer footer.</string>
+    <string name="hint_full_name">Enter your full name</string><string name="hint_email">name@gmail.com</string>
+    <string name="hint_password">Enter your password</string><string name="hint_confirm_password">Confirm your password</string>
+    <string name="hint_child_name">Enter the name of the child</string><string name="hint_child_email">name@gmail.com</string>
+    <string name="hint_temporary_password">Enter a temporary password</string><string name="hint_phone">Enter your phone number</string>
+    <string name="hint_initial_allocation">Enter an amount (DT), optional</string><string name="hint_amount">Enter amount (DT)</string>
+    <string name="hint_note">Enter a note</string><string name="hint_product_name">Enter product name</string>
+    <string name="hint_product_brand">Enter brand</string><string name="hint_price">Enter product price (DT)</string>
+    <string name="hint_quantity">Enter quantity</string><string name="hint_store">Enter store name</string>
+    <string name="hint_category_name">Enter category name</string><string name="hint_allocation_percent">Enter allocation percentage (%)</string>
+    <string name="hint_transaction_name">Enter a description</string><string name="hint_expense_note">Enter a note</string>
+    <string name="hint_budget_start_date">Enter a date (dd/mm/yyyy)</string><string name="hint_budget_end_date">Enter a date (dd/mm/yyyy)</string>
+    <string name="hint_date">Choose a date</string><string name="hint_voice_text">Dictate or enter the transaction</string>
+    <string name="hint_allocation_amount">Enter this envelope amount</string>
+    <string name="field_category">Category</string><string name="field_unit">Unit</string>
+    <string name="select_product_category">Choose a product category</string>
+    <string name="select_expense_category">Choose an expense category</string>
+    <string name="select_unit">Choose a unit</string><string name="voice_language_label">Dictation language</string>
+    <string name="date_required">Choose a date</string>
+    <string name="budget_value_unavailable">—</string>
+    <string name="spent_value_unavailable">Spent —</string>
+    <string name="budget_total_unavailable">%1$s —</string>
+    <string name="dashboard_loading">Loading data…</string>
+    <string name="dashboard_read_error">Could not read local data. Try again.</string>
+    <string name="dashboard_transactions_empty">No transactions recorded for this period.</string>
+    <string name="dashboard_personal_summary">Spent: %1$s · Transactions: %2$d</string>
+    <string name="dashboard_family_summary">Actual spending: %1$s · Budget left: %2$s · Children: %3$d · Transactions: %4$d · Pending requests: %5$d</string>
+    <string name="child_money_summary_title">Money received and goal</string>
+    <string name="child_received_summary">Received in total: %1$s · Latest: %2$s</string>
+    <string name="no_recent_allowance">no allowance yet</string>
+    <string name="child_goal_missing">No savings goal has been recorded.</string>
+    <string name="child_goal_summary">%1$s — saved %2$s of %3$s</string>
+    <string name="savings_goal">Savings goal</string>
+    <string name="child_request_money">Request money</string>
+    <string name="money_request_page_title">Money request</string>
+    <string name="money_request_amount">Requested amount (DT)</string>
+    <string name="money_amount_hint">Enter the amount in DT</string>
+    <string name="money_request_reason">Reason</string>
+    <string name="money_request_reason_hint">Explain your request</string>
+    <string name="money_request_submit">Send request</string>
+    <string name="money_request_history">My recent requests</string>
+    <string name="money_request_notification_title">New money request</string>
+    <string name="money_request_notification_body">%1$s requested %2$s.</string>
+    <string name="money_request_accepted">Request accepted</string>
+    <string name="money_request_rejected">Request declined</string>
+    <string name="money_request_accepted_body">Your request for %1$s was accepted.</string>
+    <string name="money_request_rejected_body">Your money request was declined.</string>
+    <string name="money_request_pending">Pending</string>
+    <string name="money_request_sent">Your request was sent to your parent.</string>
+    <string name="money_request_failed">Could not save the request.</string>
+    <string name="money_request_insufficient_funds">The available budget cannot cover this transfer.</string>
+    <string name="money_request_approve">Accept</string>
+    <string name="money_request_reject">Decline</string>
+    <string name="pending_money_requests">Pending money requests</string>
+    <string name="money_request_from_child">%1$s requests %2$s</string>
+    <string name="filter_all">All</string>
+    <string name="search_products_label">Search products</string>
+    <string name="search_products_hint">Search products…</string>
+    <string name="product_image">Product image</string>
+    <string name="products_empty">No products have been recorded.</string>
+    <string name="products_filter_empty">No products match this search.</string>
+    <string name="no_brand_recorded">Brand not provided</string>
+    <string name="no_store_recorded">Store not recorded</string>
+    <string name="product_catalog_meta">%1$s · %2$s · %3$s</string>
+    <string name="product_catalog_price">%1$s · %2$s</string>
+    <string name="price_trend_new">No comparable price history</string>
+    <string name="price_trend_up">↑ Up %1$d%%</string>
+    <string name="price_trend_down">↓ Down %1$d%%</string>
+    <string name="price_trend_stable">Small change: +%1$d%%</string>
+    <string name="calendar_previous">Previous month</string>
+    <string name="calendar_next">Next month</string>
+    <string name="calendar_no_transactions">No movements recorded this month.</string>
+    <string name="calendar_transactions_hint">Tap a day to view its transactions.</string>
+    <string name="calendar_day_accessibility">Day %1$d, total %2$s</string>
+    <string name="calendar_day_total">Daily total: %1$s</string>
+    <string name="calendar_day_empty">No transactions on this day.</string>
+    <string name="points_balance_title">Points balance</string>
+    <string name="rewards_available_title">Rewards</string>
+    <string name="rewards_empty">No rewards have been added by the parent.</string>
+    <string name="points_history_title">Points history</string>
+    <string name="points_history_empty">No points activity recorded.</string>
+    <string name="points_level_beginner">Beginner</string>
+    <string name="points_level_saver">Saver</string>
+    <string name="points_level_expert">Expert</string>
+    <string name="points_next_level">%1$d more points to the next level</string>
+    <string name="points_level_max">Expert level reached</string>
+    <string name="reward_points_cost">Cost: %1$d points</string>
+    <string name="reward_redeemed">Earned</string>
+    <string name="reward_redeem">Redeem</string>
+    <string name="reward_locked">Locked</string>
+    <string name="points_history_row">%1$d points · %2$s · %3$s</string>
+    <string name="points_reason_budget">Budget period completed within limit</string>
+    <string name="points_reason_reward">Reward redeemed</string>
+    <string name="reward_redeemed_title">Reward earned</string>
+    <string name="reward_redeemed_body">A reward was redeemed with your points.</string>
+    <string name="reward_redeem_failed">Could not redeem this reward.</string>
+    <string name="notifications_mark_all_read">Mark all as read</string>
+    <string name="notifications_filter_all">All</string>
+    <string name="notifications_filter_unread">Unread</string>
+    <string name="notifications_unread_count">%1$d unread notification(s)</string>
+    <string name="notifications_no_unread">No unread notifications.</string>
+    <string name="notification_unread">Unread</string>
+    <string name="notification_private_preview">Open Masrouf to view this notification.</string>
+    <string name="product_details_unavailable">Could not load this product.</string>
+    <string name="product_price_stats">Minimum %1$s · Average %2$s · Maximum %3$s</string>
+    <string name="purchase_history_title">Purchase history</string>
+    <string name="purchase_history_empty">No purchases are recorded for this product.</string>
+    <string name="purchase_history_item">%1$s · %2$s · %3$s</string>
+    <string name="analytics_comparison_loading">Loading monthly comparison…</string>
+    <string name="analytics_comparison_unavailable">Monthly comparison is unavailable.</string>
+    <string name="analytics_comparison_no_previous">This month: %1$s · Previous month: %2$s · no comparison base</string>
+    <string name="analytics_comparison">This month: %1$s · Previous month: %2$s · change %3$d%%</string>
+    <string name="analytics_essentials">Essential spending: %1$s</string>
+    <string name="analytics_leisure">Other spending: %1$s</string>
+    <string name="voice_action_purchase">Purchase</string><string name="voice_action_expense">Expense</string><string name="voice_action_donation">Donation</string><string name="voice_action_allowance">Child allowance</string>
+    <string name="voice_product_bread">Bread</string><string name="voice_product_milk">Milk</string><string name="voice_product_meat">Meat</string><string name="voice_product_chicken">Chicken</string><string name="voice_product_oil">Oil</string><string name="voice_product_sugar">Sugar</string><string name="voice_product_coffee">Coffee</string><string name="voice_product_vegetables">Vegetables</string><string name="voice_product_fruit">Fruit</string>
+    <string name="voice_ambiguous_title">Review voice result</string><string name="voice_ambiguous_review">This phrase may have more than one meaning. Review the amount and details before continuing.</string><string name="voice_continue_editing">Continue to form</string><string name="voice_confirm_allocation">Confirm allowance</string><string name="voice_allowance_confirmation">Confirm %2$s DT for %1$s?</string>
+    <string name="transaction_details">Transaction details</string><string name="transaction_details_unavailable">This transaction is missing or does not belong to this account.</string>
 </resources>

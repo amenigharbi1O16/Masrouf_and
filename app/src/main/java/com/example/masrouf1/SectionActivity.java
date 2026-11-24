@@ -13,8 +13,9 @@ import androidx.appcompat.app.AppCompatActivity;
 public abstract class SectionActivity extends AppCompatActivity {
     @Override protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (requiresParentRole() && AppRole.from(getSharedPreferences("masrouf_preferences", MODE_PRIVATE)
-                .getString("role", AppRole.USER.value())) != AppRole.PARENT) {
+        AppRole role=AppRole.from(getSharedPreferences("masrouf_preferences", MODE_PRIVATE)
+                .getString("role", AppRole.USER.value()));
+        if ((requiresParentRole() && role != AppRole.PARENT) || (disallowParentRole() && role == AppRole.PARENT)) {
             Toast.makeText(this, R.string.nav_children, Toast.LENGTH_SHORT).show();
             finish();
             return;
@@ -27,6 +28,7 @@ public abstract class SectionActivity extends AppCompatActivity {
     }
 
     protected boolean requiresParentRole() { return false; }
+    protected boolean disallowParentRole() { return false; }
     protected abstract int titleResource();
     protected abstract View createSectionContent();
 

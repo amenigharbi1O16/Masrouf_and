@@ -18,13 +18,13 @@ public final class AdminDrawer {
         menu.removeAllViews(); TextView childrenBadge=null,notificationsBadge=null;
         for(int i=0;i<DESTINATIONS.length;i++) {
             String destination=DESTINATIONS[i];
-            LinearLayout row=new LinearLayout(activity); row.setGravity(Gravity.CENTER_VERTICAL); row.setPadding(dp(activity,13),0,dp(activity,10),0);
+            LinearLayout row=new LinearLayout(activity); row.setGravity(Gravity.CENTER_VERTICAL); row.setPaddingRelative(dp(activity,13),0,dp(activity,10),0);
             row.setMinimumHeight(dp(activity,52)); row.setBackgroundResource(R.drawable.drawer_item_background);
             ImageView icon=new ImageView(activity); icon.setImageResource(ICONS[i]); icon.setColorFilter(activity.getColor(R.color.mint));
             row.addView(icon,new LinearLayout.LayoutParams(dp(activity,23),dp(activity,23)));
             TextView label=new TextView(activity); label.setText(LABELS[i]); label.setTextColor(activity.getColor(R.color.alabaster)); label.setTextSize(14.5f);
             LinearLayout.LayoutParams labelParams=new LinearLayout.LayoutParams(0,-2,1); labelParams.setMarginStart(dp(activity,13)); row.addView(label,labelParams);
-            TextView badge=new TextView(activity); badge.setGravity(Gravity.CENTER); badge.setTextColor(activity.getColor(R.color.forest)); badge.setTextSize(10); badge.setTypeface(null,1);
+            TextView badge=new TextView(activity); badge.setGravity(Gravity.CENTER); badge.setTextColor(activity.getColor(R.color.forest)); badge.setTextSize(10); badge.setTypeface(null,android.graphics.Typeface.BOLD);
             badge.setPadding(dp(activity,7),dp(activity,3),dp(activity,7),dp(activity,3)); badge.setBackgroundResource(R.drawable.badge_background); badge.setVisibility(android.view.View.GONE);
             row.addView(badge,new LinearLayout.LayoutParams(-2,-2));
             if("children".equals(destination)) childrenBadge=badge;

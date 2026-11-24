@@ -21,7 +21,7 @@ public final class AppDrawer {
             final String destination = destinations[i];
             TextView item = new TextView(activity);
             item.setText(labels[i]); item.setTextColor(activity.getColor(R.color.ink)); item.setTextSize(15f);
-            item.setGravity(Gravity.CENTER_VERTICAL); item.setPadding(16, 14, 12, 14);
+            item.setGravity(Gravity.CENTER_VERTICAL); item.setPaddingRelative(16, 14, 12, 14);
             item.setMinHeight((int) (52 * activity.getResources().getDisplayMetrics().density));
             item.setBackgroundResource(R.drawable.drawer_item_background);
             item.setOnClickListener(v -> activity.onDrawerDestination(destination));

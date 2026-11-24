@@ -6,6 +6,7 @@ import com.example.masrouf1.AppRole;
 import com.example.masrouf1.BudgetNotificationManager;
 import com.example.masrouf1.db.MasroufDatabase;
 import com.example.masrouf1.db.MasroufEntities.CategoryEntity;
+import com.example.masrouf1.db.MasroufEntities.SystemCategoryEntity;
 import com.example.masrouf1.db.MasroufEntities.BudgetEntity;
 import com.example.masrouf1.db.MasroufEntities.ChildProfileEntity;
 import com.example.masrouf1.db.MasroufEntities.UserEntity;
@@ -28,7 +29,8 @@ public final class UserDao {
         IO.execute(() -> {
             UserEntity user = null;
             try {
-                UserEntity candidate = InputValidation.isValidGmail(email) ? database.masroufDao().findUserByEmail(email) : null;
+                String normalizedEmail=InputValidation.normalizeGmail(email);
+                UserEntity candidate = InputValidation.isStrictGmail(normalizedEmail) ? database.masroufDao().findUserByEmail(normalizedEmail) : null;
                 if (candidate != null && PasswordHasher.verify(password, candidate.passwordHash)) user = candidate;
             } catch (RuntimeException ignored) { }
             UserEntity result = user;
@@ -45,17 +47,18 @@ public final class UserDao {
         IO.execute(() -> {
             Long id = null; String error = null;
             try {
-                if (!InputValidation.isValidGmail(email)) throw new IllegalArgumentException("gmail");
+                String normalizedEmail=InputValidation.normalizeGmail(email);
+                if (!InputValidation.isStrictGmail(normalizedEmail)) throw new IllegalArgumentException("gmail");
                 if (!InputValidation.isValidPassword(password)) throw new IllegalArgumentException("password");
                 if (name==null||name.trim().isEmpty()) throw new IllegalArgumentException("name");
                 if (!AppRole.USER.value().equals(role)&&!AppRole.PARENT.value().equals(role)) throw new IllegalArgumentException("role");
-                if (database.masroufDao().findUserByEmail(email) != null) throw new IllegalArgumentException("duplicate");
+                if (database.masroufDao().findUserByEmail(normalizedEmail) != null) throw new IllegalArgumentException("duplicate");
                 UserEntity user = new UserEntity(); user.householdId = System.currentTimeMillis();
-                user.name = name.trim(); user.email = email; user.role = role;
+                user.name = name.trim(); user.email = normalizedEmail; user.role = role;
                 user.accountType=type;
-                user.passwordHash = PasswordHasher.hash(password); user.onboarded = false;
+                user.passwordHash = PasswordHasher.hash(password); user.onboarded = false; user.categoriesSelected = false;
                 user.balanceMilli = 0; user.createdAt = System.currentTimeMillis();
-                id = database.masroufDao().insert(user);
+                id = database.masroufDao().insertNewUser(user);
             } catch (Exception exception) { error = exception.getMessage() == null ? "save" : exception.getMessage(); }
             Long result = id; String failure = error;
             new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> callback.complete(result, failure));
@@ -72,7 +75,7 @@ public final class UserDao {
         });
     }
 
-    public void saveOnboarding(long userId, List<CategoryEntity> categories, Result<Boolean> callback) {
+    public void saveOnboarding(long userId, List<SystemCategoryEntity> categories, Result<Boolean> callback) {
         IO.execute(() -> {
             boolean success = false; String error = null;
             try {
@@ -90,7 +93,8 @@ public final class UserDao {
                 UserEntity parent=profile==null?null:database.masroufDao().findUser(profile.parentUserId);
                 if(parent==null||!AppRole.PARENT.value().equalsIgnoreCase(parent.role)&&!"admin".equalsIgnoreCase(parent.role)) throw new SecurityException("parent");
                 if(child==null||!AppRole.CHILD.value().equals(child.role)) throw new SecurityException("role");
-                if(!InputValidation.isValidGmail(child.email)) throw new IllegalArgumentException("gmail");
+                child.email=InputValidation.normalizeGmail(child.email);
+                if(!InputValidation.isStrictGmail(child.email)) throw new IllegalArgumentException("gmail");
                 if(!InputValidation.isValidPassword(plainPassword)) throw new IllegalArgumentException("password");
                 if(database.masroufDao().findUserByEmail(child.email)!=null) throw new IllegalArgumentException("duplicate");
                 child.passwordHash=PasswordHasher.hash(plainPassword);
@@ -107,7 +111,7 @@ public final class UserDao {
             int result=-3; String error=null;
             try {
                 result=database.masroufDao().giveMoneyToChild(profileId,parentId,amountMilli,note,occurredAt);
-                if(result==0) { com.example.masrouf1.db.MasroufEntities.BudgetEntity budget=database.masroufDao().activeBudgetForUser(parentId); if(budget!=null) BudgetNotificationManager.reportBudgetProgress(appContext,budget.spentMilli,budget.monthlyLimitMilli,(int)(budget.id&0x7fffffff)); }
+                if(result==0) { com.example.masrouf1.db.MasroufEntities.BudgetEntity budget=database.masroufDao().activeBudgetForUser(parentId); if(budget!=null) BudgetNotificationManager.reportBudgetProgress(appContext,budget.spentMilli,budget.monthlyLimitMilli,parentId,budget.id,budget.periodStart); }
             }
             catch(Exception exception) { error=exception.getMessage()==null?"save":exception.getMessage(); }
             int value=result; String failure=error;
@@ -130,6 +134,6 @@ public final class UserDao {
     }
 
     public void updateEmail(long userId,String email,Result<Boolean> callback) {
-        IO.execute(()->{boolean saved=false;String error=null;try{if(!InputValidation.isValidGmail(email))throw new IllegalArgumentException("gmail");UserEntity existing=database.masroufDao().findUserByEmail(email);if(existing!=null&&existing.id!=userId)throw new IllegalArgumentException("duplicate");saved=database.masroufDao().updateEmail(userId,email)>0;}catch(Exception exception){error=exception.getMessage()==null?"save":exception.getMessage();}boolean result=saved;String failure=error;new android.os.Handler(android.os.Looper.getMainLooper()).post(()->callback.complete(result,failure));});
+        IO.execute(()->{boolean saved=false;String error=null;try{String normalizedEmail=InputValidation.normalizeGmail(email);if(!InputValidation.isStrictGmail(normalizedEmail))throw new IllegalArgumentException("gmail");UserEntity existing=database.masroufDao().findUserByEmail(normalizedEmail);if(existing!=null&&existing.id!=userId)throw new IllegalArgumentException("duplicate");saved=database.masroufDao().updateEmail(userId,normalizedEmail)>0;}catch(Exception exception){error=exception.getMessage()==null?"save":exception.getMessage();}boolean result=saved;String failure=error;new android.os.Handler(android.os.Looper.getMainLooper()).post(()->callback.complete(result,failure));});
     }
 }

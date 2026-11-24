@@ -7,7 +7,6 @@ import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 
 import java.util.concurrent.TimeUnit;
-import com.masrouf.service.BudgetEvaluationService;
 import com.masrouf.controller.DevelopmentSeedManager;
 
 public final class MasroufApplication extends Application {
@@ -17,6 +16,5 @@ public final class MasroufApplication extends Application {
         BudgetNotificationManager.createChannel(this);
         PeriodicWorkRequest rollover = new PeriodicWorkRequest.Builder(BudgetRolloverWorker.class, 1, TimeUnit.DAYS).build();
         WorkManager.getInstance(this).enqueueUniquePeriodicWork("masrouf-budget-rollover", ExistingPeriodicWorkPolicy.KEEP, rollover);
-        BudgetEvaluationService.scheduleNextMonth(this);
     }
 }

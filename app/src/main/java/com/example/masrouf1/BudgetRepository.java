@@ -29,7 +29,7 @@ public final class BudgetRepository {
                 database.masroufDao().recordExpense(transaction);
                 BudgetEntity budget = database.masroufDao().findBudget(transaction.budgetId);
                 if (budget != null) BudgetNotificationManager.reportBudgetProgress(app,
-                        budget.spentMilli, budget.monthlyLimitMilli, (int) (budget.id & 0x7fffffff));
+                        budget.spentMilli, budget.monthlyLimitMilli,transaction.userId,budget.id,budget.periodStart);
                 saved=true;
             } catch(RuntimeException ignored) { }
             boolean result=saved;

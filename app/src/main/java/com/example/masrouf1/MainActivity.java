@@ -7,12 +7,15 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.LayoutInflater;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.activity.OnBackPressedCallback;
 import androidx.core.os.LocaleListCompat;
 import androidx.core.content.ContextCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
@@ -22,24 +25,58 @@ import androidx.fragment.app.FragmentTransaction;
 
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.masrouf.controller.SessionStore;
 import com.masrouf.controller.VoiceTransactionDialogFragment;
+import com.example.masrouf1.db.MasroufDatabase;
+import com.example.masrouf1.db.MasroufEntities.UserEntity;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /** Personal-account dashboard host. */
 public final class MainActivity extends AppCompatActivity {
     public static final String EXTRA_CENTRAL_TAB="com.example.masrouf1.CENTRAL_TAB";
+    private static final ExecutorService ACCOUNT_GATE=Executors.newSingleThreadExecutor();
     private DrawerLayout drawer;
     private View drawerPanel;
-    private BottomNavigationView bottomNavigation;
     private int activeTab=R.id.tab_home;
     @Override protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (SessionStore.userId(this) == 0L) {
-            startActivity(new Intent(this, com.masrouf.controller.WelcomeActivity.class)); finish(); return;
-        }
-        setContentView(R.layout.activity_dashboard_host);
-        bottomNavigation=findViewById(R.id.dashboard_bottom_navigation);
+        getOnBackPressedDispatcher().addCallback(this,new OnBackPressedCallback(true) {
+            @Override public void handleOnBackPressed() {
+                if(drawer!=null&&drawerPanel!=null&&drawer.isDrawerOpen(drawerPanel)){drawer.closeDrawer(drawerPanel);return;}
+                if(activeTab!=R.id.tab_home){openCentralTab("home");return;}
+                setEnabled(false);getOnBackPressedDispatcher().onBackPressed();
+            }
+        });
+        long userId=SessionStore.userId(this);
+        if(userId==0L){openWelcome();return;}
+        FrameLayout shell=new FrameLayout(this);
+        View dashboard=LayoutInflater.from(this).inflate(R.layout.activity_dashboard_host,shell,false);
+        shell.addView(dashboard,new FrameLayout.LayoutParams(-1,-1));
+        TextView loading=new TextView(this);loading.setText(R.string.app_name);loading.setTextColor(getColor(R.color.forest));
+        loading.setGravity(android.view.Gravity.CENTER);loading.setBackgroundColor(getColor(R.color.cream));
+        shell.addView(loading,new FrameLayout.LayoutParams(-1,-1));setContentView(shell);
+        ACCOUNT_GATE.execute(()->{
+            UserEntity account;
+            try{account=MasroufDatabase.getInstance(getApplicationContext()).masroufDao().findUser(userId);}
+            catch(RuntimeException failure){account=null;}
+            UserEntity verified=account;
+            runOnUiThread(()->{
+                if(isFinishing()||isDestroyed())return;
+                if(verified==null){SessionStore.clear(this);openWelcome();return;}
+                SessionStore.save(this,verified);
+                if(!verified.categoriesSelected||!verified.onboarded){
+                    startActivity(new Intent(this,com.masrouf.controller.OnboardingActivity.class).putExtra("USER_ID",verified.id));finish();return;
+                }
+                loading.setVisibility(View.GONE);initializeDashboard(savedInstanceState);
+            });
+        });
+    }
+
+    private void openWelcome(){startActivity(new Intent(this,com.masrouf.controller.WelcomeActivity.class));finish();}
+
+    private void initializeDashboard(Bundle savedInstanceState) {
         drawer=findViewById(R.id.user_drawer);
         AppRole role=SessionStore.role(this);
         View personalPanel=findViewById(R.id.personal_drawer_panel),adminPanel=findViewById(R.id.admin_drawer_panel);
@@ -62,24 +99,27 @@ public final class MainActivity extends AppCompatActivity {
             Intent welcome=new Intent(this,com.masrouf.controller.WelcomeActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(welcome);
         });
-        if(savedInstanceState==null){activeTab=tabIdForName(getIntent().getStringExtra(EXTRA_CENTRAL_TAB));showCentralTab(activeTab);bottomNavigation.setSelectedItemId(activeTab);}
+        if(savedInstanceState==null){activeTab=tabIdForName(getIntent().getStringExtra(EXTRA_CENTRAL_TAB));showCentralTab(activeTab);}
         else {
             FragmentManager manager=getSupportFragmentManager();
             for(Fragment fragment:manager.getFragments())if(fragment.isVisible()){activeTab=tabForFragment(fragment);break;}
-            bottomNavigation.setSelectedItemId(activeTab);
         }
-        bottomNavigation.setOnItemSelectedListener(item->{showCentralTab(item.getItemId());return true;});
         FloatingActionButton voice = findViewById(R.id.voice_transaction_button);
         voice.setOnClickListener(v -> new VoiceTransactionDialogFragment().show(getSupportFragmentManager(), "voice-transaction"));
-        if(Build.VERSION.SDK_INT>=33 && ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)!=PackageManager.PERMISSION_GRANTED)
-            requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS},210);
+        if(Build.VERSION.SDK_INT>=33 && ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)!=PackageManager.PERMISSION_GRANTED){
+            android.content.SharedPreferences permissionState=getSharedPreferences("masrouf_notification_permission",MODE_PRIVATE);
+            if(!permissionState.getBoolean("requested",false)){
+                permissionState.edit().putBoolean("requested",true).apply();
+                requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS},210);
+            }
+        }
     }
 
     public void openMenu() { drawer.openDrawer(drawerPanel); }
     public void openCentralTab(String destination) {
         int tab=tabIdForName(destination);
         if(drawer!=null&&drawer.isDrawerOpen(drawerPanel))drawer.closeDrawer(drawerPanel);
-        if(bottomNavigation!=null)bottomNavigation.setSelectedItemId(tab);else showCentralTab(tab);
+        showCentralTab(tab);
     }
 
     private int tabIdForName(String name){switch(name==null?"home":name){case "products":return R.id.tab_products;case "calendar":return R.id.tab_calendar;case "analytics":return R.id.tab_analytics;case "settings":return R.id.tab_settings;default:return R.id.tab_home;}}
@@ -109,11 +149,6 @@ public final class MainActivity extends AppCompatActivity {
         return R.id.tab_settings;
     }
 
-    @Override public void onBackPressed(){
-        if(drawer!=null && drawerPanel!=null && drawer.isDrawerOpen(drawerPanel)){drawer.closeDrawer(drawerPanel);return;}
-        if(activeTab!=R.id.tab_home){openCentralTab("home");return;}
-        super.onBackPressed();
-    }
     private void buildLanguageButtons(int rowId) {
         LinearLayout row=findViewById(rowId);
         for(String tag:new String[]{"fr","ar","en"}) {

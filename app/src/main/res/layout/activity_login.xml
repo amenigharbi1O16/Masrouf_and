@@ -1,11 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@color/cream" android:fillViewport="true">
-    <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center_vertical" android:orientation="vertical" android:padding="24dp">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="vertical" android:padding="24dp">
         <ImageView android:layout_width="56dp" android:layout_height="56dp" android:contentDescription="@string/app_name" android:src="@drawable/ic_masrouf_logo" />
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="20dp" android:text="@string/login_title" android:textColor="@color/forest" android:textSize="28sp" android:textStyle="bold" />
-        <EditText android:id="@+id/login_email" android:layout_width="match_parent" android:layout_height="58dp" android:layout_marginTop="18dp" android:hint="@string/email_address" android:inputType="textEmailAddress" android:singleLine="true" />
+        <TextView style="@style/FormFieldLabel" android:labelFor="@id/login_email" android:text="@string/email_address" />
+        <EditText android:id="@+id/login_email" android:layout_width="match_parent" android:layout_height="58dp" android:hint="@string/hint_email" android:inputType="textEmailAddress" android:singleLine="true" />
         <TextView android:id="@+id/login_email_feedback" android:layout_width="match_parent" android:layout_height="24dp" android:textColor="@color/coral" android:textSize="12sp" />
-        <EditText android:id="@+id/login_password" android:layout_width="match_parent" android:layout_height="58dp" android:hint="@string/password" android:inputType="textPassword" android:singleLine="true" />
+        <TextView style="@style/FormFieldLabel" android:labelFor="@id/login_password" android:text="@string/password" />
+        <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" app:endIconMode="password_toggle">
+            <EditText android:id="@+id/login_password" android:layout_width="match_parent" android:layout_height="58dp" android:hint="@string/hint_password" android:inputType="textPassword" android:singleLine="true" />
+        </com.google.android.material.textfield.TextInputLayout>
         <com.google.android.material.card.MaterialCardView android:id="@+id/login_error_card" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:visibility="gone" app:cardBackgroundColor="@color/coral" app:cardCornerRadius="16dp" app:cardElevation="0dp">
             <TextView android:id="@+id/login_error_text" android:layout_width="match_parent" android:layout_height="wrap_content" android:padding="14dp" android:text="@string/auth_error" android:textColor="@color/alabaster" />
         </com.google.android.material.card.MaterialCardView>

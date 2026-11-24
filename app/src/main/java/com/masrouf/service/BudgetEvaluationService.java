@@ -59,11 +59,12 @@ public final class BudgetEvaluationService extends Service {
                 Calendar end=(Calendar)start.clone(); end.add(Calendar.MONTH,1);
                 while(end.getTimeInMillis()<=now) { start=end; end=(Calendar)start.clone(); end.add(Calendar.MONTH,1); }
                 boolean respect=budget.spentMilli<=budget.monthlyLimitMilli;
-                boolean updated=database.masroufDao().rolloverBudget(budget.id,start.getTimeInMillis(),end.getTimeInMillis(),now-120L*24L*60L*60L*1000L);
+                boolean updated=database.masroufDao().rolloverBudget(budget.id,start.getTimeInMillis(),end.getTimeInMillis(),now-120L*24L*60L*60L*1000L,now,
+                        getString(R.string.points_awarded_title),getString(R.string.points_awarded_message));
                 if(updated) {
                     int notificationId=(int)(budget.id&0x7fffffff);
-                    BudgetNotificationManager.budgetClosed(getApplicationContext(),notificationId);
-                    if(respect) BudgetNotificationManager.pointsAwarded(getApplicationContext(),notificationId+1);
+                    BudgetNotificationManager.budgetClosed(getApplicationContext(),notificationId,budget.userId,budget.id,budget.periodStart);
+                    if(respect) BudgetNotificationManager.pointsAwarded(getApplicationContext(),notificationId+1,"budget-close:"+budget.id+":"+budget.periodStart);
                 }
             }
         } catch(RuntimeException ignored) { }
