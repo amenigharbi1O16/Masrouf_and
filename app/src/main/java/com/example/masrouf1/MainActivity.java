@@ -43,13 +43,15 @@ public final class MainActivity extends AppCompatActivity {
         drawer=findViewById(R.id.user_drawer);
         AppRole role=SessionStore.role(this);
         View personalPanel=findViewById(R.id.personal_drawer_panel),adminPanel=findViewById(R.id.admin_drawer_panel);
+        View drawerContainer=findViewById(R.id.drawer_container);
+        drawerPanel = drawerContainer != null ? drawerContainer : (role == AppRole.PARENT ? adminPanel : personalPanel);
         if(role==AppRole.PARENT) {
-            personalPanel.setVisibility(View.GONE); adminPanel.setVisibility(View.VISIBLE); drawerPanel=adminPanel;
+            personalPanel.setVisibility(View.GONE); adminPanel.setVisibility(View.VISIBLE);
             int width=Math.min((int)(getResources().getDisplayMetrics().widthPixels*.88f),(int)(360*getResources().getDisplayMetrics().density+.5f));
-            ViewGroup.LayoutParams params=adminPanel.getLayoutParams(); params.width=width; adminPanel.setLayoutParams(params);
+            ViewGroup.LayoutParams params=adminPanel.getLayoutParams(); if(params!=null){params.width=width; adminPanel.setLayoutParams(params);}
             AdminDrawer.populate(this,findViewById(R.id.admin_drawer_menu_items));
         } else {
-            adminPanel.setVisibility(View.GONE); personalPanel.setVisibility(View.VISIBLE); drawerPanel=personalPanel;
+            adminPanel.setVisibility(View.GONE); personalPanel.setVisibility(View.VISIBLE);
             AppDrawer.populate(this,findViewById(R.id.drawer_menu_items));
         }
         TextView badge=findViewById(R.id.personal_drawer_badge);
@@ -108,6 +110,7 @@ public final class MainActivity extends AppCompatActivity {
     }
 
     @Override public void onBackPressed(){
+        if(drawer!=null && drawerPanel!=null && drawer.isDrawerOpen(drawerPanel)){drawer.closeDrawer(drawerPanel);return;}
         if(activeTab!=R.id.tab_home){openCentralTab("home");return;}
         super.onBackPressed();
     }
