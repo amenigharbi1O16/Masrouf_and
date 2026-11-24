@@ -12,11 +12,7 @@
         <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" app:endIconMode="password_toggle">
             <EditText android:id="@+id/register_password" android:layout_width="match_parent" android:layout_height="58dp" android:hint="@string/hint_password" android:inputType="textPassword" android:singleLine="true" />
         </com.google.android.material.textfield.TextInputLayout>
-        <TextView android:id="@+id/rule_length" android:layout_width="match_parent" android:layout_height="28dp" android:text="@string/password_length" android:textColor="@color/muted_green" />
-        <TextView android:id="@+id/rule_uppercase" android:layout_width="match_parent" android:layout_height="28dp" android:text="@string/password_uppercase" android:textColor="@color/muted_green" />
-        <TextView android:id="@+id/rule_lowercase" android:layout_width="match_parent" android:layout_height="28dp" android:text="@string/password_lowercase" android:textColor="@color/muted_green" />
-        <TextView android:id="@+id/rule_number" android:layout_width="match_parent" android:layout_height="28dp" android:text="@string/password_number" android:textColor="@color/muted_green" />
-        <TextView android:id="@+id/rule_symbol" android:layout_width="match_parent" android:layout_height="28dp" android:text="@string/password_symbol" android:textColor="@color/muted_green" />
+
         <TextView style="@style/FormFieldLabel" android:labelFor="@id/register_confirm" android:text="@string/confirm_password" />
         <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" app:endIconMode="password_toggle">
             <EditText android:id="@+id/register_confirm" android:layout_width="match_parent" android:layout_height="58dp" android:hint="@string/hint_confirm_password" android:inputType="textPassword" android:singleLine="true" />
