@@ -5,11 +5,17 @@ public final class HomeCategoryProgress {
     public final long categoryId;
     public final String name, colorHex, type, catalogKey, iconName;
     public final long allocatedMilli, spentMilli;
-    public final int plannedPercent, consumedPercent;
+    public final int plannedPercent, plannedPercentBps, consumedPercent;
 
     public HomeCategoryProgress(long categoryId, String name, String colorHex, String type,
                                 String catalogKey, String iconName, long allocatedMilli,
                                 long spentMilli, int plannedPercent, int consumedPercent) {
+        this(categoryId, name, colorHex, type, catalogKey, iconName, allocatedMilli, spentMilli, plannedPercent, plannedPercent * 100, consumedPercent);
+    }
+
+    public HomeCategoryProgress(long categoryId, String name, String colorHex, String type,
+                                String catalogKey, String iconName, long allocatedMilli,
+                                long spentMilli, int plannedPercent, int plannedPercentBps, int consumedPercent) {
         this.categoryId = categoryId;
         this.name = name;
         this.colorHex = colorHex;
@@ -19,6 +25,7 @@ public final class HomeCategoryProgress {
         this.allocatedMilli = allocatedMilli;
         this.spentMilli = spentMilli;
         this.plannedPercent = plannedPercent;
+        this.plannedPercentBps = plannedPercentBps;
         this.consumedPercent = consumedPercent;
     }
 }

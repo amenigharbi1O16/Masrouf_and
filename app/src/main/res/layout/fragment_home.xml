@@ -57,9 +57,17 @@
         <!-- 7. User categories -->
         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="22dp" android:gravity="center_vertical" android:orientation="horizontal">
             <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/your_categories" android:textColor="@color/forest" android:textSize="18sp" android:textStyle="bold" />
+            <TextView android:id="@+id/home_allocate_repartition" android:layout_width="wrap_content" android:layout_height="40dp" android:layout_marginEnd="10dp" android:background="@drawable/bg_btn_secondary_mint" android:gravity="center" android:paddingHorizontal="12dp" android:text="@string/adjust_repartition" android:textColor="@color/forest" android:textSize="12sp" android:textStyle="bold" android:visibility="gone" />
             <TextView android:id="@+id/home_manage_categories" android:layout_width="wrap_content" android:layout_height="44dp" android:gravity="center" android:text="@string/category_manage" android:textColor="@color/emerald" android:textStyle="bold" />
         </LinearLayout>
+        <com.example.masrouf1.ui.AlertBannerView android:id="@+id/home_category_feedback" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:visibility="gone" />
         <androidx.recyclerview.widget.RecyclerView android:id="@+id/home_categories" android:layout_width="match_parent" android:layout_height="wrap_content" android:clipToPadding="false" android:nestedScrollingEnabled="false" android:paddingTop="4dp" />
+        <com.google.android.material.card.MaterialCardView android:id="@+id/home_categories_empty_card" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:visibility="gone" app:cardBackgroundColor="@color/alabaster" app:cardCornerRadius="16dp" app:strokeColor="@color/card_border" app:strokeWidth="1dp">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:orientation="vertical" android:padding="16dp">
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:text="@string/no_followed_categories_title" android:textColor="@color/forest" android:textSize="14sp" android:textStyle="bold" />
+                <com.google.android.material.button.MaterialButton android:id="@+id/home_choose_categories_btn" android:layout_width="match_parent" android:layout_height="46dp" android:layout_marginTop="10dp" android:text="@string/choose_my_categories_btn" android:textColor="@color/alabaster" android:textStyle="bold" app:backgroundTint="@color/emerald" app:cornerRadius="14dp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
         <!-- 8. Family children tracking stays hidden for a personal account -->
         <com.google.android.material.card.MaterialCardView android:id="@+id/home_children_tracking" android:layout_width="match_parent" android:layout_height="wrap_content" android:visibility="gone" app:cardBackgroundColor="@color/alabaster" app:cardCornerRadius="16dp" app:strokeColor="@color/card_border" app:strokeWidth="1dp">

@@ -5,6 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/cream"
+    android:fitsSystemWindows="true"
     android:layoutDirection="locale">
 
     <LinearLayout
@@ -22,13 +23,14 @@
 
             <ImageView
                 android:id="@+id/onboarding_back"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/back"
-                android:padding="6dp"
+                android:padding="10dp"
                 android:src="@drawable/ic_back"
-                android:visibility="invisible" />
+                android:visibility="invisible"
+                app:tint="@color/forest" />
 
             <TextView
                 android:id="@+id/onboarding_title_bar"
@@ -90,81 +92,96 @@
                 android:id="@+id/onboarding_step_one"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:orientation="vertical"
-                android:paddingHorizontal="20dp"
-                android:paddingTop="8dp">
+                android:orientation="vertical">
 
-                <!-- Large title -->
-                <TextView
+                <ScrollView
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
-                    android:text="@string/onboarding_step1_heading"
-                    android:textColor="@color/forest"
-                    android:textSize="26sp"
-                    android:textStyle="bold" />
-
-                <!-- Dark hero card with leaf icon + headline -->
-                <com.google.android.material.card.MaterialCardView
-                    android:layout_width="match_parent"
-                    android:layout_height="160dp"
-                    android:layout_marginBottom="16dp"
-                    app:cardBackgroundColor="@color/forest"
-                    app:cardCornerRadius="20dp"
-                    app:cardElevation="0dp">
+                    android:layout_height="match_parent"
+                    android:fillViewport="true"
+                    android:scrollbars="none">
 
                     <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:gravity="bottom|start"
+                        android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:padding="22dp">
+                        android:paddingHorizontal="20dp"
+                        android:paddingTop="8dp"
+                        android:paddingBottom="12dp">
 
-                        <ImageView
-                            android:layout_width="30dp"
-                            android:layout_height="30dp"
-                            android:layout_marginBottom="12dp"
-                            android:contentDescription=""
-                            android:src="@drawable/ic_notification_leaf"
-                            android:tint="@color/mint" />
+                        <!-- Large title -->
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="14dp"
+                            android:text="@string/onboarding_step1_heading"
+                            android:textColor="@color/forest"
+                            android:textSize="26sp"
+                            android:textStyle="bold" />
+
+                        <!-- Dark hero card with leaf icon + headline -->
+                        <com.google.android.material.card.MaterialCardView
+                            android:layout_width="match_parent"
+                            android:layout_height="152dp"
+                            android:layout_marginBottom="14dp"
+                            app:cardBackgroundColor="@color/forest"
+                            app:cardCornerRadius="20dp"
+                            app:cardElevation="0dp">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:gravity="bottom|start"
+                                android:orientation="vertical"
+                                android:padding="20dp">
+
+                                <ImageView
+                                    android:layout_width="30dp"
+                                    android:layout_height="30dp"
+                                    android:layout_marginBottom="10dp"
+                                    android:contentDescription=""
+                                    android:src="@drawable/ic_notification_leaf"
+                                    android:tint="@color/mint" />
+
+                                <TextView
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/onboarding_hero_title"
+                                    android:textColor="@color/alabaster"
+                                    android:textSize="21sp"
+                                    android:textStyle="bold" />
+
+                            </LinearLayout>
+
+                        </com.google.android.material.card.MaterialCardView>
+
+                        <!-- Section title -->
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="6dp"
+                            android:text="@string/onboarding_welcome_in_masrouf"
+                            android:textColor="@color/forest"
+                            android:textSize="17sp"
+                            android:textStyle="bold" />
 
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="@string/onboarding_hero_title"
-                            android:textColor="@color/alabaster"
-                            android:textSize="22sp"
-                            android:textStyle="bold" />
+                            android:layout_marginBottom="12dp"
+                            android:text="@string/onboarding_welcome_desc"
+                            android:textColor="@color/muted_green"
+                            android:textSize="13sp" />
+
+                        <!-- Sample transaction list -->
+                        <LinearLayout
+                            android:id="@+id/onboarding_sample_transactions"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical" />
 
                     </LinearLayout>
 
-                </com.google.android.material.card.MaterialCardView>
-
-                <!-- Section title -->
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp"
-                    android:text="@string/onboarding_welcome_in_masrouf"
-                    android:textColor="@color/forest"
-                    android:textSize="17sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="12dp"
-                    android:text="@string/onboarding_welcome_desc"
-                    android:textColor="@color/muted_green"
-                    android:textSize="13sp" />
-
-                <!-- Sample transaction list -->
-                <LinearLayout
-                    android:id="@+id/onboarding_sample_transactions"
-                    android:layout_width="match_parent"
-                    android:layout_height="0dp"
-                    android:layout_weight="1"
-                    android:orientation="vertical" />
+                </ScrollView>
 
             </LinearLayout>
 

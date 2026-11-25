@@ -79,8 +79,23 @@ public interface MasroufDao {
     @Query("SELECT * FROM settings WHERE id = 1 LIMIT 1") SettingEntity systemSettings();
     @Query("SELECT * FROM goals WHERE userId = :userId ORDER BY dueAt, id LIMIT 1") GoalEntity primaryGoal(long userId);
     @Query("SELECT * FROM budgets WHERE userId = :userId AND status = 'ACTIVE' ORDER BY periodStart DESC LIMIT 1") BudgetEntity activeBudgetForUser(long userId);
+    @Query("SELECT * FROM budgets WHERE userId = :userId ORDER BY periodStart ASC, id ASC") List<BudgetEntity> budgetsForUser(long userId);
+    @Query("SELECT * FROM budgets WHERE userId = :userId AND periodStart <= :rangeEnd AND periodEnd >= :rangeStart ORDER BY periodStart ASC, id ASC") List<BudgetEntity> budgetsOverlappingForUser(long userId, long rangeStart, long rangeEnd);
+    @Query("SELECT * FROM budgets WHERE userId = :userId AND periodStart <= :now AND periodEnd >= :now ORDER BY CASE WHEN status = 'ACTIVE' THEN 0 ELSE 1 END, periodStart DESC, id DESC LIMIT 1") BudgetEntity currentBudgetAt(long userId, long now);
+    @Query("SELECT * FROM budgets WHERE userId = :userId AND (:excludeId <= 0 OR id != :excludeId) AND periodStart <= :end AND periodEnd >= :start LIMIT 1") BudgetEntity findOverlappingBudget(long userId, long start, long end, long excludeId);
     @Query("SELECT * FROM categories WHERE userId = :userId ORDER BY name COLLATE NOCASE") List<CategoryEntity> categoriesForUser(long userId);
-    @Query("SELECT c.id AS categoryId, c.name AS name, c.colorHex AS colorHex, c.type AS type, sc.`key` AS catalogKey, sc.iconName AS iconName FROM categories c INNER JOIN user_categories uc ON uc.categoryId = c.id LEFT JOIN system_categories sc ON sc.id = uc.catalogId WHERE uc.userId = :userId AND uc.active = 1 ORDER BY c.name COLLATE NOCASE") List<CategoryPresentationRow> selectedCategoryPresentations(long userId);
+    @Query("SELECT c.* FROM categories c INNER JOIN user_categories uc ON uc.categoryId = c.id WHERE uc.userId = :userId AND uc.active = 1 ORDER BY c.name COLLATE NOCASE") List<CategoryEntity> selectedCategoriesForUser(long userId);
+    @Query("SELECT * FROM categories WHERE id = :categoryId AND userId = :userId LIMIT 1") CategoryEntity findCategoryForUser(long categoryId, long userId);
+    @Query("SELECT c.id AS categoryId, c.name AS name, c.colorHex AS colorHex, c.type AS type, sc.`key` AS catalogKey, sc.iconName AS iconName, c.allocationPercent AS allocationPercent, COALESCE(sc.recommendedPercent, 5) AS recommendedPercent FROM categories c INNER JOIN user_categories uc ON uc.categoryId = c.id LEFT JOIN system_categories sc ON sc.id = uc.catalogId WHERE uc.userId = :userId AND uc.active = 1 ORDER BY c.name COLLATE NOCASE") List<CategoryPresentationRow> selectedCategoryPresentations(long userId);
+    @Query("SELECT * FROM user_categories WHERE userId = :userId") List<UserCategoryEntity> userCategoryLinks(long userId);
+    @Query("UPDATE user_categories SET active = :active, catalogId = :catalogId WHERE id = :id") int updateUserCategoryLink(long id, boolean active, Long catalogId);
+    @Query("UPDATE users SET categoriesSelected = 1 WHERE id = :userId") int markCategoriesSelected(long userId);
+    @Query("DELETE FROM budget_lines WHERE id = :lineId") int deleteBudgetLine(long lineId);
+    @Query("SELECT COUNT(*) FROM products WHERE categoryId = :categoryId") int countProductsInCategory(long categoryId);
+    @Query("SELECT COUNT(*) FROM money_transactions WHERE categoryId = :categoryId") int countTransactionsInCategory(long categoryId);
+    @Query("SELECT COUNT(*) FROM user_categories WHERE categoryId = :categoryId AND catalogId IS NOT NULL") int countCatalogLinkForCategory(long categoryId);
+    @Query("DELETE FROM categories WHERE id = :categoryId AND userId = :userId") int deleteCategoryRow(long categoryId, long userId);
+    @Query("SELECT COALESCE(SUM(amountMilli),0) FROM money_transactions WHERE userId = :userId AND categoryId = :categoryId AND kind IN ('expense','donation','purchase') AND occurredAt >= :from AND occurredAt < :to") long categoryTotalSpendBetween(long userId, long categoryId, long from, long to);
     @Query("SELECT * FROM categories WHERE userId = :userId ORDER BY name COLLATE NOCASE") LiveData<List<CategoryEntity>> observeCategoriesForUser(long userId);
     @Query("SELECT * FROM budget_lines WHERE budgetId = :budgetId ORDER BY categoryId") List<BudgetLineEntity> budgetLines(long budgetId);
     @Query("SELECT COALESCE(SUM(limitMilli),0) FROM budget_lines WHERE budgetId = :budgetId") long allocatedEnvelopes(long budgetId);
@@ -325,6 +340,8 @@ public interface MasroufDao {
 
     @Transaction
     default long insertBudgetWithEnvelopes(BudgetEntity budget,List<BudgetLineEntity> lines) {
+        if(budget==null||budget.monthlyLimitMilli<=0||budget.periodEnd<budget.periodStart) return -1L;
+        if(findOverlappingBudget(budget.userId,budget.periodStart,budget.periodEnd,0L)!=null) return -2L;
         long sum=0; for(BudgetLineEntity line:lines) sum=MoneyMath.add(sum,line.limitMilli);
         if(sum>budget.monthlyLimitMilli) return -1L;
         UserEntity owner=findUser(budget.userId);
@@ -336,6 +353,8 @@ public interface MasroufDao {
 
     @Transaction
     default boolean updateBudgetWithEnvelopes(BudgetEntity budget,List<BudgetLineEntity> lines) {
+        if(budget==null||budget.monthlyLimitMilli<=0||budget.periodEnd<budget.periodStart) return false;
+        if(findOverlappingBudget(budget.userId,budget.periodStart,budget.periodEnd,budget.id)!=null) return false;
         long sum=0; for(BudgetLineEntity line:lines) sum=MoneyMath.add(sum,line.limitMilli);
         BudgetEntity current=findBudget(budget.id);
         if(current==null||current.userId!=budget.userId||sum>budget.monthlyLimitMilli) return false;
@@ -514,16 +533,177 @@ public interface MasroufDao {
     @Transaction
     default boolean addCategoryWithAllocation(CategoryEntity category) {
         if(category.allocationPercent<0||category.allocationPercent>100)return false;
-        int current = allocatedPercent(category.userId, category.type);
-        if (Math.addExact(current,category.allocationPercent) > 100) return false;
         BudgetEntity budget=activeBudgetForUser(category.userId);
-        if(budget==null) return false;
-        long envelopeLimit=MoneyMath.portion(budget.monthlyLimitMilli,category.allocationPercent);
-        if(MoneyMath.add(allocatedEnvelopes(budget.id),envelopeLimit)>budget.monthlyLimitMilli) return false;
+        if(budget!=null) {
+            long envelopeLimit=MoneyMath.portion(budget.monthlyLimitMilli,category.allocationPercent);
+            if(MoneyMath.add(allocatedEnvelopes(budget.id),envelopeLimit)>budget.monthlyLimitMilli) {
+                long remaining=Math.max(0L,MoneyMath.subtract(budget.monthlyLimitMilli,allocatedEnvelopes(budget.id)));
+                envelopeLimit=Math.min(envelopeLimit,remaining);
+            }
+            long categoryId=insert(category);
+            if(categoryId<=0)return false;
+            UserCategoryEntity relation=new UserCategoryEntity();relation.userId=category.userId;relation.categoryId=categoryId;relation.catalogId=null;relation.active=true;insertUserCategory(relation);
+            BudgetLineEntity line=new BudgetLineEntity(); line.budgetId=budget.id; line.categoryId=categoryId;
+            line.limitMilli=envelopeLimit; line.spentMilli=0;
+            line.plannedPercentBps=budget.monthlyLimitMilli>0?(int)((envelopeLimit*10_000L)/budget.monthlyLimitMilli):(category.allocationPercent*100);
+            insert(line);
+            return true;
+        }
         long categoryId=insert(category);
+        if(categoryId<=0)return false;
         UserCategoryEntity relation=new UserCategoryEntity();relation.userId=category.userId;relation.categoryId=categoryId;relation.catalogId=null;relation.active=true;insertUserCategory(relation);
-        BudgetLineEntity line=new BudgetLineEntity(); line.budgetId=budget.id; line.categoryId=categoryId;
-        line.limitMilli=envelopeLimit; line.spentMilli=0; insert(line);
-        return categoryId > 0;
+        return true;
+    }
+
+    @Transaction
+    default boolean updateUserCategorySelections(long userId, List<Long> selectedCatalogIds,
+                                                 List<Long> selectedCustomCategoryIds, long todayStartMillis) {
+        UserEntity user=findUser(userId);
+        if(user==null) return false;
+        List<Long> safeCatalogIds=selectedCatalogIds==null?java.util.Collections.emptyList():selectedCatalogIds;
+        List<Long> safeCustomIds=selectedCustomCategoryIds==null?java.util.Collections.emptyList():selectedCustomCategoryIds;
+        java.util.LinkedHashSet<Long> catalogSet=new java.util.LinkedHashSet<>(safeCatalogIds);
+        java.util.LinkedHashSet<Long> customSet=new java.util.LinkedHashSet<>(safeCustomIds);
+        if(catalogSet.isEmpty() && customSet.isEmpty()) return false;
+
+        boolean child="child".equalsIgnoreCase(user.role);
+        if(child) {
+            if(childProfileForUser(userId)==null) return false;
+            java.util.HashSet<Long> allowed=new java.util.HashSet<>();
+            for(SystemCategoryEntity option:allowedSystemCategoriesForChild(userId)) allowed.add(option.id);
+            if(!allowed.containsAll(catalogSet)) return false;
+        }
+
+        List<UserCategoryEntity> existingLinks=userCategoryLinks(userId);
+        java.util.Map<Long,UserCategoryEntity> linkByCategoryId=new java.util.HashMap<>();
+        java.util.HashSet<Long> previouslyActiveCategoryIds=new java.util.HashSet<>();
+        for(UserCategoryEntity link:existingLinks) {
+            linkByCategoryId.put(link.categoryId,link);
+            if(link.active) previouslyActiveCategoryIds.add(link.categoryId);
+        }
+
+        java.util.LinkedHashSet<Long> targetActiveCategoryIds=new java.util.LinkedHashSet<>();
+        java.util.Map<Long,Integer> weightByCategoryId=new java.util.HashMap<>();
+
+        for(Long catalogId:catalogSet) {
+            if(catalogId==null||catalogId<=0) return false;
+            SystemCategoryEntity canonical=systemCategory(catalogId);
+            if(canonical==null) return false;
+            CategoryEntity category=selectedCategoryForCatalog(userId,catalogId);
+            if(category==null) category=categoryForUserByName(userId,canonical.name);
+            if(category==null) {
+                category=new CategoryEntity();
+                category.userId=userId;category.name=canonical.name;
+                category.colorHex=canonical.colorHex;category.type=canonical.type;
+                category.isEssential=canonical.protectedCategory;
+                category.allocationPercent=canonical.recommendedPercent;
+                category.id=insert(category);
+            }
+            UserCategoryEntity existing=linkByCategoryId.get(category.id);
+            if(existing!=null) updateUserCategoryLink(existing.id,true,catalogId);
+            else {
+                UserCategoryEntity rel=new UserCategoryEntity();
+                rel.userId=userId;rel.categoryId=category.id;rel.catalogId=catalogId;rel.active=true;
+                insertUserCategory(rel);
+            }
+            targetActiveCategoryIds.add(category.id);
+            weightByCategoryId.put(category.id,category.allocationPercent>0?category.allocationPercent:Math.max(1,canonical.recommendedPercent));
+        }
+
+        for(Long customCatId:customSet) {
+            if(customCatId==null||customCatId<=0) continue;
+            CategoryEntity custom=findCategoryForUser(customCatId,userId);
+            if(custom==null) continue;
+            UserCategoryEntity existing=linkByCategoryId.get(custom.id);
+            if(existing!=null) updateUserCategoryLink(existing.id,true,existing.catalogId);
+            else {
+                UserCategoryEntity rel=new UserCategoryEntity();
+                rel.userId=userId;rel.categoryId=custom.id;rel.catalogId=null;rel.active=true;
+                insertUserCategory(rel);
+            }
+            targetActiveCategoryIds.add(custom.id);
+            weightByCategoryId.put(custom.id,custom.allocationPercent>0?custom.allocationPercent:5);
+        }
+
+        java.util.HashSet<Long> deactivatedCategoryIds=new java.util.HashSet<>();
+        for(UserCategoryEntity link:existingLinks) {
+            if(link.active && !targetActiveCategoryIds.contains(link.categoryId)) {
+                updateUserCategoryLink(link.id,false,link.catalogId);
+                deactivatedCategoryIds.add(link.categoryId);
+            }
+        }
+
+        ArrayList<Long> newlyAddedCategoryIds=new ArrayList<>();
+        for(Long categoryId:targetActiveCategoryIds) {
+            if(!previouslyActiveCategoryIds.contains(categoryId)) newlyAddedCategoryIds.add(categoryId);
+        }
+
+        // Update active/future non-closed budgets without altering historical budgets or transactions.
+        List<BudgetEntity> budgets=budgetsForUser(userId);
+        for(BudgetEntity budget:budgets) {
+            if("CLOSED".equalsIgnoreCase(budget.status) || budget.periodEnd < todayStartMillis) continue;
+            long safeEnd=budget.periodEnd==Long.MAX_VALUE?Long.MAX_VALUE:budget.periodEnd+1;
+            List<BudgetLineEntity> lines=budgetLines(budget.id);
+            java.util.HashSet<Long> keptLineCategories=new java.util.HashSet<>();
+            long keptAllocatedSum=0L;
+            for(BudgetLineEntity line:lines) {
+                if(deactivatedCategoryIds.contains(line.categoryId)) {
+                    long txSpent=categoryTotalSpendBetween(userId,line.categoryId,budget.periodStart,safeEnd);
+                    if(line.spentMilli<=0 && txSpent<=0) {
+                        deleteBudgetLine(line.id);
+                        continue;
+                    }
+                }
+                keptLineCategories.add(line.categoryId);
+                keptAllocatedSum=MoneyMath.add(keptAllocatedSum,line.limitMilli);
+            }
+
+            ArrayList<Long> missingCatIds=new ArrayList<>();
+            for(Long catId:targetActiveCategoryIds) {
+                if(!keptLineCategories.contains(catId) && newlyAddedCategoryIds.contains(catId)) {
+                    missingCatIds.add(catId);
+                }
+            }
+            // Also add lines for any active category missing in a newly created budget when newlyAdded wasn't toggled this call
+            if(missingCatIds.isEmpty()) {
+                for(Long catId:targetActiveCategoryIds) {
+                    if(!keptLineCategories.contains(catId)) missingCatIds.add(catId);
+                }
+            }
+            if(!missingCatIds.isEmpty()) {
+                long headroom=Math.max(0L,MoneyMath.subtract(budget.monthlyLimitMilli,keptAllocatedSum));
+                int weightSum=0;
+                ArrayList<Long> weights=new ArrayList<>(missingCatIds.size());
+                for(Long catId:missingCatIds) {
+                    int w=Math.max(1,weightByCategoryId.containsKey(catId)?weightByCategoryId.get(catId):5);
+                    weightSum+=w;
+                    weights.add((long)w);
+                }
+                long desiredPortion=MoneyMath.portion(budget.monthlyLimitMilli,Math.min(100,weightSum));
+                long toDistribute=headroom>0?(desiredPortion>0?Math.min(headroom,desiredPortion):headroom):0L;
+                List<Long> distributed=toDistribute>0?MoneyMath.allocate(toDistribute,weights):java.util.Collections.nCopies(missingCatIds.size(),0L);
+                for(int i=0;i<missingCatIds.size();i++) {
+                    long catId=missingCatIds.get(i);
+                    long limitMilli=distributed.get(i);
+                    BudgetLineEntity newLine=new BudgetLineEntity();
+                    newLine.budgetId=budget.id;
+                    newLine.categoryId=catId;
+                    newLine.limitMilli=limitMilli;
+                    newLine.spentMilli=0L;
+                    newLine.plannedPercentBps=budget.monthlyLimitMilli>0?(int)Math.min(10_000L,(limitMilli*10_000L)/budget.monthlyLimitMilli):0;
+                    insert(newLine);
+                }
+            }
+        }
+        markCategoriesSelected(userId);
+        return true;
+    }
+
+    @Transaction
+    default boolean deleteCustomCategory(long userId, long categoryId) {
+        CategoryEntity category=findCategoryForUser(categoryId,userId);
+        if(category==null||countCatalogLinkForCategory(categoryId)>0||"Enfants".equalsIgnoreCase(category.name)) return false;
+        if(countProductsInCategory(categoryId)>0||countTransactionsInCategory(categoryId)>0) return false;
+        return deleteCategoryRow(categoryId,userId)>0;
     }
 }

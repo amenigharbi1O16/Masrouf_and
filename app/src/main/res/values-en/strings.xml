@@ -474,4 +474,80 @@
         <item quantity="other">%1$d categories selected. No budget required for now.</item>
     </plurals>
 
+    <!-- ═══ Calendar, Budget Period, Budget Allocation & Category Management ═══ -->
+    <string name="calendar_eyebrow">YOUR FINANCIAL YEAR</string>
+    <string name="calendar_subtitle">Choose a month to explore its budget periods.</string>
+    <string name="calendar_prev_year">Previous year</string>
+    <string name="calendar_next_year">Next year</string>
+    <string name="calendar_no_budget_title">No budget defined for this period</string>
+    <string name="calendar_no_budget_detail">No period overlaps this month yet.</string>
+    <string name="calendar_past_month_detail">This budget period has passed and can no longer be modified (read-only).</string>
+    <string name="calendar_create_budget">Create a budget period</string>
+    <string name="calendar_new_period">New budget period</string>
+    <string name="calendar_select_reference">Select as reference</string>
+    <string name="calendar_active_badge">✓ Active</string>
+    <string name="calendar_closed_badge">Closed</string>
+    <string name="calendar_modify">Modify</string>
+    <string name="calendar_consult">Consult</string>
+    <string name="calendar_month_transactions">Month transactions</string>
+    <string name="calendar_short_dt">%1$s DT</string>
+
+    <string name="create_budget_title">Create a budget</string>
+    <string name="edit_budget_title">Modify budget</string>
+    <string name="consult_budget_title">Consult budget</string>
+    <string name="budget_period_eyebrow">A PERIOD THAT WORKS FOR YOU</string>
+    <string name="budget_period_headline">Give every dinar a direction.</string>
+    <string name="budget_period_info_title">Custom period: freely set your start and end dates according to your needs.</string>
+    <string name="budget_period_days_format">%1$s · %2$d days</string>
+    <string name="budget_start_date_iso">Start date (YYYY-MM-DD)</string>
+    <string name="budget_end_date_iso">End date (YYYY-MM-DD)</string>
+    <string name="budget_total_dt_label">Total budget · DT</string>
+    <string name="budget_days_selected_title">%1$d days selected</string>
+    <string name="budget_pay_cycle_detail">Not just a calendar month — pick the period that fits your pay cycle.</string>
+    <string name="allocate_by_category_cta">Allocate by category</string>
+    <string name="cancel_btn">Cancel</string>
+    <string name="calendar_picker_open">Interactive calendar</string>
+    <string name="calendar_pick_start">Start</string>
+    <string name="calendar_pick_end">End</string>
+    <string name="date_format_iso_error">Use the format YYYY-MM-DD for both dates.</string>
+    <string name="past_period_budget_error">Cannot create a budget for a past closed period.</string>
+    <string name="period_overlap_title">Invalid or overlapping period</string>
+    <string name="period_overlap_error">This period overlaps an existing budget (%1$s).</string>
+    <string name="period_duplicate_title">Budget already allocated for this period</string>
+    <string name="edit_existing_budget">Modify existing budget</string>
+    <string name="period_closed_banner_title">Closed period</string>
+    <string name="period_closed_banner_detail">This budget period has passed and remains accessible read-only for consultation and analysis.</string>
+    <string name="view_allocations_readonly">View allocation</string>
+
+    <string name="allocate_budget_title">Allocate budget</string>
+    <string name="allocate_period_eyebrow">%1$s · %2$d DAYS</string>
+    <string name="allocate_manage_categories">Manage categories</string>
+    <string name="allocate_auto_100">Auto-distribute (100%)</string>
+    <string name="allocate_default_pct_info">Default %1$d%% of total</string>
+    <string name="allocate_pct_label">Percentage (%)</string>
+    <string name="allocate_amount_label">Amount (DT)</string>
+    <string name="allocate_unassigned_ok_title">Unallocated money is fine</string>
+    <string name="allocate_unassigned_ok_detail">You can keep some of your budget unassigned or adjust amounts and percentages independently.</string>
+    <string name="allocate_overflow_title">Allocation exceeds your total budget</string>
+    <string name="allocate_overflow_detail">Reduce categories by %1$s to continue.</string>
+    <string name="create_my_budget_cta">Create my budget</string>
+    <string name="save_allocation_cta">Save allocation</string>
+    <string name="allocate_sum_with_pct">%1$s (%2$s%%)</string>
+    <string name="budget_repartition_saved">Budget allocated across your categories!</string>
+    <string name="period_overlap_save_error">Cannot save: this period overlaps an existing budget.</string>
+
+    <string name="manage_categories_title">Manage categories</string>
+    <string name="manage_categories_subtitle">Products and expenses stay separate. Changing categories never deletes past records.</string>
+    <string name="save_categories_count">Save categories (%1$d)</string>
+    <string name="categories_updated_success">Categories saved successfully!</string>
+    <string name="no_followed_categories_title">No categories tracked yet.</string>
+    <string name="choose_my_categories_btn">Choose my categories</string>
+    <string name="category_planned_percent_str">Planned: %1$s%% of budget</string>
+    <string name="adjust_repartition">Allocate</string>
+    <string name="delete_custom_cat_confirm">Delete custom category \"%1$s\"?</string>
+    <string name="delete_custom_cat_used_error">Cannot delete this category because it is used by recorded transactions or products.</string>
+    <string name="delete_action">Delete</string>
+    <string name="confirm_action">Confirm</string>
+    <string name="home_manage_budget">Manage budget</string>
+
 </resources>

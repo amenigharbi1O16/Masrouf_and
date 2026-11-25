@@ -38,7 +38,7 @@ import com.example.masrouf1.db.MasroufEntities.PointsLogEntity;
         BudgetEntity.class, BudgetLineEntity.class, PurchaseEntity.class, PurchaseItemEntity.class,
         TransactionEntity.class, GoalEntity.class, RewardEntity.class, NotificationEntity.class,
         PriceHistoryEntity.class, SystemCategoryEntity.class, UserCategoryEntity.class, SettingEntity.class,
-        MoneyRequestEntity.class, PointsLogEntity.class}, version = 10, exportSchema = false)
+        MoneyRequestEntity.class, PointsLogEntity.class}, version = 11, exportSchema = false)
 public abstract class MasroufDatabase extends RoomDatabase {
     private static final Migration MIGRATION_1_2 = new Migration(1, 2) {
         @Override public void migrate(SupportSQLiteDatabase db) {
@@ -114,6 +114,16 @@ public abstract class MasroufDatabase extends RoomDatabase {
             db.execSQL("CREATE INDEX IF NOT EXISTS index_child_profiles_parentUserId_allocationPeriodStart ON child_profiles(parentUserId, allocationPeriodStart)");
         }
     };
+    private static final Migration MIGRATION_10_11 = new Migration(10, 11) {
+        @Override public void migrate(SupportSQLiteDatabase db) {
+            db.execSQL("ALTER TABLE budget_lines ADD COLUMN plannedPercentBps INTEGER NOT NULL DEFAULT 0");
+            db.execSQL("UPDATE budget_lines SET plannedPercentBps = CASE WHEN COALESCE((SELECT monthlyLimitMilli FROM budgets WHERE budgets.id = budget_lines.budgetId), 0) > 0 THEN CAST((limitMilli * 10000) / (SELECT monthlyLimitMilli FROM budgets WHERE budgets.id = budget_lines.budgetId) AS INTEGER) ELSE 0 END");
+            for (SystemCategoryEntity row : SystemCategoryCatalog.defaults()) {
+                db.execSQL("UPDATE system_categories SET recommendedPercent = ? WHERE `key` = ?",
+                        new Object[]{row.recommendedPercent, row.key});
+            }
+        }
+    };
     private static final Callback REFERENCE_DATA_CALLBACK = new Callback() {
         @Override public void onOpen(SupportSQLiteDatabase db) {
             db.beginTransaction();
@@ -147,7 +157,7 @@ public abstract class MasroufDatabase extends RoomDatabase {
             synchronized (MasroufDatabase.class) {
                 if (instance == null) {
                     instance = Room.databaseBuilder(context.getApplicationContext(), MasroufDatabase.class, "masrouf.db")
-                            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10)
+                            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11)
                             .addCallback(REFERENCE_DATA_CALLBACK).build();
                 }
             }

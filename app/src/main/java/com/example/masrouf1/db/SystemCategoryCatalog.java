@@ -12,25 +12,25 @@ public final class SystemCategoryCatalog {
 
     public static List<SystemCategoryEntity> defaults() {
         ArrayList<SystemCategoryEntity> rows = new ArrayList<>();
-        // ── Keep original IDs 1–10 for backward compatibility ───────────────
+        // ── Keep original IDs 1–10 for backward compatibility (sum = 100%) ──
         // ── Catégories de produits (product) ────────────────────────────────
-        rows.add(row(1,  "food",       "Alimentation",               "product", "#2E7D43", "cart-outline",             25, false));
-        rows.add(row(7,  "clothing",   "Vêtements et chaussures",    "product", "#4A6572", "shirt-outline",             5, false));
-        rows.add(row(11, "hygiene",    "Hygiène et soins personnels","product", "#85B8A5", "medkit-outline",             5, false));
+        rows.add(row(1,  "food",       "Alimentation",               "product", "#2E7D43", "cart-outline",             33, false));
+        rows.add(row(7,  "clothing",   "Vêtements et chaussures",    "product", "#4A6572", "shirt-outline",             4, false));
+        rows.add(row(11, "hygiene",    "Hygiène et soins personnels","product", "#85B8A5", "medkit-outline",             4, false));
         rows.add(row(12, "home_equip", "Maison et équipement",       "product", "#A58C67", "home-outline",              5, false));
-        rows.add(row(13, "computer",   "Matériel informatique",      "product", "#4A6572", "laptop-outline",            5, false));
-        rows.add(row(4,  "health",     "Santé",                      "product", "#DC7770", "medkit-outline",           10, false));
+        rows.add(row(13, "computer",   "Matériel informatique",      "product", "#4A6572", "laptop-outline",            3, false));
+        rows.add(row(4,  "health",     "Santé",                      "product", "#DC7770", "medkit-outline",            5, false));
         // ── Catégories de dépenses (expense) ────────────────────────────────
         rows.add(row(3,  "transport",  "Transport",                  "expense", "#61746D", "bus-outline",              10, false));
-        rows.add(row(8,  "bills",      "Factures",                   "expense", "#D35400", "receipt-outline",           5, false));
-        rows.add(row(6,  "education",  "Études",                     "expense", "#A58C67", "school-outline",           10, false));
-        rows.add(row(5,  "leisure",    "Loisirs et sorties",         "expense", "#85B8A5", "game-controller-outline",  10, false));
-        rows.add(row(14, "children",   "Enfants",                    "expense", "#DC7770", "people-outline",            5, false));
-        rows.add(row(15, "family_aid", "Aide à la famille",          "expense", "#E9B66B", "heart-outline",             5, false));
-        rows.add(row(9,  "savings",    "Épargne",                    "expense", "#27AE60", "wallet-outline",            5, false));
-        rows.add(row(16, "donations",  "Dons et charité",            "expense", "#27AE60", "gift-outline",              3, false));
-        rows.add(row(17, "banking",    "Frais bancaires",            "expense", "#7F8C8D", "card-outline",              2, false));
-        rows.add(row(10, "other",      "Autres",                     "expense", "#7F8C8D", "ellipsis-horizontal-outline", 0, true));
+        rows.add(row(8,  "bills",      "Factures",                   "expense", "#D35400", "receipt-outline",          14, false));
+        rows.add(row(6,  "education",  "Études",                     "expense", "#A58C67", "school-outline",            4, false));
+        rows.add(row(5,  "leisure",    "Loisirs et sorties",         "expense", "#85B8A5", "game-controller-outline",   5, false));
+        rows.add(row(14, "children",   "Enfants",                    "expense", "#DC7770", "people-outline",            3, false));
+        rows.add(row(15, "family_aid", "Aide à la famille",          "expense", "#E9B66B", "heart-outline",             3, false));
+        rows.add(row(9,  "savings",    "Épargne",                    "expense", "#27AE60", "wallet-outline",            4, false));
+        rows.add(row(16, "donations",  "Dons et charité",            "expense", "#27AE60", "gift-outline",              1, false));
+        rows.add(row(17, "banking",    "Frais bancaires",            "expense", "#7F8C8D", "card-outline",              1, false));
+        rows.add(row(10, "other",      "Autres",                     "expense", "#7F8C8D", "ellipsis-horizontal-outline", 1, true));
         return rows;
     }
 

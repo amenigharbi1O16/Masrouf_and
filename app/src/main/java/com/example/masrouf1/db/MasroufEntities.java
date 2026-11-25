@@ -96,6 +96,7 @@ public final class MasroufEntities {
         public long categoryId;
         public long limitMilli;
         public long spentMilli;
+        @ColumnInfo(defaultValue = "0") public int plannedPercentBps;
     }
 
     @Entity(tableName = "purchases", foreignKeys = @ForeignKey(entity = UserEntity.class,

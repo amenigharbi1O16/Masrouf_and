@@ -42,11 +42,15 @@ public final class CategoryProgressCardView extends MaterialCardView {
         addView(body,new LayoutParams(-1,-2));
     }
     public void setProgressData(String displayName,String iconName,String type,String colorHex,long allocatedMilli,long spentMilli,int plannedPercent,int consumedPercent){
+        setProgressData(displayName,iconName,type,colorHex,allocatedMilli,spentMilli,plannedPercent,plannedPercent*100,consumedPercent);
+    }
+    public void setProgressData(String displayName,String iconName,String type,String colorHex,long allocatedMilli,long spentMilli,int plannedPercent,int plannedPercentBps,int consumedPercent){
         String resolvedName=displayName==null?"":displayName;name.setText(resolvedName);
         icon.setImageResource(CategoryIconResources.resolve(iconName,type));
         int iconColor=getContext().getColor(R.color.emerald);try{if(colorHex!=null)iconColor=Color.parseColor(colorHex);}catch(IllegalArgumentException ignored){}
         icon.setImageTintList(ColorStateList.valueOf(iconColor));
-        planned.setText(getContext().getString(R.string.category_planned_percent,Math.max(0,plannedPercent)));
+        int effectiveBps=plannedPercentBps>0?plannedPercentBps:Math.max(0,plannedPercent*100);
+        planned.setText(getContext().getString(R.string.category_planned_percent_str,com.example.masrouf1.BudgetPeriodMath.formatPercentFromBps(effectiveBps)));
         allocated.setText(getContext().getString(R.string.category_allocated,CurrencyFormatter.formatMilli(allocatedMilli)));
         spent.setText(getContext().getString(R.string.category_spent,CurrencyFormatter.formatMilli(spentMilli)));
         int tint=spentMilli>0&&allocatedMilli<=0?R.color.coral:consumedPercent>=100?R.color.coral:consumedPercent>=80?R.color.amber:R.color.mint_accent;

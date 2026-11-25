@@ -530,4 +530,80 @@
         <item quantity="other">%1$d catégories sélectionnées. Aucun budget requis pour l\'instant.</item>
     </plurals>
 
+    <!-- ═══ Calendar, Budget Period, Budget Allocation & Category Management ═══ -->
+    <string name="calendar_eyebrow">VOTRE ANNÉE FINANCIÈRE</string>
+    <string name="calendar_subtitle">Choisissez un mois pour explorer ses périodes de budget.</string>
+    <string name="calendar_prev_year">Année précédente</string>
+    <string name="calendar_next_year">Année suivante</string>
+    <string name="calendar_no_budget_title">Aucun budget défini pour cette période</string>
+    <string name="calendar_no_budget_detail">Aucune période ne chevauche ce mois pour le moment.</string>
+    <string name="calendar_past_month_detail">Cette période budgétaire est passée et ne peut plus être modifiée (lecture seule).</string>
+    <string name="calendar_create_budget">Créer une période de budget</string>
+    <string name="calendar_new_period">Nouvelle période de budget</string>
+    <string name="calendar_select_reference">Sélectionner comme référence</string>
+    <string name="calendar_active_badge">✓ Active</string>
+    <string name="calendar_closed_badge">Clôturée</string>
+    <string name="calendar_modify">Modifier</string>
+    <string name="calendar_consult">Consulter</string>
+    <string name="calendar_month_transactions">Opérations du mois</string>
+    <string name="calendar_short_dt">%1$s DT</string>
+
+    <string name="create_budget_title">Créer un budget</string>
+    <string name="edit_budget_title">Modifier le budget</string>
+    <string name="consult_budget_title">Consulter le budget</string>
+    <string name="budget_period_eyebrow">UNE PÉRIODE QUI VOUS CONVIENT</string>
+    <string name="budget_period_headline">Donnez une direction à chaque dinar.</string>
+    <string name="budget_period_info_title">Période personnalisée : définissez librement vos dates selon vos besoins.</string>
+    <string name="budget_period_days_format">%1$s · %2$d jours</string>
+    <string name="budget_start_date_iso">Date de début (AAAA-MM-JJ)</string>
+    <string name="budget_end_date_iso">Date de fin (AAAA-MM-JJ)</string>
+    <string name="budget_total_dt_label">Budget total · DT</string>
+    <string name="budget_days_selected_title">%1$d jours sélectionnés</string>
+    <string name="budget_pay_cycle_detail">Pas seulement un mois calendaire : choisissez la période qui correspond à votre cycle de paie.</string>
+    <string name="allocate_by_category_cta">Répartir par catégorie</string>
+    <string name="cancel_btn">Annuler</string>
+    <string name="calendar_picker_open">Calendrier interactif</string>
+    <string name="calendar_pick_start">Début</string>
+    <string name="calendar_pick_end">Fin</string>
+    <string name="date_format_iso_error">Utilisez le format AAAA-MM-JJ pour les deux dates.</string>
+    <string name="past_period_budget_error">Impossible de créer un budget pour une période passée clôturée.</string>
+    <string name="period_overlap_title">Période invalide ou chevauchante</string>
+    <string name="period_overlap_error">Cette période chevauche un budget existant (%1$s).</string>
+    <string name="period_duplicate_title">Budget déjà alloué pour cette période</string>
+    <string name="edit_existing_budget">Modifier le budget existant</string>
+    <string name="period_closed_banner_title">Période clôturée</string>
+    <string name="period_closed_banner_detail">Cette période budgétaire est passée et reste accessible en lecture seule pour consultation et analyse.</string>
+    <string name="view_allocations_readonly">Voir la répartition</string>
+
+    <string name="allocate_budget_title">Répartir le budget</string>
+    <string name="allocate_period_eyebrow">%1$s · %2$d JOURS</string>
+    <string name="allocate_manage_categories">Gérer les catégories</string>
+    <string name="allocate_auto_100">Répartir automatiquement (100%)</string>
+    <string name="allocate_default_pct_info">Par défaut %1$d %% du total</string>
+    <string name="allocate_pct_label">Pourcentage (%)</string>
+    <string name="allocate_amount_label">Montant (DT)</string>
+    <string name="allocate_unassigned_ok_title">L\'argent non alloué est autorisé</string>
+    <string name="allocate_unassigned_ok_detail">Vous pouvez laisser une partie de votre budget non assignée ou modifier librement les montants et pourcentages.</string>
+    <string name="allocate_overflow_title">La répartition dépasse votre budget total</string>
+    <string name="allocate_overflow_detail">Réduisez les catégories de %1$s pour continuer.</string>
+    <string name="create_my_budget_cta">Créer mon budget</string>
+    <string name="save_allocation_cta">Enregistrer la répartition</string>
+    <string name="allocate_sum_with_pct">%1$s (%2$s%%)</string>
+    <string name="budget_repartition_saved">Budget réparti avec succès sur vos catégories !</string>
+    <string name="period_overlap_save_error">Impossible d\'enregistrer : cette période chevauche un budget existant.</string>
+
+    <string name="manage_categories_title">Gérer les catégories</string>
+    <string name="manage_categories_subtitle">Les produits et les dépenses restent séparés. Modifier les catégories ne supprime jamais les données passées.</string>
+    <string name="save_categories_count">Enregistrer les catégories (%1$d)</string>
+    <string name="categories_updated_success">Catégories enregistrées avec succès !</string>
+    <string name="no_followed_categories_title">Aucune catégorie suivie pour le moment.</string>
+    <string name="choose_my_categories_btn">Choisir mes catégories</string>
+    <string name="category_planned_percent_str">Prévu : %1$s%% du budget</string>
+    <string name="adjust_repartition">Répartir</string>
+    <string name="delete_custom_cat_confirm">Supprimer la catégorie personnalisée « %1$s » ?</string>
+    <string name="delete_custom_cat_used_error">Impossible de supprimer cette catégorie car elle est déjà utilisée par des transactions ou produits.</string>
+    <string name="delete_action">Supprimer</string>
+    <string name="confirm_action">Confirmer</string>
+    <string name="home_manage_budget">Gérer le budget</string>
+
 </resources>

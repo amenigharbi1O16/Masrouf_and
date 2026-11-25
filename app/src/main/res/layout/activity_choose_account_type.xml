@@ -37,6 +37,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:fitsSystemWindows="true"
         android:orientation="vertical">
 
         <!-- Top row: back + language -->
@@ -49,12 +50,13 @@
 
             <ImageView
                 android:id="@+id/choose_back"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/back"
-                android:padding="8dp"
-                android:src="@drawable/ic_back" />
+                android:padding="10dp"
+                android:src="@drawable/ic_back"
+                app:tint="@color/forest" />
 
             <View
                 android:layout_width="0dp"

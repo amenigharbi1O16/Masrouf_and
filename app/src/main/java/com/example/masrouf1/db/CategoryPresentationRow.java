@@ -8,4 +8,6 @@ public final class CategoryPresentationRow {
     public String type;
     public String catalogKey;
     public String iconName;
+    public int allocationPercent;
+    public int recommendedPercent;
 }

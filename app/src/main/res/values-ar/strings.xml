@@ -474,4 +474,80 @@
         <item quantity="other">%1$d فئات مختارة. لا حاجة لميزانية الآن.</item>
     </plurals>
 
+    <!-- ═══ Calendar, Budget Period, Budget Allocation & Category Management ═══ -->
+    <string name="calendar_eyebrow">سنتك المالية</string>
+    <string name="calendar_subtitle">اختر شهراً لاستكشاف فترات ميزانيته.</string>
+    <string name="calendar_prev_year">السنة السابقة</string>
+    <string name="calendar_next_year">السنة التالية</string>
+    <string name="calendar_no_budget_title">لا توجد ميزانية محددة لهذه الفترة</string>
+    <string name="calendar_no_budget_detail">لا توجد فترة تتداخل مع هذا الشهر بعد.</string>
+    <string name="calendar_past_month_detail">انتهت هذه الفترة الميزانية ولا يمكن تعديلها بعد الآن (للقراءة فقط).</string>
+    <string name="calendar_create_budget">إنشاء فترة ميزانية</string>
+    <string name="calendar_new_period">فترة ميزانية جديدة</string>
+    <string name="calendar_select_reference">تحديد كمرجع</string>
+    <string name="calendar_active_badge">✓ نشطة</string>
+    <string name="calendar_closed_badge">مغلقة</string>
+    <string name="calendar_modify">تعديل</string>
+    <string name="calendar_consult">معاينة</string>
+    <string name="calendar_month_transactions">معاملات الشهر</string>
+    <string name="calendar_short_dt">%1$s د.ت</string>
+
+    <string name="create_budget_title">إنشاء ميزانية</string>
+    <string name="edit_budget_title">تعديل الميزانية</string>
+    <string name="consult_budget_title">معاينة الميزانية</string>
+    <string name="budget_period_eyebrow">فترة تناسبك تماماً</string>
+    <string name="budget_period_headline">أعطِ كل دينار وجهة واضحة.</string>
+    <string name="budget_period_info_title">فترة مخصصة: حدد تواريخ البدء والانتهاء بحرية حسب احتياجاتك.</string>
+    <string name="budget_period_days_format">%1$s · %2$d أيام</string>
+    <string name="budget_start_date_iso">تاريخ البدء (YYYY-MM-DD)</string>
+    <string name="budget_end_date_iso">تاريخ الانتهاء (YYYY-MM-DD)</string>
+    <string name="budget_total_dt_label">إجمالي الميزانية · د.ت</string>
+    <string name="budget_days_selected_title">%1$d يوماً محدداً</string>
+    <string name="budget_pay_cycle_detail">ليس مجرد شهر تقويمي: اختر الفترة التي تتوافق مع دورة راتبك.</string>
+    <string name="allocate_by_category_cta">توزيع حسب الفئات</string>
+    <string name="cancel_btn">إلغاء</string>
+    <string name="calendar_picker_open">التقويم التفاعلي</string>
+    <string name="calendar_pick_start">البداية</string>
+    <string name="calendar_pick_end">النهاية</string>
+    <string name="date_format_iso_error">استخدم تنسيق YYYY-MM-DD لكلا التاريخين.</string>
+    <string name="past_period_budget_error">لا يمكن إنشاء ميزانية لفترة ماضية منتهية.</string>
+    <string name="period_overlap_title">فترة غير صالحة أو متداخلة</string>
+    <string name="period_overlap_error">تتداخل هذه الفترة مع ميزانية حالية (%1$s).</string>
+    <string name="period_duplicate_title">الميزانية مخصصة بالفعل لهذه الفترة</string>
+    <string name="edit_existing_budget">تعديل الميزانية الحالية</string>
+    <string name="period_closed_banner_title">فترة مغلقة</string>
+    <string name="period_closed_banner_detail">انتهت هذه الفترة الميزانية وتظل متاحة للقراءة والتحليل فقط.</string>
+    <string name="view_allocations_readonly">عرض التوزيع</string>
+
+    <string name="allocate_budget_title">توزيع الميزانية</string>
+    <string name="allocate_period_eyebrow">%1$s · %2$d أيام</string>
+    <string name="allocate_manage_categories">إدارة الفئات</string>
+    <string name="allocate_auto_100">توزيع تلقائي (100%)</string>
+    <string name="allocate_default_pct_info">افتراضياً %1$d%% من الإجمالي</string>
+    <string name="allocate_pct_label">النسبة (%)</string>
+    <string name="allocate_amount_label">المبلغ (د.ت)</string>
+    <string name="allocate_unassigned_ok_title">الأموال غير المخصصة مسموح بها</string>
+    <string name="allocate_unassigned_ok_detail">يمكنك ترك جزء من ميزانيتك غير مخصص أو تعديل المبالغ والنسب بحرية.</string>
+    <string name="allocate_overflow_title">التوزيع يتجاوز إجمالي ميزانيتك</string>
+    <string name="allocate_overflow_detail">قم بتقليل الفئات بمقدار %1$s للمتابعة.</string>
+    <string name="create_my_budget_cta">إنشاء ميزانيتي</string>
+    <string name="save_allocation_cta">حفظ التوزيع</string>
+    <string name="allocate_sum_with_pct">%1$s (%2$s%%)</string>
+    <string name="budget_repartition_saved">تم توزيع الميزانية بنجاح على فئاتك!</string>
+    <string name="period_overlap_save_error">تعذر الحفظ: تتداخل هذه الفترة مع ميزانية حالية.</string>
+
+    <string name="manage_categories_title">إدارة الفئات</string>
+    <string name="manage_categories_subtitle">تبقى المنتجات والمصاريف منفصلة. تعديل الفئات لا يحذف البيانات السابقة أبداً.</string>
+    <string name="save_categories_count">حفظ الفئات (%1$d)</string>
+    <string name="categories_updated_success">تم حفظ الفئات بنجاح!</string>
+    <string name="no_followed_categories_title">لم تحدد أي فئات للمتابعة بعد.</string>
+    <string name="choose_my_categories_btn">اختيار فئاتي</string>
+    <string name="category_planned_percent_str">المخطط: %1$s%% من الميزانية</string>
+    <string name="adjust_repartition">توزيع</string>
+    <string name="delete_custom_cat_confirm">حذف الفئة المخصصة «%1$s»؟</string>
+    <string name="delete_custom_cat_used_error">لا يمكن حذف هذه الفئة لأنها مرتبطة بمعاملات أو منتجات مسجلة.</string>
+    <string name="delete_action">حذف</string>
+    <string name="confirm_action">تأكيد</string>
+    <string name="home_manage_budget">إدارة الميزانية</string>
+
 </resources>

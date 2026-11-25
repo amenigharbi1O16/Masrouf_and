@@ -23,4 +23,14 @@ public final class SessionStore {
     public static void clear(Context context) {
         context.getSharedPreferences("masrouf_preferences", Context.MODE_PRIVATE).edit().remove("user_id").remove("role").remove("onboarded").remove("categories_selected").apply();
     }
+    public static long selectedBudgetId(Context context, long userId) {
+        if (userId <= 0L) return 0L;
+        return context.getSharedPreferences("masrouf_preferences", Context.MODE_PRIVATE)
+                .getLong("selected_budget_id_" + userId, 0L);
+    }
+    public static void setSelectedBudgetId(Context context, long userId, long budgetId) {
+        if (userId <= 0L) return;
+        context.getSharedPreferences("masrouf_preferences", Context.MODE_PRIVATE).edit()
+                .putLong("selected_budget_id_" + userId, Math.max(0L, budgetId)).apply();
+    }
 }

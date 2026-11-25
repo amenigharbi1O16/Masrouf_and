@@ -48,7 +48,10 @@ public final class MasroufRepository {
     public MasroufRepository(Context context){appContext=context.getApplicationContext();dao=MasroufDatabase.getInstance(appContext).masroufDao();}
     public UserEntity user(long userId){return dao.findUser(userId);}
     public LiveData<UserEntity> observeUser(long userId){return dao.observeUser(userId);}
-    public List<CategoryEntity> categories(long userId){return dao.categoriesForUser(userId);}
+    public List<CategoryEntity> categories(long userId){
+        List<CategoryEntity> selected=dao.selectedCategoriesForUser(userId);
+        return selected.isEmpty()?dao.categoriesForUser(userId):selected;
+    }
     public List<SystemCategoryEntity> onboardingCategories(long userId){
         UserEntity owner=requireUserExists(userId);
         if("child".equalsIgnoreCase(owner.role)){
@@ -207,9 +210,110 @@ public final class MasroufRepository {
     }
     public ProductFormData productForm(long userId){
         requireUserExists(userId);
-        return new ProductFormData(dao.activeBudgetForUser(userId),dao.categoriesForUser(userId));
+        List<CategoryEntity> selected=dao.selectedCategoriesForUser(userId);
+        if(selected.isEmpty()) selected=dao.categoriesForUser(userId);
+        return new ProductFormData(currentOrActiveBudget(userId),selected);
     }
-    public BudgetEntity activeBudget(long userId){requireUserExists(userId);return dao.activeBudgetForUser(userId);}
+    public BudgetEntity activeBudget(long userId){requireUserExists(userId);return currentOrActiveBudget(userId);}
+    public BudgetEntity currentOrActiveBudget(long userId){
+        requireUserExists(userId);
+        BudgetEntity current=dao.currentBudgetAt(userId,System.currentTimeMillis());
+        if(current!=null) return current;
+        BudgetEntity active=dao.activeBudgetForUser(userId);
+        if(active!=null) return active;
+        List<BudgetEntity> all=dao.budgetsForUser(userId);
+        return all.isEmpty()?null:all.get(all.size()-1);
+    }
+    public BudgetEntity resolveSelectedOrCurrentBudget(long userId,long preferredBudgetId){
+        requireUserExists(userId);
+        if(preferredBudgetId>0L){
+            BudgetEntity chosen=dao.findBudget(preferredBudgetId);
+            if(chosen!=null&&chosen.userId==userId) return chosen;
+        }
+        return currentOrActiveBudget(userId);
+    }
+    public List<BudgetEntity> budgetsForUser(long userId){requireUserExists(userId);return dao.budgetsForUser(userId);}
+    public BudgetEntity findOverlappingBudget(long userId,long startMillis,long endMillis,long excludeBudgetId){
+        requireUserExists(userId);
+        return dao.findOverlappingBudget(userId,startMillis,endMillis,excludeBudgetId);
+    }
+    public ManageCategoriesData loadManageCategories(long userId){
+        UserEntity owner=requireUserExists(userId);
+        boolean child="child".equalsIgnoreCase(owner.role);
+        List<SystemCategoryEntity> catalog=child?onboardingCategories(userId):dao.systemCategories();
+        List<Long> selectedCatalogIds=dao.selectedCatalogIds(userId);
+        List<MasroufEntities.UserCategoryEntity> links=dao.userCategoryLinks(userId);
+        java.util.HashSet<Long> customIds=new java.util.HashSet<>();
+        ArrayList<CategoryEntity> customCats=new ArrayList<>();
+        ArrayList<Long> selectedCustomIds=new ArrayList<>();
+        java.util.HashSet<Long> activeCatIds=new java.util.HashSet<>();
+        for(MasroufEntities.UserCategoryEntity link:links){
+            if(link.active) activeCatIds.add(link.categoryId);
+            if(link.catalogId==null) customIds.add(link.categoryId);
+        }
+        for(CategoryEntity c:dao.categoriesForUser(userId)){
+            if(customIds.contains(c.id)){
+                customCats.add(c);
+                if(activeCatIds.contains(c.id)) selectedCustomIds.add(c.id);
+            }
+        }
+        return new ManageCategoriesData(child,catalog,customCats,selectedCatalogIds,selectedCustomIds);
+    }
+    public boolean saveManagedCategories(long userId,List<Long> catalogIds,List<Long> customIds){
+        requireUserExists(userId);
+        return dao.updateUserCategorySelections(userId,catalogIds,customIds,BudgetPeriodMath.todayStartMillis());
+    }
+    public boolean deleteCustomCategory(long userId,long categoryId){
+        requireUserExists(userId);
+        return dao.deleteCustomCategory(userId,categoryId);
+    }
+    public CalendarYearData loadCalendarYear(long userId,int year,long selectedBudgetId){
+        requireUserExists(userId);
+        long yearStart=BudgetPeriodMath.startOfMonthMillis(year,0);
+        long yearEnd=BudgetPeriodMath.endOfMonthMillis(year,11);
+        List<BudgetEntity> overlappingYear=dao.budgetsOverlappingForUser(userId,yearStart,yearEnd);
+        List<TransactionRow> yearTx=dao.transactionsBetween(userId,yearStart,yearEnd);
+        long[] monthlySpent=new long[12];
+        long[] monthlyAllocated=new long[12];
+        Map<Integer,List<CalendarYearData.BudgetPeriodSummary>> monthBudgets=new HashMap<>();
+        Map<Integer,List<TransactionRow>> monthTransactions=new HashMap<>();
+        for(int m=0;m<12;m++){
+            monthBudgets.put(m,new ArrayList<>());
+            monthTransactions.put(m,new ArrayList<>());
+        }
+        Calendar txCal=Calendar.getInstance();
+        for(TransactionRow tx:yearTx){
+            txCal.setTimeInMillis(tx.occurredAt);
+            if(txCal.get(Calendar.YEAR)!=year) continue;
+            int m=txCal.get(Calendar.MONTH);
+            if(m>=0&&m<12){
+                monthTransactions.get(m).add(tx);
+                if("expense".equalsIgnoreCase(tx.kind)||"donation".equalsIgnoreCase(tx.kind)||"purchase".equalsIgnoreCase(tx.kind)){
+                    monthlySpent[m]=MoneyMath.add(monthlySpent[m],tx.amountMilli);
+                }
+            }
+        }
+        Map<Long,Long> budgetSpendCache=new HashMap<>();
+        for(int m=0;m<12;m++){
+            long mStart=BudgetPeriodMath.startOfMonthMillis(year,m);
+            long mEnd=BudgetPeriodMath.endOfMonthMillis(year,m);
+            List<CalendarYearData.BudgetPeriodSummary> list=monthBudgets.get(m);
+            for(BudgetEntity b:overlappingYear){
+                if(BudgetPeriodMath.periodsOverlap(b.periodStart,b.periodEnd,mStart,mEnd)){
+                    monthlyAllocated[m]=MoneyMath.add(monthlyAllocated[m],b.monthlyLimitMilli);
+                    Long cached=budgetSpendCache.get(b.id);
+                    if(cached==null){
+                        long total=dao.totalSpendingBetween(userId,b.periodStart,safeExclusiveEnd(b.periodEnd));
+                        cached=total;
+                        budgetSpendCache.put(b.id,cached);
+                    }
+                    list.add(new CalendarYearData.BudgetPeriodSummary(b,cached));
+                }
+            }
+        }
+        BudgetEntity resolved=resolveSelectedOrCurrentBudget(userId,selectedBudgetId);
+        return new CalendarYearData(year,monthlySpent,monthlyAllocated,monthBudgets,resolved==null?0L:resolved.id,monthTransactions);
+    }
     public BudgetEntity budget(long budgetId,long ownerId){requireUserExists(ownerId);BudgetEntity value=dao.findBudget(budgetId);return value!=null&&value.userId==ownerId?value:null;}
     public ProductDetailsData productDetails(long userId,long productId){
         requireUserExists(userId);
@@ -231,9 +335,13 @@ public final class MasroufRepository {
         requireUserExists(userId);if(expense.userId!=userId)throw new SecurityException("expense owner");
         return dao.recordExpense(expense);
     }
-    public List<CategoryEntity> categoriesForExpense(long userId){requireUserExists(userId);return dao.categoriesForUser(userId);}
+    public List<CategoryEntity> categoriesForExpense(long userId){
+        requireUserExists(userId);
+        List<CategoryEntity> selected=dao.selectedCategoriesForUser(userId);
+        return selected.isEmpty()?dao.categoriesForUser(userId):selected;
+    }
     public int allocatedPercent(long userId,String type){requireUserExists(userId);return dao.allocatedPercent(userId,type);}
-    public CategoryAllocationData categoryAllocation(long userId,String type){requireUserExists(userId);return new CategoryAllocationData(dao.allocatedPercent(userId,type),dao.activeBudgetForUser(userId));}
+    public CategoryAllocationData categoryAllocation(long userId,String type){requireUserExists(userId);return new CategoryAllocationData(dao.allocatedPercent(userId,type),currentOrActiveBudget(userId));}
     public boolean addCategory(CategoryEntity category,long userId){requireUserExists(userId);if(category.userId!=userId)throw new SecurityException("category owner");return dao.addCategoryWithAllocation(category);}
     public List<ChildSpendingSummary> familyChildren(long parentId){requireParent(parentId);return dao.childSpendingSummaries(parentId);}
     public List<BudgetHistoryRow> childHistory(long parentId,long childId){requireParent(parentId);return dao.childBudgetHistory(childId,parentId);}
@@ -261,13 +369,29 @@ public final class MasroufRepository {
     public DrawerBadgeData parentDrawerBadges(long parentId){requireParent(parentId);return new DrawerBadgeData(dao.countChildren(parentId),dao.unreadNotificationCount(parentId));}
     public BudgetAllocationData loadBudgetAllocation(long userId,boolean childMode,boolean editMode,long budgetId,long periodStart){
         UserEntity owner=requireUserExists(userId);boolean isChild="child".equalsIgnoreCase(owner.role);
-        if(childMode!=isChild)return new BudgetAllocationData(false,Collections.emptyList(),null,null,Collections.emptyList(),Collections.emptyMap());
-        List<CategoryEntity> categories=dao.categoriesForUser(userId);BudgetEntity budget=null;ChildProfileEntity profile=null;
-        if(childMode){profile=dao.childProfileForUser(userId);budget=dao.findBudget(budgetId);if(profile==null||budget==null||budget.userId!=userId)return new BudgetAllocationData(false,categories,null,profile,Collections.emptyList(),Collections.emptyMap());}
-        else if(editMode){budget=dao.findBudget(budgetId);if(budget==null||budget.userId!=userId)return new BudgetAllocationData(false,categories,null,null,Collections.emptyList(),Collections.emptyMap());}
-        List<BudgetLineEntity> lines=budget==null?Collections.emptyList():dao.budgetLines(budget.id);Map<Long,Long> history=Collections.emptyMap();
+        if(childMode!=isChild)return new BudgetAllocationData(false,Collections.emptyList(),Collections.emptyList(),null,null,Collections.emptyList(),Collections.emptyMap());
+        List<CategoryPresentationRow> presentations=dao.selectedCategoryPresentations(userId);
+        List<CategoryEntity> categories=dao.selectedCategoriesForUser(userId);
+        if(categories.isEmpty()) categories=dao.categoriesForUser(userId);
+        BudgetEntity budget=null;ChildProfileEntity profile=null;
+        if(childMode){profile=dao.childProfileForUser(userId);budget=dao.findBudget(budgetId);if(profile==null||budget==null||budget.userId!=userId)return new BudgetAllocationData(false,categories,presentations,null,profile,Collections.emptyList(),Collections.emptyMap());}
+        else if(editMode){budget=dao.findBudget(budgetId);if(budget==null||budget.userId!=userId)return new BudgetAllocationData(false,categories,presentations,null,null,Collections.emptyList(),Collections.emptyMap());}
+        List<BudgetLineEntity> lines=budget==null?Collections.emptyList():dao.budgetLines(budget.id);
+        if(!lines.isEmpty()){
+            java.util.HashSet<Long> included=new java.util.HashSet<>();
+            for(CategoryEntity c:categories) included.add(c.id);
+            ArrayList<CategoryEntity> merged=new ArrayList<>(categories);
+            for(BudgetLineEntity line:lines){
+                if(!included.contains(line.categoryId)&&line.spentMilli>0){
+                    CategoryEntity extra=dao.findCategoryForUser(line.categoryId,userId);
+                    if(extra!=null){merged.add(extra);included.add(extra.id);}
+                }
+            }
+            categories=merged;
+        }
+        Map<Long,Long> history=Collections.emptyMap();
         if(lines.isEmpty()&&periodStart>0){Calendar prior=Calendar.getInstance();prior.setTimeInMillis(periodStart);prior.add(Calendar.MONTH,-1);List<CategorySpendRow> spent=dao.categorySpendingBetween(userId,prior.getTimeInMillis(),periodStart);Map<Long,Long> amounts=new java.util.HashMap<>();for(CategorySpendRow row:spent)amounts.put(row.categoryId,row.amountMilli);history=amounts;}
-        return new BudgetAllocationData(true,categories,budget,profile,lines,history);
+        return new BudgetAllocationData(true,categories,presentations,budget,profile,lines,history);
     }
     public FamilyAnalyticsData familyAnalytics(long parentId){
         requireParent(parentId);List<ChildSpendingSummary> children=dao.childSpendingSummaries(parentId);TreeMap<Long,FamilyMonthSpending> months=new TreeMap<>();
@@ -282,8 +406,13 @@ public final class MasroufRepository {
     private UserEntity requireUserExists(long userId){UserEntity user=dao.findUser(userId);if(user==null)throw new SecurityException("unknown user");return user;}
     private void requireParent(long userId){UserEntity parent=dao.findUser(userId);if(parent==null||!("parent".equalsIgnoreCase(parent.role)||"admin".equalsIgnoreCase(parent.role)))throw new SecurityException("parent role required");}
     public HomeDashboardData loadHome(long userId,boolean parentMode,boolean childMode){
-        UserEntity user=dao.findUser(userId);BudgetEntity budget=dao.activeBudgetForUser(userId);
-        List<CategoryEntity> categories=dao.categoriesForUser(userId);List<TransactionRow> recent=dao.recentSpendingTransactions(userId);
+        return loadHome(userId,parentMode,childMode,0L);
+    }
+    public HomeDashboardData loadHome(long userId,boolean parentMode,boolean childMode,long preferredBudgetId){
+        UserEntity user=dao.findUser(userId);BudgetEntity budget=resolveSelectedOrCurrentBudget(userId,preferredBudgetId);
+        List<CategoryEntity> categories=dao.selectedCategoriesForUser(userId);
+        if(categories.isEmpty()) categories=dao.categoriesForUser(userId);
+        List<TransactionRow> recent=dao.recentSpendingTransactions(userId);
         ChildProfileEntity profile=childMode?dao.childProfileForUser(userId):null;
         List<ChildSpendingSummary> children=parentMode?dao.childSpendingSummaries(userId):Collections.emptyList();
         long allocated=parentMode?dao.totalChildAllocations(userId):0;
@@ -295,18 +424,22 @@ public final class MasroufRepository {
         long totalAllowance=childMode?dao.totalAllowanceReceived(userId):0L;
         int transactionCount=parentMode?dao.familyTransactionCount(userId,periodStart,periodEndExclusive):dao.transactionCount(userId,periodStart,periodEndExclusive);
         int pendingRequests=parentMode?dao.pendingMoneyRequestCount(userId):0;
-        Map<Long,Long> envelopes=new HashMap<>();
-        if(budget!=null)for(BudgetLineEntity line:dao.budgetLines(budget.id))envelopes.put(line.categoryId,line.limitMilli);
+        Map<Long,BudgetLineEntity> envelopes=new HashMap<>();
+        if(budget!=null)for(BudgetLineEntity line:dao.budgetLines(budget.id))envelopes.put(line.categoryId,line);
         Map<Long,Long> spending=new HashMap<>();
         for(CategorySpendRow row:dao.categorySpendingBetween(userId,periodStart,periodEndExclusive))spending.put(row.categoryId,row.amountMilli);
         long percentBase=budget==null?0:budget.monthlyLimitMilli;
         ArrayList<HomeCategoryProgress> progress=new ArrayList<>();
         for(CategoryPresentationRow row:dao.selectedCategoryPresentations(userId)){
-            long envelope=envelopes.containsKey(row.categoryId)?envelopes.get(row.categoryId):0;
-            long spent=spending.containsKey(row.categoryId)?spending.get(row.categoryId):0;
-            int planned=percentBase<=0?0:Math.max(0,MoneyMath.percentOf(envelope,percentBase));
+            BudgetLineEntity line=envelopes.get(row.categoryId);
+            long envelope=line==null?0L:line.limitMilli;
+            long spent=spending.containsKey(row.categoryId)?spending.get(row.categoryId):0L;
+            int plannedBps=line!=null&&line.plannedPercentBps>0
+                    ?line.plannedPercentBps
+                    :(percentBase<=0?0:BudgetPeriodMath.percentBpsFromAmount(percentBase,envelope));
+            int planned=(plannedBps+50)/100;
             int consumed=envelope<=0?(spent>0?100:0):Math.max(0,MoneyMath.percentOf(spent,envelope));
-            progress.add(new HomeCategoryProgress(row.categoryId,row.name,row.colorHex,row.type,row.catalogKey,row.iconName,envelope,spent,planned,consumed));
+            progress.add(new HomeCategoryProgress(row.categoryId,row.name,row.colorHex,row.type,row.catalogKey,row.iconName,envelope,spent,planned,plannedBps,consumed));
         }
         SettingEntity settings=dao.systemSettings();
         return new HomeDashboardData(user,budget,categories,recent,profile,children,allocated,parentSpent,progress,settings,goal,latestAllowance,totalAllowance,transactionCount,pendingRequests);

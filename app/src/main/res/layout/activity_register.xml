@@ -5,6 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/cream"
+    android:fitsSystemWindows="true"
     android:layoutDirection="locale">
 
     <ScrollView
@@ -32,8 +33,9 @@
                     android:layout_height="48dp"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:contentDescription="@string/back"
-                    android:padding="8dp"
-                    android:src="@drawable/ic_back" />
+                    android:padding="10dp"
+                    android:src="@drawable/ic_back"
+                    app:tint="@color/forest" />
 
                 <View
                     android:layout_width="0dp"
