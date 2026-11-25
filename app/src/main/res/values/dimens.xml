@@ -16,4 +16,8 @@
     <dimen name="text_secondary">14sp</dimen>
     <dimen name="text_caption">12sp</dimen>
     <dimen name="voice_fab_size">58dp</dimen>
+    <!-- Touch targets — minimum 48dp per Material guidelines -->
+    <dimen name="touch_target_min">48dp</dimen>
+    <!-- Drawer width — adapts to screen size via qualifier -->
+    <dimen name="drawer_width">280dp</dimen>
 </resources>

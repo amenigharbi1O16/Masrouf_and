@@ -1,14 +1,137 @@
 <resources>
+    <!-- Thème de base Masrouf — inspiré de la charte graphique React Native -->
     <style name="Base.Theme.Masrouf1" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Couleurs primaires et secondaires (vert forêt / émeraude) -->
         <item name="colorPrimary">@color/forest</item>
         <item name="colorOnPrimary">@color/alabaster</item>
+        <item name="colorPrimaryContainer">@color/mint</item>
+        <item name="colorOnPrimaryContainer">@color/forest</item>
         <item name="colorSecondary">@color/emerald</item>
         <item name="colorOnSecondary">@color/alabaster</item>
+        <item name="colorSecondaryContainer">@color/mint_light</item>
+        <item name="colorOnSecondaryContainer">@color/forest</item>
+        <item name="colorTertiary">@color/mint_accent</item>
+        <item name="colorOnTertiary">@color/forest</item>
+        <item name="colorTertiaryContainer">@color/mint</item>
+        <item name="colorOnTertiaryContainer">@color/forest</item>
+
+        <!-- CORRECTIF CRITIQUE : Remplace le violet Material3 par les couleurs Masrouf -->
+        <item name="colorControlActivated">@color/emerald</item>
+        <item name="colorControlHighlight">@color/mint</item>
+        <item name="colorControlNormal">@color/muted_green</item>
+        <item name="colorAccent">@color/emerald</item>
         <item name="android:colorAccent">@color/emerald</item>
+        <item name="android:textColorHighlight">@color/mint</item>
+
+        <!-- Surfaces et conteneurs Material3 (aucune teinte lavande/mauve par défaut) -->
+        <item name="colorSurface">@color/alabaster</item>
+        <item name="colorOnSurface">@color/forest</item>
+        <item name="colorSurfaceVariant">@color/cream</item>
+        <item name="colorOnSurfaceVariant">@color/muted_green</item>
+        <item name="colorSurfaceContainerLowest">@color/alabaster</item>
+        <item name="colorSurfaceContainerLow">@color/cream</item>
+        <item name="colorSurfaceContainer">@color/cream</item>
+        <item name="colorSurfaceContainerHigh">@color/mint</item>
+        <item name="colorSurfaceContainerHighest">@color/mint</item>
+        <item name="android:colorBackground">@color/cream</item>
+        <item name="colorOnBackground">@color/forest</item>
+
+        <!-- Couleurs d'erreur (corail Masrouf) -->
+        <item name="colorError">@color/coral</item>
+        <item name="colorOnError">@color/alabaster</item>
+
+        <!-- Outline pour TextInputLayout (bordures champ de saisie) -->
+        <item name="colorOutline">@color/card_border</item>
+        <item name="colorOutlineVariant">@color/card_border</item>
+
+        <!-- Typographie : texte principal en vert forêt foncé, secondaire en vert doux -->
+        <item name="android:textColorPrimary">@color/forest</item>
+        <item name="android:textColorSecondary">@color/muted_green</item>
+        <item name="android:textColorHint">@color/muted_green</item>
+
+        <!-- Fenêtre et barres de navigation -->
         <item name="android:windowLightStatusBar">true</item>
         <item name="android:statusBarColor">@color/cream</item>
         <item name="android:navigationBarColor">@color/cream</item>
         <item name="android:windowBackground">@color/cream</item>
+
+        <!-- ScrollView : overscroll en couleur menthe -->
+        <item name="android:colorEdgeEffect">@color/mint_accent</item>
+
+        <!-- Styles globaux des composants Material3 -->
+        <item name="textInputStyle">@style/Widget.Masrouf.TextInputLayout</item>
+        <item name="chipStyle">@style/Widget.Masrouf.Chip</item>
+        <item name="materialButtonOutlinedStyle">@style/Widget.Masrouf.Button.Outlined</item>
+        <item name="materialAlertDialogTheme">@style/ThemeOverlay.Masrouf.AlertDialog</item>
+        <!-- CORRECTIF : forcer le texte saisi en noir dans TOUS les EditText -->
+        <item name="editTextStyle">@style/Widget.Masrouf.EditText</item>
+        <!-- Forcer textColorPrimary en mode sombre aussi -->
+        <item name="android:textColor">@color/ink</item>
+        <!-- Touch target minimum for all MaterialButtons -->
+        <item name="materialButtonStyle">@style/Widget.Masrouf.Button.Material</item>
     </style>
+
     <style name="Theme.Masrouf1" parent="Base.Theme.Masrouf1" />
+
+    <!-- Style TextInputLayout Masrouf : fond blanc, bordures et curseurs émeraude -->
+    <style name="Widget.Masrouf.TextInputLayout" parent="Widget.Material3.TextInputLayout.OutlinedBox">
+        <item name="boxBackgroundColor">@color/alabaster</item>
+        <item name="boxStrokeColor">@color/text_input_stroke_color</item>
+        <item name="hintEnabled">false</item>
+        <item name="hintTextColor">@color/text_input_label_color</item>
+        <item name="android:textColorHint">@color/muted_green</item>
+        <item name="boxCornerRadiusTopStart">12dp</item>
+        <item name="boxCornerRadiusTopEnd">12dp</item>
+        <item name="boxCornerRadiusBottomStart">12dp</item>
+        <item name="boxCornerRadiusBottomEnd">12dp</item>
+    </style>
+
+    <!-- Style TextInputEditText Masrouf : texte toujours sombre, même en mode nuit -->
+    <style name="Widget.Masrouf.TextInputEditText" parent="Widget.Material3.TextInputEditText.OutlinedBox">
+        <item name="android:textColor">@color/ink</item>
+        <item name="android:textColorHint">@color/muted_green</item>
+    </style>
+
+    <!-- Style EditText Masrouf (hors TextInputLayout) : texte toujours sombre -->
+    <style name="Widget.Masrouf.EditText" parent="Widget.AppCompat.EditText">
+        <item name="android:textColor">@color/ink</item>
+        <item name="android:textColorHint">@color/muted_green</item>
+    </style>
+
+    <!-- Style Chip Masrouf : menthe sélectionné / blanc non sélectionné -->
+    <style name="Widget.Masrouf.Chip" parent="Widget.Material3.Chip.Filter">
+        <item name="chipBackgroundColor">@color/chip_background_color</item>
+        <item name="chipStrokeColor">@color/chip_stroke_color</item>
+        <item name="chipStrokeWidth">1dp</item>
+        <item name="android:textColor">@color/forest</item>
+        <item name="checkedIconTint">@color/emerald</item>
+    </style>
+
+    <!-- Style OutlinedButton Masrouf : texte et bordure vert forêt -->
+    <style name="Widget.Masrouf.Button.Outlined" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="android:textColor">@color/forest</item>
+        <item name="strokeColor">@color/forest</item>
+        <item name="iconTint">@color/forest</item>
+    </style>
+
+    <!-- Style AlertDialog Masrouf : boutons en vert forêt/émeraude -->
+    <style name="ThemeOverlay.Masrouf.AlertDialog" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="colorPrimary">@color/forest</item>
+        <item name="colorSecondary">@color/emerald</item>
+        <item name="colorSurface">@color/alabaster</item>
+        <item name="colorSurfaceContainerHigh">@color/alabaster</item>
+        <item name="buttonBarPositiveButtonStyle">@style/Widget.Masrouf.DialogButton</item>
+        <item name="buttonBarNegativeButtonStyle">@style/Widget.Masrouf.DialogButton</item>
+        <item name="buttonBarNeutralButtonStyle">@style/Widget.Masrouf.DialogButton</item>
+    </style>
+
+    <style name="Widget.Masrouf.DialogButton" parent="Widget.Material3.Button.TextButton.Dialog">
+        <item name="android:textColor">@color/emerald</item>
+    </style>
+
+    <!-- Global MaterialButton: enforce 48dp min height for touch targets -->
+    <style name="Widget.Masrouf.Button.Material" parent="Widget.Material3.Button">
+        <item name="android:minHeight">48dp</item>
+    </style>
+
 </resources>

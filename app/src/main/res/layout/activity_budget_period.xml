@@ -3,11 +3,17 @@
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="22dp">
         <TextView android:id="@+id/budget_period_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/budget_this_month" android:textColor="@color/forest" android:textSize="24sp" android:textStyle="bold" />
         <TextView style="@style/FormFieldLabel" android:labelFor="@id/budget_start_date" android:layout_marginTop="10dp" android:text="@string/budget_start_date" />
-        <EditText android:id="@+id/budget_start_date" android:layout_width="match_parent" android:layout_height="58dp" android:hint="@string/hint_budget_start_date" android:inputType="date" android:singleLine="true" />
+        <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="4dp">
+            <com.google.android.material.textfield.TextInputEditText android:id="@+id/budget_start_date" android:layout_width="match_parent" android:layout_height="58dp" android:hint="@string/hint_date" android:inputType="text" android:singleLine="true" android:textColor="@color/ink" />
+        </com.google.android.material.textfield.TextInputLayout>
         <TextView style="@style/FormFieldLabel" android:labelFor="@id/budget_end_date" android:text="@string/budget_end_date" />
-        <EditText android:id="@+id/budget_end_date" android:layout_width="match_parent" android:layout_height="58dp" android:hint="@string/hint_budget_end_date" android:inputType="date" android:singleLine="true" />
+        <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="4dp">
+            <com.google.android.material.textfield.TextInputEditText android:id="@+id/budget_end_date" android:layout_width="match_parent" android:layout_height="58dp" android:hint="@string/hint_date" android:inputType="text" android:singleLine="true" android:textColor="@color/ink" />
+        </com.google.android.material.textfield.TextInputLayout>
         <TextView style="@style/FormFieldLabel" android:labelFor="@id/budget_total_input" android:text="@string/monthly_budget_amount" />
-        <EditText android:id="@+id/budget_total_input" android:layout_width="match_parent" android:layout_height="58dp" android:hint="@string/hint_amount" android:inputType="numberDecimal" android:singleLine="true" />
+        <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="4dp">
+            <com.google.android.material.textfield.TextInputEditText android:id="@+id/budget_total_input" android:layout_width="match_parent" android:layout_height="58dp" android:hint="@string/hint_amount" android:inputType="numberDecimal" android:singleLine="true" android:textColor="@color/ink" />
+        </com.google.android.material.textfield.TextInputLayout>
         <TextView android:id="@+id/budget_period_error" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/coral" />
         <com.google.android.material.button.MaterialButton android:id="@+id/budget_period_continue" android:layout_width="match_parent" android:layout_height="56dp" android:layout_marginTop="18dp" android:text="@string/welcome_next" app:backgroundTint="@color/forest" app:cornerRadius="16dp" />
     </LinearLayout>

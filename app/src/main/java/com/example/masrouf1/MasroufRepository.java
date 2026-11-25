@@ -5,6 +5,7 @@ import androidx.lifecycle.LiveData;
 
 import com.example.masrouf1.db.CategorySpendRow;
 import com.example.masrouf1.db.BudgetHistoryRow;
+import com.example.masrouf1.db.PurchaseHistoryRow;
 import com.example.masrouf1.db.ChildSpendingSummary;
 import com.example.masrouf1.db.MasroufDatabase;
 import com.example.masrouf1.db.MasroufDao;
@@ -152,6 +153,39 @@ public final class MasroufRepository {
         }catch(RuntimeException failure){return OperationResult.failure("parent");}
     }
     public String childEmail(long parentId,long profileId){requireParent(parentId);return dao.childEmailForProfile(profileId,parentId);}
+    /**
+     * Vérifie l'ancien mot de passe puis met à jour le hash en base si la vérification réussit.
+     * Retourne OperationResult.failure("wrong_password") si l'ancien MDP est incorrect.
+     * Utilisé par ChangePasswordActivity.
+     */
+    public OperationResult<Boolean> changePassword(long userId, String currentPassword, String newPassword) {
+        UserEntity user = requireUserExists(userId);
+        // Vérification de l'ancien mot de passe via hash sécurisé
+        if (!com.masrouf.controller.PasswordHasher.verify(currentPassword, user.passwordHash)) {
+            return OperationResult.failure("wrong_password");
+        }
+        if (!InputValidation.isValidPassword(newPassword)) {
+            return OperationResult.failure("policy");
+        }
+        String newHash = com.masrouf.controller.PasswordHasher.hash(newPassword);
+        try {
+            return dao.updatePasswordHash(userId, newHash) > 0
+                    ? OperationResult.success(true)
+                    : OperationResult.failure("save");
+        } catch (RuntimeException e) {
+            return OperationResult.failure("save");
+        }
+    }
+
+    /**
+     * Retourne l'historique chronologique des achats d'un produit pour l'utilisateur connecté.
+     * Utilisé par ProductPriceHistoryActivity.
+     */
+    public List<PurchaseHistoryRow> purchaseHistoryForProduct(long productId, long userId) {
+        requireUserExists(userId);
+        return dao.productPurchaseHistory(userId, productId);
+    }
+
     public OperationResult<Boolean> updateEmail(long userId,String email){
         email=InputValidation.normalizeGmail(email);
         if(!InputValidation.isStrictGmail(email))return OperationResult.failure("gmail");
@@ -222,6 +256,8 @@ public final class MasroufRepository {
         UserEntity child=requireUserExists(childUserId);if(!"child".equalsIgnoreCase(child.role))return "";
         String phone=dao.parentPhoneForChild(childUserId);return phone==null?"":phone;
     }
+    public int unreadNotificationCount(long userId){requireUserExists(userId);return dao.unreadNotificationCount(userId);}
+    public List<BudgetLineEntity> budgetLines(long budgetId,long userId){requireUserExists(userId);BudgetEntity budget=dao.findBudget(budgetId);return budget!=null&&budget.userId==userId?dao.budgetLines(budgetId):Collections.emptyList();}
     public DrawerBadgeData parentDrawerBadges(long parentId){requireParent(parentId);return new DrawerBadgeData(dao.countChildren(parentId),dao.unreadNotificationCount(parentId));}
     public BudgetAllocationData loadBudgetAllocation(long userId,boolean childMode,boolean editMode,long budgetId,long periodStart){
         UserEntity owner=requireUserExists(userId);boolean isChild="child".equalsIgnoreCase(owner.role);

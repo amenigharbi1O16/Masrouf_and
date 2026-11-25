@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/admin_drawer_panel"
-    android:layout_width="320dp"
+    android:layout_width="@dimen/drawer_width"
     android:layout_height="match_parent"
     android:layout_gravity="start"
     android:background="@color/forest"
@@ -17,12 +17,13 @@
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal">
         <ImageView android:layout_width="52dp" android:layout_height="52dp" android:background="@drawable/badge_background" android:contentDescription="@string/parent_shield" android:padding="11dp" android:src="@drawable/ic_shield" app:tint="@color/forest" />
         <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="12dp" android:layout_weight="1" android:orientation="vertical">
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/app_name" android:textColor="@color/alabaster" android:textSize="23sp" android:textStyle="bold" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/app_name" android:textColor="@color/alabaster" android:textSize="22sp" android:textStyle="bold" />
+            <TextView android:id="@+id/admin_drawer_user_name" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:ellipsize="end" android:maxLines="1" android:textColor="@color/mint" android:textSize="13sp" android:textStyle="bold" android:visibility="gone" />
             <TextView android:id="@+id/admin_drawer_badge" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="5dp" android:background="@drawable/badge_background" android:paddingHorizontal="11dp" android:paddingVertical="5dp" android:text="@string/drawer_parent" android:textColor="@color/forest" android:textSize="10sp" android:textStyle="bold" />
         </LinearLayout>
     </LinearLayout>
     <LinearLayout android:id="@+id/admin_drawer_menu_items" android:layout_width="match_parent" android:layout_height="0dp" android:layout_marginTop="22dp" android:layout_weight="1" android:orientation="vertical" />
     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="7dp" android:text="@string/drawer_language" android:textColor="@color/mint" android:textSize="12sp" />
     <LinearLayout android:id="@+id/admin_language_buttons" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" />
-    <com.google.android.material.button.MaterialButton android:id="@+id/admin_logout" style="@style/Widget.Material3.Button.OutlinedButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="9dp" android:text="@string/logout" android:textColor="@color/alabaster" app:cornerRadius="16dp" app:strokeColor="@color/mint" />
+    <com.google.android.material.button.MaterialButton android:id="@+id/admin_logout" style="@style/Widget.Material3.Button.OutlinedButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="9dp" android:text="@string/logout" android:textColor="@color/coral" app:cornerRadius="16dp" app:strokeColor="@color/coral" />
 </LinearLayout>

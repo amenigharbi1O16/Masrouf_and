@@ -2,89 +2,268 @@ package com.masrouf.controller;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.Gravity;
 import android.view.View;
-import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.example.masrouf1.LocaleController;
 import com.example.masrouf1.R;
 import com.google.android.material.button.MaterialButton;
-import com.google.android.material.tabs.TabLayout;
-import com.google.android.material.tabs.TabLayoutMediator;
+
 import java.util.Locale;
 
+/**
+ * WelcomeActivity — entry point with 2 phases:
+ *  Phase 1: Welcome splash (logo + "Commencer" button)
+ *  Phase 2: 3-slide intro carousel → routes to ChooseAccountTypeActivity
+ */
 public final class WelcomeActivity extends AppCompatActivity {
-    private LinearLayout welcomePhase, slidePhase, accountPhase;
+
+    private LinearLayout phaseWelcome, phaseSlides;
+    private LinearLayout welcomeBottom, slideBottom;
     private ViewPager2 pager;
-    private MaterialButton next;
-    private TabLayoutMediator mediator;
+    private LinearLayout dotsContainer;
+    private MaterialButton slideNext;
+    private int currentSlide = 0;
+    private static final int TOTAL_SLIDES = 3;
 
-    @Override protected void onCreate(Bundle savedInstanceState) {
+    // Slide data
+    private final int[] slideTitleIds = {
+            R.string.slide_one_title,
+            R.string.slide_two_title,
+            R.string.slide_three_title
+    };
+    private final int[] slideBodyIds = {
+            R.string.slide_one_body,
+            R.string.slide_two_body,
+            R.string.slide_three_body
+    };
+    private final int[] slideBullet1Ids = {
+            R.string.slide_one_bullet1,
+            R.string.slide_two_bullet1,
+            R.string.slide_three_bullet1
+    };
+    private final int[] slideBullet2Ids = {
+            R.string.slide_one_bullet2,
+            R.string.slide_two_bullet2,
+            R.string.slide_three_bullet2
+    };
+    private final int[] slideIconIds = {
+            R.drawable.ic_wallet,
+            R.drawable.ic_pie_chart,
+            R.drawable.ic_people
+    };
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if(SessionStore.userId(this)>0) { startActivity(new Intent(this,com.example.masrouf1.MainActivity.class)); finish(); return; }
+
+        // If already logged in, skip to main
+        if (SessionStore.userId(this) > 0) {
+            startActivity(new Intent(this, com.example.masrouf1.MainActivity.class));
+            finish();
+            return;
+        }
+
         setContentView(R.layout.activity_welcome);
-        welcomePhase = findViewById(R.id.phase_welcome); slidePhase = findViewById(R.id.phase_slides); accountPhase = findViewById(R.id.phase_select_type);
-        pager = findViewById(R.id.welcome_pager); next = findViewById(R.id.slide_next);
-        buildLanguages();
-        findViewById(R.id.start_welcome).setOnClickListener(v -> showPhase2());
-        findViewById(R.id.open_login).setOnClickListener(v -> startActivity(new Intent(this, LoginActivity.class)));
-        findViewById(R.id.personal_card).setOnClickListener(v -> openRegister("personal"));
-        findViewById(R.id.family_card).setOnClickListener(v -> openRegister("family"));
-        pager.setAdapter(new WelcomeSlideAdapter());
-        mediator = new TabLayoutMediator((TabLayout) findViewById(R.id.welcome_tabs), pager, (tab, position) -> { });
-        mediator.attach();
+
+        phaseWelcome = findViewById(R.id.phase_welcome);
+        phaseSlides = findViewById(R.id.phase_slides);
+        welcomeBottom = findViewById(R.id.welcome_bottom);
+        slideBottom = findViewById(R.id.slide_bottom);
+        pager = findViewById(R.id.welcome_pager);
+        dotsContainer = findViewById(R.id.slide_dots);
+        slideNext = findViewById(R.id.slide_next);
+
+        // Build language buttons in both phases
+        buildLanguageButtons(R.id.welcome_languages);
+
+        // Welcome phase: "Commencer" button
+        MaterialButton startBtn = findViewById(R.id.start_welcome);
+        startBtn.setOnClickListener(v -> showPhase2());
+
+        // Welcome phase: "Se connecter" link (with HTML bold)
+        TextView openLogin = findViewById(R.id.open_login);
+        openLogin.setText(android.text.Html.fromHtml(getString(R.string.already_account_link), android.text.Html.FROM_HTML_MODE_COMPACT));
+        openLogin.setOnClickListener(v -> goToLogin());
+
+        // Slide phase: back arrow
+        ImageView slideBack = findViewById(R.id.slide_back);
+        slideBack.setOnClickListener(v -> {
+            if (currentSlide > 0) {
+                pager.setCurrentItem(currentSlide - 1, true);
+            } else {
+                showPhase1();
+            }
+        });
+
+        // Slide phase: "Passer" skip link
+        TextView slideSkip = findViewById(R.id.slide_skip);
+        slideSkip.setOnClickListener(v -> goToChooseAccountType());
+
+        // Slide "Se connecter"
+        TextView slideOpenLogin = findViewById(R.id.slide_open_login);
+        slideOpenLogin.setText(android.text.Html.fromHtml(getString(R.string.already_account_link), android.text.Html.FROM_HTML_MODE_COMPACT));
+        slideOpenLogin.setOnClickListener(v -> goToLogin());
+
+        // "Continuer" / "Choisissez votre type de compte" button
+        slideNext.setOnClickListener(v -> {
+            if (currentSlide < TOTAL_SLIDES - 1) {
+                pager.setCurrentItem(currentSlide + 1, true);
+            } else {
+                goToChooseAccountType();
+            }
+        });
+
+        // Build dots
+        buildDots();
+
+        // Setup pager
+        pager.setAdapter(new SlideAdapter());
         pager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
-            @Override public void onPageSelected(int position) { next.setText(position==2?R.string.start:R.string.welcome_next); }
+            @Override
+            public void onPageSelected(int position) {
+                currentSlide = position;
+                updateDots(position);
+                updateNextButton(position);
+            }
         });
-        next.setOnClickListener(v -> {
-            if (pager.getCurrentItem() < 2) pager.setCurrentItem(pager.getCurrentItem() + 1, true);
-            else showPhase3();
-        });
+
+        updateNextButton(0);
+        updateDots(0);
     }
 
-    private void showPhase2() { welcomePhase.setVisibility(View.GONE); slidePhase.setVisibility(View.VISIBLE); }
-    private void showPhase3() { slidePhase.setVisibility(View.GONE); accountPhase.setVisibility(View.VISIBLE); }
-    private void openRegister(String type) {
-        Intent intent = new Intent(this, RegisterActivity.class); intent.putExtra("TYPE", type); startActivity(intent);
+    private void showPhase1() {
+        phaseWelcome.setVisibility(View.VISIBLE);
+        phaseSlides.setVisibility(View.GONE);
+        welcomeBottom.setVisibility(View.VISIBLE);
+        slideBottom.setVisibility(View.GONE);
     }
 
-    private void buildLanguages() {
-        LinearLayout row = findViewById(R.id.welcome_languages);
-        for (String tag : new String[]{"fr", "ar", "en"}) {
-            TextView language = new TextView(this); language.setText(tag.toUpperCase(Locale.ROOT)); language.setGravity(Gravity.CENTER);
-            language.setTextColor(getColor(R.color.emerald)); language.setTextSize(11); language.setPadding(8, 8, 8, 8);
-            language.setOnClickListener(v -> LocaleController.apply(tag)); row.addView(language);
+    private void showPhase2() {
+        phaseWelcome.setVisibility(View.GONE);
+        phaseSlides.setVisibility(View.VISIBLE);
+        welcomeBottom.setVisibility(View.GONE);
+        slideBottom.setVisibility(View.VISIBLE);
+        currentSlide = 0;
+        pager.setCurrentItem(0, false);
+        updateDots(0);
+        updateNextButton(0);
+    }
+
+    private void goToLogin() {
+        startActivity(new Intent(this, LoginActivity.class));
+    }
+
+    private void goToChooseAccountType() {
+        startActivity(new Intent(this, ChooseAccountTypeActivity.class));
+    }
+
+    private void updateNextButton(int position) {
+        if (position == TOTAL_SLIDES - 1) {
+            slideNext.setText(R.string.choose_account_type_action);
+        } else {
+            slideNext.setText(R.string.welcome_next);
         }
     }
 
-    private final class WelcomeSlideAdapter extends androidx.recyclerview.widget.RecyclerView.Adapter<WelcomeSlideAdapter.Holder> {
-        private final int[] titleIds = {R.string.slide_one_title, R.string.slide_two_title, R.string.slide_three_title};
-        private final int[] bodyIds = {R.string.slide_one_body, R.string.slide_two_body, R.string.slide_three_body};
-        private final String[] icons = {"↗", "◉", "✦"};
-        @Override public Holder onCreateViewHolder(ViewGroup parent, int type) {
-            LinearLayout page = new LinearLayout(WelcomeActivity.this); page.setGravity(Gravity.CENTER); page.setOrientation(LinearLayout.VERTICAL); page.setPadding(20, 24, 20, 24);
-            TextView icon = new TextView(WelcomeActivity.this); icon.setGravity(Gravity.CENTER); icon.setTextColor(getColor(R.color.emerald)); icon.setTextSize(76);
-            page.addView(icon, new LinearLayout.LayoutParams(-1, dp(130)));
-            TextView title = new TextView(WelcomeActivity.this); title.setGravity(Gravity.CENTER); title.setTextColor(getColor(R.color.forest)); title.setTextSize(24); title.setTypeface(null, android.graphics.Typeface.BOLD);
-            page.addView(title, new LinearLayout.LayoutParams(-1, ViewGroup.LayoutParams.WRAP_CONTENT));
-            TextView body = new TextView(WelcomeActivity.this); body.setGravity(Gravity.CENTER); body.setTextColor(getColor(R.color.muted_green)); body.setTextSize(15); body.setPadding(8, 12, 8, 12);
-            page.addView(body, new LinearLayout.LayoutParams(-1, ViewGroup.LayoutParams.WRAP_CONTENT));
-            return new Holder(page, icon, title, body);
-        }
-        @Override public void onBindViewHolder(Holder holder, int position) {
-            holder.icon.setText(icons[position]); holder.title.setText(titleIds[position]); holder.body.setText(bodyIds[position]);
-        }
-        @Override public int getItemCount() { return titleIds.length; }
-        final class Holder extends androidx.recyclerview.widget.RecyclerView.ViewHolder {
-            final TextView icon, title, body;
-            Holder(View view, TextView icon, TextView title, TextView body) { super(view); this.icon=icon; this.title=title; this.body=body; }
+    private void buildDots() {
+        dotsContainer.removeAllViews();
+        for (int i = 0; i < TOTAL_SLIDES; i++) {
+            View dot = new View(this);
+            int size = dp(10);
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(size, size);
+            params.setMargins(dp(5), 0, dp(5), 0);
+            dot.setLayoutParams(params);
+            dot.setTag(i);
+            dotsContainer.addView(dot);
         }
     }
-    private int dp(int value) { return (int)(value * getResources().getDisplayMetrics().density + .5f); }
-    @Override protected void onDestroy() { if (mediator != null) mediator.detach(); super.onDestroy(); }
+
+    private void updateDots(int active) {
+        for (int i = 0; i < dotsContainer.getChildCount(); i++) {
+            View dot = dotsContainer.getChildAt(i);
+            if (i == active) {
+                dot.setBackgroundResource(R.drawable.bg_dot_active);
+            } else {
+                dot.setBackgroundResource(R.drawable.bg_dot_inactive);
+            }
+        }
+    }
+
+    private void buildLanguageButtons(int containerId) {
+        LinearLayout row = findViewById(containerId);
+        if (row == null) return;
+        row.removeAllViews();
+        String[] tags = {"en", "fr", "ar"};
+        String[] labels = {"EN", "FR", "عربي"};
+        for (int i = 0; i < tags.length; i++) {
+            final String tag = tags[i];
+            final String label = labels[i];
+            TextView tv = new TextView(this);
+            tv.setText(label);
+            tv.setGravity(android.view.Gravity.CENTER);
+            tv.setTextSize(13f);
+            tv.setPadding(dp(10), dp(6), dp(10), dp(6));
+            tv.setTextColor(getColor(R.color.muted_green));
+            tv.setBackground(getDrawable(R.drawable.bg_lang_unselected));
+            tv.setOnClickListener(v -> {
+                LocaleController.apply(tag);
+                // setApplicationLocales() automatically recreates the activity — no manual recreate() needed
+            });
+            row.addView(tv);
+        }
+    }
+
+    private int dp(int value) {
+        return Math.round(value * getResources().getDisplayMetrics().density);
+    }
+
+    // ─── Slide ViewPager2 adapter ────────────────────────────────────────────
+
+    private final class SlideAdapter extends RecyclerView.Adapter<SlideAdapter.Holder> {
+
+        @Override
+        public Holder onCreateViewHolder(android.view.ViewGroup parent, int viewType) {
+            android.view.View v = getLayoutInflater().inflate(R.layout.item_welcome_slide, parent, false);
+            return new Holder(v);
+        }
+
+        @Override
+        public void onBindViewHolder(Holder holder, int position) {
+            holder.icon.setImageResource(slideIconIds[position]);
+            holder.title.setText(slideTitleIds[position]);
+            holder.body.setText(slideBodyIds[position]);
+            holder.bullet1.setText(slideBullet1Ids[position]);
+            holder.bullet2.setText(slideBullet2Ids[position]);
+            // Last slide uses blue checkmarks
+            int checkRes = position == 2 ? R.drawable.ic_check_circle_blue : R.drawable.ic_check_circle;
+            holder.bullet1Icon.setImageResource(checkRes);
+            holder.bullet2Icon.setImageResource(checkRes);
+        }
+
+        @Override
+        public int getItemCount() { return TOTAL_SLIDES; }
+
+        final class Holder extends RecyclerView.ViewHolder {
+            final ImageView icon, bullet1Icon, bullet2Icon;
+            final TextView title, body, bullet1, bullet2;
+            Holder(android.view.View v) {
+                super(v);
+                icon = v.findViewById(R.id.slide_icon);
+                title = v.findViewById(R.id.slide_title);
+                body = v.findViewById(R.id.slide_body);
+                bullet1 = v.findViewById(R.id.slide_bullet1);
+                bullet2 = v.findViewById(R.id.slide_bullet2);
+                bullet1Icon = v.findViewById(R.id.slide_bullet1_icon);
+                bullet2Icon = v.findViewById(R.id.slide_bullet2_icon);
+            }
+        }
+    }
 }

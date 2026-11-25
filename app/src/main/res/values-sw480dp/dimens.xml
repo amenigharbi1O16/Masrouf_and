@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dimens for large phones / tablets >= 480dp screen width -->
+<resources>
+    <dimen name="drawer_width">320dp</dimen>
+    <dimen name="text_title">28sp</dimen>
+    <dimen name="text_section">20sp</dimen>
+    <dimen name="text_body">16sp</dimen>
+</resources>

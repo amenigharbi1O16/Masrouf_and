@@ -19,12 +19,19 @@ import java.io.File;
 public final class ProductDetailsActivity extends BaseFeatureActivity {
     @Override protected void onCreate(Bundle state){super.onCreate(state);showPage(R.string.product_details);getLayoutInflater().inflate(R.layout.activity_product_details,content,true);
         ImageView photo=findViewById(R.id.product_detail_photo);TextView title=findViewById(R.id.product_detail_title),stats=findViewById(R.id.product_detail_stats),empty=findViewById(R.id.product_purchase_empty);
+        com.google.android.material.button.MaterialButton fullHistoryButton=findViewById(R.id.product_view_full_history);
         PriceChartView chart=findViewById(R.id.product_price_chart);RecyclerView purchases=findViewById(R.id.product_purchase_history);purchases.setLayoutManager(new LinearLayoutManager(this));PurchaseHistoryAdapter adapter=new PurchaseHistoryAdapter();purchases.setAdapter(adapter);
         long id=getIntent().getLongExtra("PRODUCT_ID",0),userId=SessionStore.userId(this);MasroufViewModel vm=new androidx.lifecycle.ViewModelProvider(this,new MasroufViewModelFactory(this)).get(MasroufViewModel.class);
-        vm.<ProductDetailsData>request(repository->repository.productDetails(userId,id),result->{if(result.failed||result.data==null||result.data.product==null){title.setText(R.string.product_details_unavailable);stats.setText("");chart.setHistory(java.util.Collections.emptyList());adapter.submit(java.util.Collections.emptyList());empty.setVisibility(android.view.View.VISIBLE);return;}
+        vm.<ProductDetailsData>request(repository->repository.productDetails(userId,id),result->{if(result.failed||result.data==null||result.data.product==null){title.setText(R.string.product_details_unavailable);stats.setText("");chart.setHistory(java.util.Collections.emptyList());adapter.submit(java.util.Collections.emptyList());empty.setVisibility(android.view.View.VISIBLE);if(fullHistoryButton!=null)fullHistoryButton.setVisibility(android.view.View.GONE);return;}
             ProductDetailsData data=result.data;title.setText(data.product.name+(data.product.brand==null||data.product.brand.isEmpty()?"":" · "+data.product.brand)+"\n"+CurrencyFormatter.formatMilli(data.product.currentPriceMilli)+" / "+data.product.unit);
             if(data.product.photoPath!=null&&new File(data.product.photoPath).exists())photo.setImageBitmap(BitmapFactory.decodeFile(data.product.photoPath));
             if(data.minPriceMilli==null)stats.setText(R.string.price_history_empty);else stats.setText(getString(R.string.product_price_stats,CurrencyFormatter.formatMilli(data.minPriceMilli),CurrencyFormatter.formatMilli(data.averagePriceMilli),CurrencyFormatter.formatMilli(data.maxPriceMilli)));
             chart.setHistory(data.history);adapter.submit(data.purchases);empty.setVisibility(data.purchases.isEmpty()?android.view.View.VISIBLE:android.view.View.GONE);
+            if(fullHistoryButton!=null){
+                fullHistoryButton.setVisibility(data.purchases.isEmpty()?android.view.View.GONE:android.view.View.VISIBLE);
+                fullHistoryButton.setOnClickListener(v->startActivity(new android.content.Intent(this,ProductPriceHistoryActivity.class)
+                        .putExtra("PRODUCT_ID",data.product.id)
+                        .putExtra("PRODUCT_NAME",data.product.name)));
+            }
         });}
 }

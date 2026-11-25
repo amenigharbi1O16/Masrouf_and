@@ -4,13 +4,19 @@
     <com.google.android.material.card.MaterialCardView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_margin="16dp" app:cardBackgroundColor="@color/alabaster" app:cardCornerRadius="16dp" app:strokeColor="@color/card_border" app:strokeWidth="1dp">
         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
             <TextView style="@style/FormFieldLabel" android:labelFor="@id/expense_label" android:text="@string/transaction_name" />
-            <EditText android:id="@+id/expense_label" android:layout_width="match_parent" android:layout_height="54dp" android:hint="@string/hint_transaction_name" android:singleLine="true" />
+            <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="4dp">
+                <com.google.android.material.textfield.TextInputEditText android:id="@+id/expense_label" android:layout_width="match_parent" android:layout_height="58dp" android:hint="@string/hint_transaction_name" android:inputType="text" android:singleLine="true" android:textColor="@color/ink" />
+            </com.google.android.material.textfield.TextInputLayout>
             <TextView style="@style/FormFieldLabel" android:labelFor="@id/expense_amount" android:text="@string/amount_dinars" />
-            <EditText android:id="@+id/expense_amount" android:layout_width="match_parent" android:layout_height="54dp" android:hint="@string/hint_amount" android:inputType="numberDecimal" />
+            <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="4dp">
+                <com.google.android.material.textfield.TextInputEditText android:id="@+id/expense_amount" android:layout_width="match_parent" android:layout_height="58dp" android:hint="@string/hint_amount" android:inputType="numberDecimal" android:singleLine="true" android:textColor="@color/ink" />
+            </com.google.android.material.textfield.TextInputLayout>
             <TextView style="@style/FormFieldLabel" android:labelFor="@id/expense_category" android:text="@string/field_category" />
             <Spinner android:id="@+id/expense_category" android:layout_width="match_parent" android:layout_height="54dp" android:contentDescription="@string/field_category" />
             <TextView style="@style/FormFieldLabel" android:labelFor="@id/expense_note" android:text="@string/expense_note" />
-            <EditText android:id="@+id/expense_note" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="top" android:hint="@string/hint_expense_note" android:minHeight="80dp" android:inputType="textCapSentences|textMultiLine" />
+            <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="4dp">
+                <com.google.android.material.textfield.TextInputEditText android:id="@+id/expense_note" android:layout_width="match_parent" android:layout_height="58dp" android:hint="@string/hint_note" android:inputType="text" android:singleLine="true" android:textColor="@color/ink" />
+            </com.google.android.material.textfield.TextInputLayout>
             <TextView style="@style/FormFieldLabel" android:labelFor="@id/expense_date" android:text="@string/expense_date" />
             <TextView android:id="@+id/expense_date" android:layout_width="match_parent" android:layout_height="52dp" android:gravity="center_vertical" android:hint="@string/hint_date" android:paddingHorizontal="10dp" />
             <com.google.android.material.button.MaterialButton android:id="@+id/save_expense" android:layout_width="match_parent" android:layout_height="54dp" android:text="@string/save" app:backgroundTint="@color/forest" app:cornerRadius="16dp" />

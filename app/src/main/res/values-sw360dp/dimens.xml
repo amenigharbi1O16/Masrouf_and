@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dimens for phones with >= 360dp screen width (most modern Android phones) -->
+<resources>
+    <dimen name="drawer_width">300dp</dimen>
+    <dimen name="text_title">26sp</dimen>
+    <dimen name="text_section">19sp</dimen>
+    <dimen name="text_body">15sp</dimen>
+</resources>

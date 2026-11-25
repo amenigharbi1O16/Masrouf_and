@@ -65,6 +65,11 @@
         <activity android:name="com.masrouf.controller.EditPurchaseActivity" android:exported="false" />
         <activity android:name="com.masrouf.controller.EditExpenseActivity" android:exported="false" />
         <activity android:name="com.masrouf.controller.MoneyRequestActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
+        <activity android:name="com.masrouf.controller.ChooseAccountTypeActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
+        <!-- Nouvelles activités ajoutées lors de l'audit de conformité -->
+        <activity android:name="com.masrouf.controller.ChangePasswordActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
+        <activity android:name="com.masrouf.controller.ProductPriceHistoryActivity" android:exported="false" />
+        <activity android:name="com.masrouf.controller.CongratulationsActivity" android:exported="false" />
         <activity android:name=".ProductsActivity" android:exported="false" />
         <activity android:name=".CalendarActivity" android:exported="false" />
         <activity android:name=".AnalyticsActivity" android:exported="false" />

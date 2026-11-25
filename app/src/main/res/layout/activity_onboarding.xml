@@ -1,33 +1,419 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@drawable/bg_botanical_page">
-    <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:padding="20dp">
-        <TextView android:id="@+id/onboarding_step_label" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="@color/muted_green" android:textSize="12sp" />
-        <FrameLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1">
-            <LinearLayout android:id="@+id/onboarding_step_one" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:paddingTop="14dp">
-                <com.google.android.material.card.MaterialCardView android:layout_width="match_parent" android:layout_height="wrap_content" app:cardBackgroundColor="@color/forest" app:cardCornerRadius="24dp" app:cardElevation="0dp">
-                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="22dp">
-                        <TextView style="@style/TextAppearance.Masrouf.Title" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/onboarding_discover" android:textColor="@color/alabaster" android:textSize="24sp" />
-                        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="@string/onboarding_discover_body" android:textColor="@color/mint" />
-                    </LinearLayout>
-                </com.google.android.material.card.MaterialCardView>
-                <com.google.android.material.card.MaterialCardView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="18dp" app:cardBackgroundColor="@color/alabaster" app:cardCornerRadius="16dp" app:strokeColor="@color/card_border" app:strokeWidth="1dp"><TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:minHeight="90dp" android:padding="18dp" android:text="@string/onboarding_transactions_empty" android:textColor="@color/muted_green" /></com.google.android.material.card.MaterialCardView>
+<!-- OnboardingActivity: post-login 3-step flow matching screenshots -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/cream"
+    android:layoutDirection="locale">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <!-- Top bar: title + icons -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="16dp">
+
+            <ImageView
+                android:id="@+id/onboarding_back"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/back"
+                android:padding="6dp"
+                android:src="@drawable/ic_back"
+                android:visibility="invisible" />
+
+            <TextView
+                android:id="@+id/onboarding_title_bar"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="@string/onboarding_discover"
+                android:textColor="@color/forest"
+                android:textSize="17sp"
+                android:textStyle="bold" />
+
+            <!-- Bell + profile icons -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:contentDescription=""
+                    android:padding="4dp"
+                    android:src="@drawable/ic_notifications"
+                    android:tint="@color/forest" />
+
+                <ImageView
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_marginStart="4dp"
+                    android:contentDescription=""
+                    android:padding="4dp"
+                    android:src="@drawable/ic_people"
+                    android:tint="@color/forest" />
+
             </LinearLayout>
-            <LinearLayout android:id="@+id/onboarding_step_two" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:visibility="gone">
-                <TextView style="@style/TextAppearance.Masrouf.Title" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingTop="12dp" android:text="@string/onboarding_customize_title" android:textSize="24sp" />
-                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="7dp" android:layout_marginBottom="12dp" android:text="@string/onboarding_customize_description" android:textColor="@color/muted_green" android:textSize="14sp" />
-                <ProgressBar android:id="@+id/onboarding_category_loading" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="4dp" android:indeterminate="true" android:visibility="gone" />
-                <androidx.recyclerview.widget.RecyclerView android:id="@+id/onboarding_category_list" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:clipToPadding="false" android:paddingBottom="8dp" />
-                <TextView android:id="@+id/onboarding_category_count" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingVertical="10dp" android:textColor="@color/muted_green" android:textSize="14sp" />
-            </LinearLayout>
-            <LinearLayout android:id="@+id/onboarding_step_three" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:visibility="gone">
-                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingVertical="16dp" android:text="@string/onboarding_summary" android:textColor="@color/forest" android:textSize="22sp" android:textStyle="bold" />
-                <LinearLayout android:id="@+id/onboarding_summary_list" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" />
-                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="18dp" android:text="@string/no_budget" android:textColor="@color/muted_green" />
-            </LinearLayout>
-        </FrameLayout>
-        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal">
-            <com.google.android.material.button.MaterialButton android:id="@+id/onboarding_next" style="@style/Widget.Masrouf.Button.Primary" android:layout_width="0dp" android:layout_height="56dp" android:layout_weight="1" android:text="@string/choose_categories" />
-            <ProgressBar android:id="@+id/onboarding_save_progress" android:layout_width="28dp" android:layout_height="28dp" android:layout_marginStart="12dp" android:indeterminateTint="@color/emerald" android:visibility="gone" />
+
         </LinearLayout>
+
+        <!-- Step label: "01 / 03 · BIENVENUE DANS MASROUF" -->
+        <TextView
+            android:id="@+id/onboarding_step_label"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="20dp"
+            android:textColor="@color/muted_green"
+            android:textSize="11sp"
+            android:letterSpacing="0.1" />
+
+        <!-- Step container -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+
+            <!-- === STEP 1: Welcome / discover === -->
+            <LinearLayout
+                android:id="@+id/onboarding_step_one"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:paddingHorizontal="20dp"
+                android:paddingTop="8dp">
+
+                <!-- Large title -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    android:text="@string/onboarding_step1_heading"
+                    android:textColor="@color/forest"
+                    android:textSize="26sp"
+                    android:textStyle="bold" />
+
+                <!-- Dark hero card with leaf icon + headline -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="160dp"
+                    android:layout_marginBottom="16dp"
+                    app:cardBackgroundColor="@color/forest"
+                    app:cardCornerRadius="20dp"
+                    app:cardElevation="0dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="bottom|start"
+                        android:orientation="vertical"
+                        android:padding="22dp">
+
+                        <ImageView
+                            android:layout_width="30dp"
+                            android:layout_height="30dp"
+                            android:layout_marginBottom="12dp"
+                            android:contentDescription=""
+                            android:src="@drawable/ic_notification_leaf"
+                            android:tint="@color/mint" />
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/onboarding_hero_title"
+                            android:textColor="@color/alabaster"
+                            android:textSize="22sp"
+                            android:textStyle="bold" />
+
+                    </LinearLayout>
+
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Section title -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:text="@string/onboarding_welcome_in_masrouf"
+                    android:textColor="@color/forest"
+                    android:textSize="17sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp"
+                    android:text="@string/onboarding_welcome_desc"
+                    android:textColor="@color/muted_green"
+                    android:textSize="13sp" />
+
+                <!-- Sample transaction list -->
+                <LinearLayout
+                    android:id="@+id/onboarding_sample_transactions"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical" />
+
+            </LinearLayout>
+
+            <!-- === STEP 2: Category selection === -->
+            <LinearLayout
+                android:id="@+id/onboarding_step_two"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:paddingHorizontal="20dp"
+                android:paddingTop="8dp"
+                android:visibility="gone">
+
+                <!-- Main title -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="4dp"
+                    android:text="@string/onboarding_step2_heading"
+                    android:textColor="@color/forest"
+                    android:textSize="22sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:text="@string/onboarding_customize_description"
+                    android:textColor="@color/muted_green"
+                    android:textSize="13sp" />
+
+                <!-- Category count badge -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp"
+                    app:cardBackgroundColor="@color/alabaster"
+                    app:cardCornerRadius="20dp"
+                    app:cardElevation="0dp"
+                    app:strokeColor="@color/card_border"
+                    app:strokeWidth="1dp">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingHorizontal="14dp"
+                        android:paddingVertical="8dp">
+
+                        <ImageView
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
+                            android:contentDescription=""
+                            android:src="@drawable/ic_bag"
+                            android:tint="@color/forest" />
+
+                        <TextView
+                            android:id="@+id/onboarding_category_count"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:text="@string/categories_selected_zero"
+                            android:textColor="@color/forest"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/category_count_badge"
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:layout_marginStart="6dp"
+                            android:background="@drawable/badge_background"
+                            android:gravity="center"
+                            android:text="0"
+                            android:textColor="@color/alabaster"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
+
+                    </LinearLayout>
+
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Loading spinner -->
+                <ProgressBar
+                    android:id="@+id/onboarding_category_loading"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="4dp"
+                    android:indeterminate="true"
+                    android:indeterminateTint="@color/emerald"
+                    android:visibility="gone" />
+
+                <!-- Category list -->
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/onboarding_category_list"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:clipToPadding="false"
+                    android:paddingBottom="8dp" />
+
+            </LinearLayout>
+
+            <!-- === STEP 3: Confirmation / Your selection === -->
+            <LinearLayout
+                android:id="@+id/onboarding_step_three"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:paddingHorizontal="20dp"
+                android:paddingTop="8dp"
+                android:visibility="gone">
+
+                <!-- Main title -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="4dp"
+                    android:text="@string/onboarding_step3_heading"
+                    android:textColor="@color/forest"
+                    android:textSize="22sp"
+                    android:textStyle="bold" />
+
+                <!-- Selection summary text -->
+                <TextView
+                    android:id="@+id/onboarding_selection_summary_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    android:textColor="@color/muted_green"
+                    android:textSize="13sp" />
+
+                <!-- Scrollable selected categories -->
+                <ScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1">
+
+                    <LinearLayout
+                        android:id="@+id/onboarding_summary_list"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical" />
+
+                </ScrollView>
+
+                <!-- Budget info banner -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:layout_marginBottom="8dp"
+                    app:cardBackgroundColor="@color/mint"
+                    app:cardCornerRadius="12dp"
+                    app:cardElevation="0dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:padding="14dp">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:contentDescription=""
+                            android:src="@drawable/ic_notifications"
+                            android:tint="@color/emerald" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="10dp"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@string/onboarding_budget_info_title"
+                                android:textColor="@color/forest"
+                                android:textSize="13sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:text="@string/onboarding_budget_info_desc"
+                                android:textColor="@color/muted_green"
+                                android:textSize="12sp" />
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                </com.google.android.material.card.MaterialCardView>
+
+            </LinearLayout>
+
+        </FrameLayout>
+
+        <!-- Bottom action buttons -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="vertical"
+            android:paddingHorizontal="20dp"
+            android:paddingBottom="24dp"
+            android:paddingTop="8dp">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/onboarding_next"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:text="@string/choose_categories"
+                android:textColor="@color/alabaster"
+                android:textSize="16sp"
+                app:backgroundTint="@color/forest"
+                app:cornerRadius="28dp" />
+
+            <!-- "Modify selection" button (only on step 3) -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/onboarding_modify_selection"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginTop="8dp"
+                android:text="@string/onboarding_modify_selection"
+                android:textColor="@color/emerald"
+                android:textSize="15sp"
+                android:visibility="gone"
+                app:backgroundTint="@color/mint"
+                app:cornerRadius="28dp"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+
+            <ProgressBar
+                android:id="@+id/onboarding_save_progress"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_gravity="center"
+                android:layout_marginTop="8dp"
+                android:indeterminateTint="@color/emerald"
+                android:visibility="gone" />
+
+        </LinearLayout>
+
     </LinearLayout>
+
 </FrameLayout>

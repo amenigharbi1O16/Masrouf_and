@@ -35,10 +35,11 @@
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/request_amount"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:hint="@string/money_amount_hint"
+                        android:layout_height="58dp"
+                        android:hint="@string/hint_amount"
                         android:inputType="numberDecimal"
-                        android:maxLines="1" />
+                        android:singleLine="true"
+                        android:textColor="@color/ink" />
                 </com.google.android.material.textfield.TextInputLayout>
                 <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="14dp" android:text="@string/money_request_reason" android:textColor="@color/forest" android:textStyle="bold" />
                 <com.google.android.material.textfield.TextInputLayout
@@ -54,11 +55,11 @@
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/request_reason"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="top|start"
-                        android:hint="@string/money_request_reason_hint"
-                        android:inputType="textCapSentences|textMultiLine"
-                        android:minLines="2" />
+                        android:layout_height="58dp"
+                        android:hint="@string/expense_note"
+                        android:inputType="text"
+                        android:singleLine="true"
+                        android:textColor="@color/ink" />
                 </com.google.android.material.textfield.TextInputLayout>
                 <TextView android:id="@+id/request_feedback" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:visibility="gone" />
                 <com.google.android.material.button.MaterialButton android:id="@+id/request_submit" android:layout_width="match_parent" android:layout_height="52dp" android:layout_marginTop="14dp" android:text="@string/money_request_submit" app:backgroundTint="@color/forest" app:cornerRadius="16dp" />

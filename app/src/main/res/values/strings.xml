@@ -8,9 +8,16 @@
     <string name="spent_label">Dépensé</string>
     <string name="limit_label">Limite</string>
     <string name="recent_activity">Votre rythme</string>
-    <string name="category_food">Alimentation &amp; Courses</string>
+    <string name="category_food">Alimentation</string>
     <string name="category_home">Logement &amp; Charges</string>
     <string name="category_transport">Transport</string>
+    <string name="category_hygiene">Hygiène et soins personnels</string>
+    <string name="category_home_equip">Maison et équipement</string>
+    <string name="category_computer">Matériel informatique</string>
+    <string name="category_children">Enfants</string>
+    <string name="category_family_aid">Aide à la famille</string>
+    <string name="category_donations">Dons et charité</string>
+    <string name="category_banking">Frais bancaires</string>
     <string name="drawer_personal">Compte personnel</string>
     <string name="drawer_child">Compte enfant</string>
     <string name="drawer_parent">PARENT</string>
@@ -405,4 +412,122 @@
     <string name="voice_product_bread">Pain</string><string name="voice_product_milk">Lait</string><string name="voice_product_meat">Viande</string><string name="voice_product_chicken">Poulet</string><string name="voice_product_oil">Huile</string><string name="voice_product_sugar">Sucre</string><string name="voice_product_coffee">Café</string><string name="voice_product_vegetables">Légumes</string><string name="voice_product_fruit">Fruits</string>
     <string name="voice_ambiguous_title">Vérifiez le résultat vocal</string><string name="voice_ambiguous_review">La phrase peut avoir plusieurs interprétations. Vérifiez le montant et les détails avant de continuer.</string><string name="voice_continue_editing">Continuer vers le formulaire</string><string name="voice_confirm_allocation">Confirmer le don</string><string name="voice_allowance_confirmation">Confirmer %2$s DT pour %1$s ?</string>
     <string name="transaction_details">Détail de l’opération</string><string name="transaction_details_unavailable">Cette opération est introuvable ou n’appartient pas à ce compte.</string>
+
+    <!-- Changer mot de passe -->
+    <string name="change_password_title">Modifier le mot de passe</string>
+    <string name="change_password_desc">Saisissez votre ancien mot de passe puis choisissez un nouveau mot de passe sécurisé.</string>
+    <string name="current_password">Mot de passe actuel</string>
+    <string name="new_password">Nouveau mot de passe</string>
+    <string name="hint_new_password">••••••••</string>
+    <string name="save_password">Enregistrer le nouveau mot de passe</string>
+    <string name="password_changed_success">Mot de passe modifié avec succès.</string>
+    <string name="current_password_required">Veuillez saisir votre mot de passe actuel.</string>
+    <string name="new_password_required">Veuillez saisir un nouveau mot de passe.</string>
+    <string name="passwords_dont_match">Les mots de passe ne correspondent pas.</string>
+    <string name="password_same_as_current">Le nouveau mot de passe doit être différent de l\'ancien.</string>
+    <string name="current_password_wrong">Mot de passe actuel incorrect.</string>
+    <string name="change_password_failed">Impossible de modifier le mot de passe. Réessayez.</string>
+    <string name="password_rules_not_met">Le mot de passe ne respecte pas toutes les règles de sécurité.</string>
+    <string name="change_password_button">Modifier le mot de passe</string>
+    <!-- Historique prix produit -->
+    <string name="price_history_title">Historique des prix</string>
+    <string name="price_history_subtitle">Évolution chronologique du prix unitaire</string>
+    <string name="quantity_label">Qté</string>
+    <string name="loading">Chargement…</string>
+    <!-- Félicitations -->
+    <string name="congrats_title">Félicitations !</string>
+    <string name="congrats_message">Vous avez respecté votre budget ce mois-ci. Continuez sur cette lancée !</string>
+    <string name="congrats_points_earned">Points gagnés</string>
+    <string name="congrats_saved">Économies réalisées</string>
+    <string name="points_label">points</string>
+    <!-- Analyses enrichies -->
+    <string name="analytics_period_current">Ce mois</string>
+    <string name="analytics_period_previous">Mois précédent</string>
+    <string name="analytics_budget_total">Budget total</string>
+    <string name="analytics_budget_remaining">Reste disponible</string>
+    <string name="analytics_budget_exceeded">Dépassement</string>
+    <string name="analytics_category_allocation">Alloué : %1$s</string>
+    <string name="analytics_spent_percent">%1$d%% consommé</string>
+    <!-- Général -->
+    <string name="back">Retour</string>
+
+    <!-- ═══ Welcome / Onboarding / Account type strings ═══ -->
+    <string name="welcome_bienvenue_sur">Bienvenue sur</string>
+    <string name="already_account_link">Vous avez déjà un compte ? <b>Se connecter</b></string>
+    <string name="welcome_skip">Passer</string>
+    <string name="choose_account_type_action">Choisissez votre type de compte</string>
+
+    <!-- Slide bullets -->
+    <string name="slide_one_bullet1">Suivi des achats d\'épicerie et prix unitaires</string>
+    <string name="slide_one_bullet2">Gestion des dépenses fixes et abonnements</string>
+    <string name="slide_two_bullet1">Enveloppes budgétaires mensuelles</string>
+    <string name="slide_two_bullet2">Alertes visuelles de dépassement et économies</string>
+    <string name="slide_three_bullet1">Création de comptes enfants avec accès sécurisé</string>
+    <string name="slide_three_bullet2">Réserve familiale, argent de poche &amp; demandes d\'argent</string>
+
+    <!-- Account type selection screen -->
+    <string name="masrouf_choix_compte_header">MASROUF · CHOIX DU COMPTE</string>
+    <string name="choose_your_account_type">Choisissez votre type de compte</string>
+    <string name="choose_account_subtitle">Sélectionnez le mode adapté à votre utilisation. Vous pourrez toujours faire évoluer votre espace plus tard.</string>
+    <string name="personal_account_desc">Gestion financière individuelle, achats, dépenses quotidiennes et budgets personnels.</string>
+    <string name="family_account_desc">Espace Personnel + Espace Familial, gestion des enfants, réserve financière, allocations et demandes d\'argent.</string>
+    <string name="badge_individuel">Individuel</string>
+    <string name="badge_parent_tuteur">Parent / Tuteur</string>
+    <string name="badge_experience_complete">★ EXPÉRIENCE COMPLÈTE</string>
+    <string name="personal_feature1">Gestion financière individuelle et autonome</string>
+    <string name="personal_feature2">Achats, dépenses quotidiennes et enveloppes budgétaires</string>
+    <string name="personal_feature3">Suivi des prix unitaires et économies</string>
+    <string name="family_feature1">Espace Personnel + Espace Familial</string>
+    <string name="family_feature2">Création de comptes enfants avec accès sécurisé</string>
+    <string name="family_feature3">Réserve familiale, argent de poche &amp; validation des demandes</string>
+    <string name="family_feature4">Budgets et rapports analytiques consolidés de la famille</string>
+    <string name="choose_personal_account">Choisir le Compte Personnel</string>
+    <string name="choose_family_account">Choisir le Compte Famille</string>
+
+    <!-- Login screen extras -->
+    <string name="login_subtitle_label">CONNEXION À MASROUF</string>
+    <string name="login_no_account">Pas encore de compte ? Créer un compte</string>
+
+    <!-- Register screen -->
+    <string name="register_subtitle">SUIVI DE BUDGET FAMILIAL</string>
+    <string name="family_account_info_banner">Compte Parent : Accès complet à l\'Espace Personnel et à l\'Espace Familial</string>
+    <string name="local_storage_note">Vos budgets, achats et dépenses restent stockés localement sur cet appareil.</string>
+    <string name="go_to_login">Se connecter</string>
+
+    <!-- Onboarding 3-step strings -->
+    <string name="onboarding_step_label_1">01 / 03 · BIENVENUE DANS MASROUF</string>
+    <string name="onboarding_step_label_2">02 / 03 · CHOISISSEZ CE QUE VOUS SUIVEZ</string>
+    <string name="onboarding_step_label_3">03 / 03 · VOTRE SÉLECTION</string>
+    <string name="onboarding_step1_heading">Bienvenue sur</string>
+    <string name="onboarding_step2_heading">Vos catégories</string>
+    <string name="onboarding_step3_heading">Votre sélection</string>
+    <string name="onboarding_your_categories">Vos catégories</string>
+    <string name="onboarding_your_selection">Votre sélection</string>
+    <string name="onboarding_hero_title">Prenez le contrôle de votre budget</string>
+    <string name="onboarding_welcome_in_masrouf">Bienvenue dans Masrouf</string>
+    <string name="onboarding_welcome_desc">Découvrez une méthode simple et efficace pour suivre vos finances.</string>
+    <string name="onboarding_select_categories_btn">Sélection des catégories</string>
+    <string name="onboarding_section_products">Catégories de produits</string>
+    <string name="onboarding_section_expenses">Catégories de dépenses</string>
+    <string name="select_btn">Sélectionner</string>
+    <string name="selected_btn">Sélectionné</string>
+    <string name="categories_selected_zero">Catégories sélectionnées : </string>
+    <string name="categories_selected_label">Catégories sélectionnées :</string>
+    <string name="onboarding_verify_categories">Vérifier les %1$d catégories</string>
+    <string name="onboarding_budget_info_title">Créez un budget quand vous serez prêt</string>
+    <string name="onboarding_budget_info_desc">Vous pourrez en définir un depuis l\'écran Accueil à tout moment.</string>
+    <string name="onboarding_modify_selection">Modifier la sélection</string>
+    <string name="type_articles_produits">Articles &amp; Produits</string>
+    <string name="type_depenses_services">Dépenses &amp; Services</string>
+    <string name="onboarding_sample_product">Alimentation · Huile d\'olive</string>
+    <string name="onboarding_sample_desc1">Organisez vos dépenses par enveloppes claires et adaptées à vos besoins.</string>
+    <string name="onboarding_sample_desc2">Gagnez des points en respectant vos objectifs budgétaires.</string>
+    <string name="onboarding_sample_desc3">Définissez un budget pour chaque période et recevez des alertes préventives.</string>
+
+    <!-- Plurals for summary -->
+    <plurals name="categories_selected_summary">
+        <item quantity="one">%1$d catégorie sélectionnée. Aucun budget requis pour l\'instant.</item>
+        <item quantity="other">%1$d catégories sélectionnées. Aucun budget requis pour l\'instant.</item>
+    </plurals>
+
 </resources>

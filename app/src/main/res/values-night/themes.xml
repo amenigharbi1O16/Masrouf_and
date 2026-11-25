@@ -1,7 +1,77 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
+    <!-- Thème sombre Masrouf — conserve la palette verte, adapte les surfaces -->
     <style name="Base.Theme.Masrouf1" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your dark theme here. -->
-        <!-- <item name="colorPrimary">@color/my_dark_primary</item> -->
+        <!-- Thème nuit : même couleurs de marque, surfaces sombres -->
+        <item name="colorPrimary">@color/mint_accent</item>
+        <item name="colorOnPrimary">@color/forest</item>
+        <item name="colorPrimaryContainer">@color/forest</item>
+        <item name="colorOnPrimaryContainer">@color/mint</item>
+        <item name="colorSecondary">@color/emerald</item>
+        <item name="colorOnSecondary">@color/alabaster</item>
+        <item name="colorSecondaryContainer">@color/forest</item>
+        <item name="colorOnSecondaryContainer">@color/mint</item>
+        <item name="colorTertiary">@color/mint_accent</item>
+        <item name="colorOnTertiary">@color/forest</item>
+
+        <!-- CORRECTIF : Pas de violet en mode nuit non plus -->
+        <item name="colorControlActivated">@color/mint_accent</item>
+        <item name="colorControlHighlight">@color/forest</item>
+        <item name="colorControlNormal">@color/mint_accent</item>
+        <item name="colorAccent">@color/mint_accent</item>
+        <item name="android:colorAccent">@color/mint_accent</item>
+        <item name="android:textColorHighlight">@color/emerald</item>
+
+        <item name="colorSurface">@color/forest</item>
+        <item name="colorOnSurface">@color/cream</item>
+        <item name="colorSurfaceVariant">@color/ink</item>
+        <item name="colorOnSurfaceVariant">@color/mint_accent</item>
+        <item name="android:colorBackground">@color/ink</item>
+        <item name="colorOnBackground">@color/cream</item>
+        <item name="colorError">@color/coral</item>
+        <item name="colorOutline">@color/muted_green</item>
+
+        <item name="android:textColorPrimary">@color/cream</item>
+        <item name="android:textColorSecondary">@color/mint_accent</item>
+        <item name="android:textColorHint">@color/mint_accent</item>
+
+        <item name="android:windowLightStatusBar" tools:targetApi="23">false</item>
+        <item name="android:statusBarColor">@color/ink</item>
+        <item name="android:navigationBarColor">@color/ink</item>
+        <item name="android:windowBackground">@color/ink</item>
+
+        <item name="textInputStyle">@style/Widget.Masrouf.TextInputLayout.Night</item>
+        <item name="materialAlertDialogTheme">@style/ThemeOverlay.Masrouf.AlertDialog.Night</item>
+        <!-- CORRECTIF CRITIQUE : forcer le texte saisi en foncé dans les EditText en mode nuit -->
+        <item name="editTextStyle">@style/Widget.Masrouf.EditText.Night</item>
+    </style>
+
+    <!-- TextInputEditText night : fond blanc, texte sombre -->
+    <style name="Widget.Masrouf.TextInputEditText.Night" parent="Widget.Material3.TextInputEditText.OutlinedBox">
+        <item name="android:textColor">@color/ink</item>
+        <item name="android:textColorHint">@color/muted_green</item>
+    </style>
+
+    <!-- EditText night (hors TextInputLayout) : fond blanc, texte sombre -->
+    <style name="Widget.Masrouf.EditText.Night" parent="Widget.AppCompat.EditText">
+        <item name="android:textColor">@color/ink</item>
+        <item name="android:textColorHint">@color/muted_green</item>
+        <item name="android:background">@color/alabaster</item>
+    </style>
+    <!-- Style TextInputLayout pour le thème nuit -->
+    <style name="Widget.Masrouf.TextInputLayout.Night" parent="Widget.Material3.TextInputLayout.OutlinedBox">
+        <item name="boxStrokeColor">@color/muted_green</item>
+        <item name="hintEnabled">false</item>
+        <item name="hintTextColor">@color/mint_accent</item>
+        <item name="android:textColorHint">@color/mint_accent</item>
+        <item name="boxCornerRadiusTopStart">12dp</item>
+        <item name="boxCornerRadiusTopEnd">12dp</item>
+        <item name="boxCornerRadiusBottomStart">12dp</item>
+        <item name="boxCornerRadiusBottomEnd">12dp</item>
+    </style>
+
+    <style name="ThemeOverlay.Masrouf.AlertDialog.Night" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="colorPrimary">@color/mint_accent</item>
+        <item name="colorSurface">@color/forest</item>
+        <item name="colorOnSurface">@color/cream</item>
     </style>
 </resources>

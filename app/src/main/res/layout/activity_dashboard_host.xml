@@ -14,7 +14,7 @@
 
         <LinearLayout
             android:id="@+id/personal_drawer_panel"
-            android:layout_width="300dp"
+            android:layout_width="@dimen/drawer_width"
             android:layout_height="match_parent"
             android:background="@color/alabaster"
             android:elevation="16dp"
@@ -33,13 +33,25 @@
                 android:textStyle="bold" />
 
             <TextView
+                android:id="@+id/personal_drawer_user_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textColor="@color/ink"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
+
+            <TextView
                 android:id="@+id/personal_drawer_badge"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
+                android:layout_marginTop="8dp"
                 android:background="@drawable/badge_background"
                 android:paddingHorizontal="12dp"
-                android:paddingVertical="8dp"
+                android:paddingVertical="6dp"
                 android:text="@string/drawer_personal"
                 android:textColor="@color/forest"
                 android:textSize="11sp"
@@ -74,7 +86,9 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:text="@string/logout"
-                app:cornerRadius="16dp" />
+                android:textColor="@color/coral"
+                app:cornerRadius="16dp"
+                app:strokeColor="@color/coral" />
         </LinearLayout>
 
         <include layout="@layout/drawer_admin" />

@@ -18,6 +18,12 @@ public final class CategoryIconResources {
             case "receipt-outline": return R.drawable.ic_receipt;
             case "wallet-outline": return R.drawable.ic_wallet;
             case "ellipsis-horizontal-outline": return R.drawable.ic_more;
+            // New icon mappings
+            case "laptop-outline": return R.drawable.ic_laptop;
+            case "card-outline": return R.drawable.ic_receipt;
+            case "gift-outline": return R.drawable.ic_trophy;
+            case "people-outline": return R.drawable.ic_people;
+            case "heart-outline": return R.drawable.ic_health;
             default: return productFallback(type);
         }
     }

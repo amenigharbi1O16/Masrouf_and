@@ -34,6 +34,12 @@ public final class InputValidation {
         return new boolean[]{hasMinimumLength(password),hasUppercase(password),hasLowercase(password),hasNumber(password),hasSpecialCharacter(password)};
     }
     public static boolean isValidPassword(String value) { for(boolean rule:passwordRules(value))if(!rule)return false;return true; }
+    /**
+     * Évalue chaque règle de complexité du mot de passe et retourne un tableau booléen.
+     * Chaque index correspond à une règle (longueur, majuscule, minuscule, chiffre, symbole).
+     * Utilisé par ChangePasswordActivity pour l'affichage en temps réel.
+     */
+    public static boolean[] evaluatePasswordRules(String value) { return passwordRules(value); }
     public static int[] passwordRuleStringIds(){return new int[]{R.string.password_length,R.string.password_uppercase,R.string.password_lowercase,R.string.password_number,R.string.password_symbol};}
     public static List<Integer> missingPasswordRuleIds(String value) {
         boolean[] valid=passwordRules(value);int[] ids=passwordRuleStringIds();

@@ -8,9 +8,16 @@
     <string name="spent_label">المصروف</string>
     <string name="limit_label">الحد</string>
     <string name="recent_activity">إيقاع الإنفاق</string>
-    <string name="category_food">المشتريات</string>
-    <string name="category_home">المنزل</string>
+    <string name="category_food">الغذاء والمشتريات</string>
+    <string name="category_home">السكن والمصاريف</string>
     <string name="category_transport">النقل</string>
+    <string name="category_hygiene">النظافة والعناية الشخصية</string>
+    <string name="category_home_equip">المنزل والتجهيزات</string>
+    <string name="category_computer">المعدات الإلكترونية</string>
+    <string name="category_children">الأطفال</string>
+    <string name="category_family_aid">مساعدة العائلة</string>
+    <string name="category_donations">التبرعات والصدقات</string>
+    <string name="category_banking">المصاريف البنكية</string>
     <string name="drawer_personal">حساب شخصي</string>
     <string name="drawer_child">حساب طفل</string>
     <string name="drawer_parent">وليّ الأمر</string>
@@ -359,4 +366,108 @@
     <string name="voice_product_bread">خبز</string><string name="voice_product_milk">حليب</string><string name="voice_product_meat">لحم</string><string name="voice_product_chicken">دجاج</string><string name="voice_product_oil">زيت</string><string name="voice_product_sugar">سكر</string><string name="voice_product_coffee">قهوة</string><string name="voice_product_vegetables">خضروات</string><string name="voice_product_fruit">فاكهة</string>
     <string name="voice_ambiguous_title">راجع نتيجة الإملاء الصوتي</string><string name="voice_ambiguous_review">قد تحتمل العبارة أكثر من معنى. راجع المبلغ والتفاصيل قبل المتابعة.</string><string name="voice_continue_editing">المتابعة إلى النموذج</string><string name="voice_confirm_allocation">تأكيد المصروف</string><string name="voice_allowance_confirmation">تأكيد مبلغ %2$s د.ت لـ %1$s؟</string>
     <string name="transaction_details">تفاصيل المعاملة</string><string name="transaction_details_unavailable">المعاملة غير موجودة أو لا تخص هذا الحساب.</string>
+
+    <!-- تغيير كلمة المرور -->
+    <string name="change_password_title">تغيير كلمة المرور</string>
+    <string name="change_password_desc">أدخل كلمة المرور الحالية ثم اختر كلمة مرور جديدة آمنة.</string>
+    <string name="current_password">كلمة المرور الحالية</string>
+    <string name="new_password">كلمة المرور الجديدة</string>
+    <string name="hint_new_password">••••••••</string>
+    <string name="save_password">حفظ كلمة المرور الجديدة</string>
+    <string name="password_changed_success">تم تغيير كلمة المرور بنجاح.</string>
+    <string name="current_password_required">الرجاء إدخال كلمة المرور الحالية.</string>
+    <string name="new_password_required">الرجاء إدخال كلمة مرور جديدة.</string>
+    <string name="passwords_dont_match">كلمتا المرور غير متطابقتين.</string>
+    <string name="password_same_as_current">يجب أن تختلف كلمة المرور الجديدة عن القديمة.</string>
+    <string name="current_password_wrong">كلمة المرور الحالية غير صحيحة.</string>
+    <string name="change_password_failed">تعذّر تغيير كلمة المرور. حاول مجدداً.</string>
+    <string name="password_rules_not_met">كلمة المرور لا تستوفي جميع شروط الأمان.</string>
+    <string name="change_password_button">تغيير كلمة المرور</string>
+    <!-- سجل أسعار المنتج -->
+    <string name="price_history_title">سجل الأسعار</string>
+    <string name="price_history_subtitle">التطور الزمني لسعر الوحدة</string>
+    <string name="quantity_label">الكمية</string>
+    <string name="loading">جارٍ التحميل…</string>
+    <!-- تهانينا -->
+    <string name="congrats_title">تهانينا!</string>
+    <string name="congrats_message">لقد التزمت بميزانيتك هذا الشهر. واصل!</string>
+    <string name="congrats_points_earned">النقاط المكتسبة</string>
+    <string name="congrats_saved">المبلغ الموفّر</string>
+    <string name="points_label">نقاط</string>
+    <!-- تحليلات مفصلة -->
+    <string name="analytics_period_current">هذا الشهر</string>
+    <string name="analytics_period_previous">الشهر السابق</string>
+    <string name="analytics_budget_total">إجمالي الميزانية</string>
+    <string name="analytics_budget_remaining">المتبقي</string>
+    <string name="analytics_budget_exceeded">تجاوز الميزانية</string>
+    <string name="analytics_category_allocation">المخصص: %1$s</string>
+    <string name="analytics_spent_percent">تم استهلاك %1$d%%</string>
+    <!-- عام -->
+    <string name="back">رجوع</string>
+
+    <!-- ═══ ترحيب / تهيئة / نوع الحساب ═══ -->
+    <string name="welcome_bienvenue_sur">أهلاً بك في</string>
+    <string name="already_account_link">لديك حساب بالفعل؟ <b>تسجيل الدخول</b></string>
+    <string name="welcome_skip">تخطي</string>
+    <string name="choose_account_type_action">اختر نوع حسابك</string>
+    <string name="slide_one_bullet1">تتبع مشتريات البقالة والأسعار</string>
+    <string name="slide_one_bullet2">إدارة النفقات الثابتة والاشتراكات</string>
+    <string name="slide_two_bullet1">مظاريف ميزانية شهرية</string>
+    <string name="slide_two_bullet2">تنبيهات بصرية للتجاوز والتوفيرات</string>
+    <string name="slide_three_bullet1">إنشاء حسابات الأطفال بأمان</string>
+    <string name="slide_three_bullet2">الاحتياطي العائلي، المصروف &amp; طلبات المال</string>
+    <string name="masrouf_choix_compte_header">مصروف · اختيار الحساب</string>
+    <string name="choose_your_account_type">اختر نوع حسابك</string>
+    <string name="choose_account_subtitle">اختر النمط المناسب لاستخدامك. يمكنك تغييره لاحقاً.</string>
+    <string name="personal_account_desc">إدارة مالية فردية، مشتريات، نفقات يومية وميزانيات شخصية.</string>
+    <string name="family_account_desc">فضاء شخصي + فضاء عائلي، إدارة الأطفال، الاحتياطي المالي والمصروف.</string>
+    <string name="badge_individuel">فردي</string>
+    <string name="badge_parent_tuteur">أب / وصي</string>
+    <string name="badge_experience_complete">★ تجربة كاملة</string>
+    <string name="personal_feature1">إدارة مالية فردية ومستقلة</string>
+    <string name="personal_feature2">مشتريات، نفقات يومية ومظاريف ميزانية</string>
+    <string name="personal_feature3">تتبع أسعار الوحدات والتوفيرات</string>
+    <string name="family_feature1">فضاء شخصي + فضاء عائلي</string>
+    <string name="family_feature2">إنشاء حسابات أطفال بأمان</string>
+    <string name="family_feature3">احتياطي عائلي، مصروف &amp; التحقق من الطلبات</string>
+    <string name="family_feature4">ميزانيات وتقارير تحليلية موحدة للعائلة</string>
+    <string name="choose_personal_account">اختر الحساب الشخصي</string>
+    <string name="choose_family_account">اختر الحساب العائلي</string>
+    <string name="register_subtitle">متابعة الميزانية العائلية</string>
+    <string name="family_account_info_banner">حساب الأب: وصول كامل للفضاء الشخصي والفضاء العائلي</string>
+    <string name="local_storage_note">تُخزَّن ميزانياتك ومشترياتك ونفقاتك محلياً على هذا الجهاز.</string>
+    <string name="go_to_login">تسجيل الدخول</string>
+    <string name="onboarding_step_label_1">01 / 03 · مرحباً في مصروف</string>
+    <string name="onboarding_step_label_2">02 / 03 · اختر ما تتابعه</string>
+    <string name="onboarding_step_label_3">03 / 03 · اختيارك</string>
+    <string name="onboarding_step1_heading">مرحباً بك في</string>
+    <string name="onboarding_step2_heading">فئاتك</string>
+    <string name="onboarding_step3_heading">اختيارك</string>
+    <string name="onboarding_your_categories">فئاتك</string>
+    <string name="onboarding_your_selection">اختيارك</string>
+    <string name="onboarding_hero_title">تحكم في ميزانيتك</string>
+    <string name="onboarding_welcome_in_masrouf">مرحباً في مصروف</string>
+    <string name="onboarding_welcome_desc">اكتشف طريقة بسيطة وفعالة لتتبع أموالك.</string>
+    <string name="onboarding_select_categories_btn">اختيار الفئات</string>
+    <string name="onboarding_section_products">فئات المنتجات</string>
+    <string name="onboarding_section_expenses">فئات النفقات</string>
+    <string name="select_btn">اختيار</string>
+    <string name="selected_btn">تم الاختيار</string>
+    <string name="categories_selected_zero">الفئات المختارة: </string>
+    <string name="categories_selected_label">الفئات المختارة:</string>
+    <string name="onboarding_verify_categories">مراجعة %1$d فئة</string>
+    <string name="onboarding_budget_info_title">أنشئ ميزانية عندما تكون مستعداً</string>
+    <string name="onboarding_budget_info_desc">يمكنك تعريف ميزانية من شاشة الرئيسية في أي وقت.</string>
+    <string name="onboarding_modify_selection">تعديل الاختيار</string>
+    <string name="type_articles_produits">مقالات &amp; منتجات</string>
+    <string name="type_depenses_services">نفقات &amp; خدمات</string>
+    <string name="onboarding_sample_product">تغذية · زيت الزيتون</string>
+    <string name="onboarding_sample_desc1">نظّم نفقاتك في مظاريف واضحة ومناسبة لاحتياجاتك.</string>
+    <string name="onboarding_sample_desc2">اكسب نقاطاً باحترام أهدافك الميزانية.</string>
+    <string name="onboarding_sample_desc3">حدد ميزانية لكل فترة واحصل على تنبيهات وقائية.</string>
+    <plurals name="categories_selected_summary">
+        <item quantity="one">%1$d فئة مختارة. لا حاجة لميزانية الآن.</item>
+        <item quantity="other">%1$d فئات مختارة. لا حاجة لميزانية الآن.</item>
+    </plurals>
+
 </resources>

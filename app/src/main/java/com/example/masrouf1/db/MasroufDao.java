@@ -63,6 +63,8 @@ public interface MasroufDao {
     @Query("SELECT * FROM users WHERE id = :id LIMIT 1") LiveData<UserEntity> observeUser(long id);
     @Query("SELECT * FROM users WHERE email = :email COLLATE NOCASE LIMIT 1") UserEntity findUserByEmail(String email);
     @Query("UPDATE users SET email = :email WHERE id = :userId") int updateEmail(long userId,String email);
+    /** Met à jour le hash du mot de passe d'un utilisateur (utilisé par ChangePasswordActivity). */
+    @Query("UPDATE users SET passwordHash = :passwordHash WHERE id = :userId") int updatePasswordHash(long userId,String passwordHash);
     @Query("UPDATE users SET onboarded = :onboarded WHERE id = :userId") int updateOnboarding(long userId, boolean onboarded);
     @Query("UPDATE users SET onboarded = 1, categoriesSelected = 1 WHERE id = :userId") int completeOnboardingAndCategorySelection(long userId);
     @Query("UPDATE users SET onboarded = 1 WHERE id = :userId") int completeGeneralOnboarding(long userId);
