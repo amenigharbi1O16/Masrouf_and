@@ -18,6 +18,7 @@ import com.example.masrouf1.MasroufViewModel;
 import com.example.masrouf1.MasroufViewModelFactory;
 import com.example.masrouf1.OperationResult;
 import com.example.masrouf1.R;
+import java.util.Locale;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.textfield.TextInputEditText;
@@ -212,13 +213,24 @@ public final class RegisterActivity extends AppCompatActivity {
     }
 
     private void buildLanguageButtons() {
-        // Find lang buttons by ID and attach
-        TextView langFr = findViewById(R.id.lang_fr);
-        TextView langAr = findViewById(R.id.lang_ar);
-        TextView langEn = findViewById(R.id.lang_en);
-        if (langFr != null) langFr.setOnClickListener(v -> LocaleController.apply("fr"));
-        if (langAr != null) langAr.setOnClickListener(v -> LocaleController.apply("ar"));
-        if (langEn != null) langEn.setOnClickListener(v -> LocaleController.apply("en"));
+        // Determine active language
+        String currentTag = androidx.appcompat.app.AppCompatDelegate.getApplicationLocales().toLanguageTags();
+        if (currentTag.isEmpty()) currentTag = java.util.Locale.getDefault().getLanguage();
+        String activeLang = currentTag.length() >= 2 ? currentTag.substring(0, 2).toLowerCase(java.util.Locale.ROOT) : "fr";
+
+        // Find lang buttons by ID, attach click listeners, and style active one
+        int[] ids = {R.id.lang_fr, R.id.lang_ar, R.id.lang_en};
+        String[] tags = {"fr", "ar", "en"};
+        for (int i = 0; i < ids.length; i++) {
+            TextView tv = findViewById(ids[i]);
+            if (tv == null) continue;
+            final String tag = tags[i];
+            boolean selected = tag.equals(activeLang);
+            tv.setBackground(selected ? getDrawable(R.drawable.bg_lang_selected) : null);
+            tv.setTextColor(getColor(selected ? R.color.alabaster : R.color.muted_green));
+            tv.setTypeface(null, selected ? android.graphics.Typeface.BOLD : android.graphics.Typeface.NORMAL);
+            tv.setOnClickListener(v -> LocaleController.apply(tag));
+        }
     }
 
     private final class PasswordRulesWatcher implements TextWatcher {
