@@ -25,5 +25,5 @@
     <LinearLayout android:id="@+id/admin_drawer_menu_items" android:layout_width="match_parent" android:layout_height="0dp" android:layout_marginTop="22dp" android:layout_weight="1" android:orientation="vertical" />
     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="7dp" android:text="@string/drawer_language" android:textColor="@color/mint" android:textSize="12sp" />
     <LinearLayout android:id="@+id/admin_language_buttons" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" />
-    <com.google.android.material.button.MaterialButton android:id="@+id/admin_logout" style="@style/Widget.Material3.Button.OutlinedButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="9dp" android:text="@string/logout" android:textColor="@color/coral" app:cornerRadius="16dp" app:strokeColor="@color/coral" />
+    <com.google.android.material.button.MaterialButton android:id="@+id/admin_logout" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="9dp" android:text="@string/logout" android:textColor="@color/alabaster" app:backgroundTint="@color/danger_text" app:cornerRadius="16dp" />
 </LinearLayout>

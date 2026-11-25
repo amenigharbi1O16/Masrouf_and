@@ -6,12 +6,13 @@
     android:orientation="vertical">
 
     <LinearLayout
+        android:id="@+id/item_category_row"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingVertical="12dp"
-        android:paddingHorizontal="4dp">
+        android:paddingVertical="10dp"
+        android:paddingHorizontal="8dp">
 
         <!-- Category icon in mint circle -->
         <FrameLayout
@@ -40,18 +41,23 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:layout_marginEnd="8dp"
             android:textColor="@color/ink"
             android:textSize="14sp" />
 
-        <!-- Toggle button: Sélectionner / Sélectionné -->
+        <!-- Dynamic toggle button: Sélectionner -> Sélectionné -->
         <TextView
             android:id="@+id/item_category_toggle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:padding="4dp"
+            android:minHeight="36dp"
+            android:gravity="center"
+            android:background="@drawable/bg_btn_select"
+            android:paddingHorizontal="14dp"
+            android:paddingVertical="6dp"
             android:text="@string/select_btn"
-            android:textColor="@color/emerald"
-            android:textSize="13sp"
+            android:textColor="@color/alabaster"
+            android:textSize="12sp"
             android:textStyle="bold" />
 
     </LinearLayout>

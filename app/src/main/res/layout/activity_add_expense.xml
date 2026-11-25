@@ -19,7 +19,7 @@
             </com.google.android.material.textfield.TextInputLayout>
             <TextView style="@style/FormFieldLabel" android:labelFor="@id/expense_date" android:text="@string/expense_date" />
             <TextView android:id="@+id/expense_date" android:layout_width="match_parent" android:layout_height="52dp" android:gravity="center_vertical" android:hint="@string/hint_date" android:paddingHorizontal="10dp" />
-            <com.google.android.material.button.MaterialButton android:id="@+id/save_expense" android:layout_width="match_parent" android:layout_height="54dp" android:text="@string/save" app:backgroundTint="@color/forest" app:cornerRadius="16dp" />
+            <com.google.android.material.button.MaterialButton android:id="@+id/save_expense" android:layout_width="match_parent" android:layout_height="54dp" android:text="@string/save" android:textColor="@color/alabaster" app:backgroundTint="@color/forest" app:cornerRadius="16dp" />
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 </ScrollView>

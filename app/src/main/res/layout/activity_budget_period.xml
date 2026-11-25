@@ -15,6 +15,6 @@
             <com.google.android.material.textfield.TextInputEditText android:id="@+id/budget_total_input" android:layout_width="match_parent" android:layout_height="58dp" android:hint="@string/hint_amount" android:inputType="numberDecimal" android:singleLine="true" android:textColor="@color/ink" />
         </com.google.android.material.textfield.TextInputLayout>
         <TextView android:id="@+id/budget_period_error" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/coral" />
-        <com.google.android.material.button.MaterialButton android:id="@+id/budget_period_continue" android:layout_width="match_parent" android:layout_height="56dp" android:layout_marginTop="18dp" android:text="@string/welcome_next" app:backgroundTint="@color/forest" app:cornerRadius="16dp" />
+        <com.google.android.material.button.MaterialButton android:id="@+id/budget_period_continue" android:layout_width="match_parent" android:layout_height="56dp" android:layout_marginTop="18dp" android:text="@string/welcome_next" android:textColor="@color/alabaster" app:backgroundTint="@color/forest" app:cornerRadius="16dp" />
     </LinearLayout>
 </ScrollView>

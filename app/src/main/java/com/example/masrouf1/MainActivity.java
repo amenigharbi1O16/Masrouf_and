@@ -274,13 +274,13 @@ public final class MainActivity extends AppCompatActivity {
             button.setCornerRadius((int) (16 * density));
             button.setStrokeWidth((int) (1 * density));
             if (darkDrawer) {
-                button.setBackgroundTintList(ColorStateList.valueOf(getColor(selected ? R.color.mint : R.color.forest)));
-                button.setTextColor(getColor(selected ? R.color.forest : R.color.mint));
-                button.setStrokeColor(ColorStateList.valueOf(getColor(R.color.mint_accent)));
+                button.setBackgroundTintList(ColorStateList.valueOf(getColor(selected ? R.color.emerald : R.color.muted_green)));
+                button.setTextColor(getColor(R.color.alabaster));
+                button.setStrokeColor(ColorStateList.valueOf(getColor(selected ? R.color.mint : R.color.mint_accent)));
             } else {
-                button.setBackgroundTintList(ColorStateList.valueOf(getColor(selected ? R.color.forest : R.color.cream)));
-                button.setTextColor(getColor(selected ? R.color.alabaster : R.color.forest));
-                button.setStrokeColor(ColorStateList.valueOf(getColor(selected ? R.color.forest : R.color.card_border)));
+                button.setBackgroundTintList(ColorStateList.valueOf(getColor(selected ? R.color.forest : R.color.muted_green)));
+                button.setTextColor(getColor(R.color.alabaster));
+                button.setStrokeColor(ColorStateList.valueOf(getColor(selected ? R.color.forest : R.color.muted_green)));
             }
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0, (int) (40 * density), 1);
             params.setMargins(3, 0, 3, 0);

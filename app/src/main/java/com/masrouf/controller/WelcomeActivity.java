@@ -60,15 +60,17 @@ public final class WelcomeActivity extends AppCompatActivity {
             R.drawable.ic_people
     };
 
+    private static final String STATE_IN_SLIDES = "in_slides";
+    private static final String STATE_SLIDE_INDEX = "slide_index";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // If already logged in, skip to main
-        if (SessionStore.userId(this) > 0) {
-            startActivity(new Intent(this, com.example.masrouf1.MainActivity.class));
-            finish();
-            return;
+        // Welcome Page is always the first screen shown on cold app launch; clear any incomplete session.
+        if (savedInstanceState == null && SessionStore.userId(this) > 0
+                && (!SessionStore.categoriesSelected(this) || !isSessionOnboarded())) {
+            SessionStore.clear(this);
         }
 
         setContentView(R.layout.activity_welcome);
@@ -81,7 +83,7 @@ public final class WelcomeActivity extends AppCompatActivity {
         dotsContainer = findViewById(R.id.slide_dots);
         slideNext = findViewById(R.id.slide_next);
 
-        // Build language buttons in both phases
+        // Build language buttons
         buildLanguageButtons(R.id.welcome_languages);
 
         // Welcome phase: "Commencer" button
@@ -135,8 +137,28 @@ public final class WelcomeActivity extends AppCompatActivity {
             }
         });
 
-        updateNextButton(0);
-        updateDots(0);
+        if (savedInstanceState != null && savedInstanceState.getBoolean(STATE_IN_SLIDES, false)) {
+            int restoredSlide = Math.max(0, Math.min(TOTAL_SLIDES - 1, savedInstanceState.getInt(STATE_SLIDE_INDEX, 0)));
+            showPhase2();
+            currentSlide = restoredSlide;
+            pager.setCurrentItem(restoredSlide, false);
+            updateDots(restoredSlide);
+            updateNextButton(restoredSlide);
+        } else {
+            updateNextButton(0);
+            updateDots(0);
+        }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean(STATE_IN_SLIDES, phaseSlides != null && phaseSlides.getVisibility() == View.VISIBLE);
+        outState.putInt(STATE_SLIDE_INDEX, currentSlide);
+    }
+
+    private boolean isSessionOnboarded() {
+        return getSharedPreferences("masrouf_preferences", MODE_PRIVATE).getBoolean("onboarded", false);
     }
 
     private void showPhase1() {
@@ -201,23 +223,31 @@ public final class WelcomeActivity extends AppCompatActivity {
         LinearLayout row = findViewById(containerId);
         if (row == null) return;
         row.removeAllViews();
-        String[] tags = {"en", "fr", "ar"};
-        String[] labels = {"EN", "FR", "عربي"};
+        String currentTag = androidx.appcompat.app.AppCompatDelegate.getApplicationLocales().toLanguageTags();
+        if (currentTag.isEmpty()) currentTag = Locale.getDefault().getLanguage();
+        String activeLang = currentTag.length() >= 2 ? currentTag.substring(0, 2).toLowerCase(Locale.ROOT) : "fr";
+        String[] tags = {"fr", "ar", "en"};
+        String[] labels = {"FR", "AR", "EN"};
         for (int i = 0; i < tags.length; i++) {
             final String tag = tags[i];
             final String label = labels[i];
+            boolean selected = tag.equals(activeLang);
             TextView tv = new TextView(this);
             tv.setText(label);
             tv.setGravity(android.view.Gravity.CENTER);
             tv.setTextSize(13f);
-            tv.setPadding(dp(10), dp(6), dp(10), dp(6));
-            tv.setTextColor(getColor(R.color.muted_green));
-            tv.setBackground(getDrawable(R.drawable.bg_lang_unselected));
+            tv.setPadding(dp(12), dp(6), dp(12), dp(6));
+            tv.setTextColor(getColor(selected ? R.color.alabaster : R.color.muted_green));
+            tv.setBackground(getDrawable(selected ? R.drawable.bg_lang_selected : R.drawable.bg_lang_unselected));
+            tv.setTypeface(null, selected ? android.graphics.Typeface.BOLD : android.graphics.Typeface.NORMAL);
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+            params.setMarginStart(dp(4));
             tv.setOnClickListener(v -> {
                 LocaleController.apply(tag);
                 // setApplicationLocales() automatically recreates the activity — no manual recreate() needed
             });
-            row.addView(tv);
+            row.addView(tv, params);
         }
     }
 

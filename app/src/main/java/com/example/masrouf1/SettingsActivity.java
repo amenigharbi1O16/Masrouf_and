@@ -43,16 +43,23 @@ public final class SettingsActivity extends SectionActivity {
         LinearLayout langRow = new LinearLayout(this);
         langRow.setOrientation(LinearLayout.HORIZONTAL);
         langRow.setPadding(0, dp(4), 0, dp(4));
+        String currentTag = androidx.appcompat.app.AppCompatDelegate.getApplicationLocales().toLanguageTags();
+        if (currentTag.isEmpty()) currentTag = java.util.Locale.getDefault().getLanguage();
+        String activeLang = currentTag.length() >= 2 ? currentTag.substring(0, 2).toLowerCase(java.util.Locale.ROOT) : "fr";
         String[] langTags   = {"fr", "ar", "en"};
         String[] langLabels = {"Français", "العربية", "English"};
         for (int li = 0; li < langTags.length; li++) {
             final String langTag = langTags[li];
-            MaterialButton langBtn = new MaterialButton(this, null, com.google.android.material.R.attr.materialButtonOutlinedStyle);
+            boolean selected = langTag.equals(activeLang);
+            MaterialButton langBtn = new MaterialButton(this);
             langBtn.setText(langLabels[li]);
             langBtn.setAllCaps(false);
             langBtn.setTextSize(13f);
+            langBtn.setBackgroundTintList(android.content.res.ColorStateList.valueOf(
+                    getColor(selected ? R.color.forest : R.color.muted_green)));
+            langBtn.setTextColor(getColor(R.color.alabaster));
             langBtn.setOnClickListener(vv -> LocaleController.apply(langTag));
-            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, dp(46), 1f);
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, dp(48), 1f);
             lp.setMargins(li == 0 ? 0 : dp(4), 0, 0, 0);
             langRow.addView(langBtn, lp);
         }

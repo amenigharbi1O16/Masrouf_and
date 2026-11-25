@@ -481,15 +481,11 @@ public interface MasroufDao {
         if(user.categoriesSelected)return completeGeneralOnboarding(userId)>0;
         if(selections==null||selections.isEmpty())return false;
         java.util.HashSet<Long> ids=new java.util.HashSet<>();
-        boolean hasProtectedFallback=false;
         for(SystemCategoryEntity selected:selections) {
             if(selected==null||selected.id<=0||!ids.add(selected.id))return false;
             SystemCategoryEntity canonical=systemCategory(selected.id);
             if(canonical==null)return false;
-            hasProtectedFallback|=canonical.protectedCategory;
         }
-        // The user explicitly selects the protected fallback, so no category is silently pre-assigned.
-        if(!hasProtectedFallback)return false;
         boolean child="child".equalsIgnoreCase(user.role);
         if(child) {
             if(childProfileForUser(userId)==null)return false;

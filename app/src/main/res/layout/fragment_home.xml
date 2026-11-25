@@ -27,13 +27,13 @@
                 <TextView android:id="@+id/home_child_received" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:textColor="@color/ink" />
                 <TextView android:id="@+id/home_child_goal" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:textColor="@color/muted_green" />
                 <ProgressBar android:id="@+id/home_child_goal_progress" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="8dp" android:layout_marginTop="8dp" android:max="100" android:progressTint="@color/emerald" android:progressBackgroundTint="@color/mint_light" />
-                <com.google.android.material.button.MaterialButton android:id="@+id/home_request_money" android:layout_width="match_parent" android:layout_height="48dp" android:layout_marginTop="10dp" android:text="@string/child_request_money" app:backgroundTint="@color/forest" app:cornerRadius="16dp" />
+                <com.google.android.material.button.MaterialButton android:id="@+id/home_request_money" android:layout_width="match_parent" android:layout_height="48dp" android:layout_marginTop="10dp" android:text="@string/child_request_money" android:textColor="@color/alabaster" app:backgroundTint="@color/forest" app:cornerRadius="16dp" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
         <!-- 3. The only add-category control: directly beneath the hero card -->
         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="end|center_vertical" android:layoutDirection="locale" android:orientation="horizontal">
-            <com.google.android.material.button.MaterialButton android:id="@+id/home_add_category" style="@style/Widget.Material3.Button.TonalButton" android:layout_width="wrap_content" android:layout_height="44dp" android:layout_marginTop="8dp" android:text="@string/add_category" android:textColor="@color/emerald" android:textStyle="bold" app:icon="@drawable/ic_add_circle" app:iconTint="@color/emerald" app:backgroundTint="@color/mint" app:cornerRadius="28dp" />
+            <com.google.android.material.button.MaterialButton android:id="@+id/home_add_category" android:layout_width="wrap_content" android:layout_height="44dp" android:layout_marginTop="8dp" android:text="@string/add_category" android:textColor="@color/alabaster" android:textStyle="bold" app:icon="@drawable/ic_add_circle" app:iconTint="@color/alabaster" app:backgroundTint="@color/emerald" app:cornerRadius="28dp" />
         </LinearLayout>
 
         <!-- 4. Empty budget callout (hidden once a budget exists) -->
@@ -41,7 +41,7 @@
             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="vertical" android:padding="16dp">
                 <TextView android:id="@+id/home_no_budget_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/no_budget" android:textColor="@color/ink" android:textStyle="bold" />
                 <TextView android:id="@+id/home_child_no_budget_message" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="@string/no_child_budget" android:textColor="@color/muted_green" android:visibility="gone" />
-                <com.google.android.material.button.MaterialButton android:id="@+id/home_define_budget" android:layout_width="match_parent" android:layout_height="48dp" android:layout_marginTop="8dp" android:text="@string/define_budget" app:backgroundTint="@color/emerald" app:cornerRadius="16dp" />
+                <com.google.android.material.button.MaterialButton android:id="@+id/home_define_budget" android:layout_width="match_parent" android:layout_height="48dp" android:layout_marginTop="8dp" android:text="@string/define_budget" android:textColor="@color/alabaster" app:backgroundTint="@color/emerald" app:cornerRadius="16dp" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -51,7 +51,7 @@
         <!-- 6. Two equal primary actions -->
         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="14dp" android:orientation="horizontal">
             <com.google.android.material.button.MaterialButton android:id="@+id/home_add_purchase" android:layout_width="0dp" android:layout_height="56dp" android:layout_marginEnd="6dp" android:layout_weight="1" android:ellipsize="end" android:maxLines="2" android:text="@string/add_purchase_product" android:textColor="@color/alabaster" android:textSize="12sp" app:icon="@drawable/ic_cart" app:iconTint="@color/mint" app:backgroundTint="@color/forest" app:cornerRadius="16dp" />
-            <com.google.android.material.button.MaterialButton android:id="@+id/home_add_expense" style="@style/Widget.Material3.Button.OutlinedButton" android:layout_width="0dp" android:layout_height="56dp" android:layout_marginStart="6dp" android:layout_weight="1" android:ellipsize="end" android:maxLines="2" android:text="@string/add_expense" android:textColor="@color/forest" android:textSize="12sp" app:icon="@drawable/ic_receipt" app:iconTint="@color/forest" app:cornerRadius="16dp" app:strokeColor="@color/forest" app:strokeWidth="1.5dp" />
+            <com.google.android.material.button.MaterialButton android:id="@+id/home_add_expense" android:layout_width="0dp" android:layout_height="56dp" android:layout_marginStart="6dp" android:layout_weight="1" android:ellipsize="end" android:maxLines="2" android:text="@string/add_expense" android:textColor="@color/alabaster" android:textSize="12sp" app:icon="@drawable/ic_receipt" app:iconTint="@color/alabaster" app:backgroundTint="@color/emerald" app:cornerRadius="16dp" />
         </LinearLayout>
 
         <!-- 7. User categories -->

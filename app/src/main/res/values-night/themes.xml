@@ -2,8 +2,8 @@
     <!-- Thème sombre Masrouf — conserve la palette verte, adapte les surfaces -->
     <style name="Base.Theme.Masrouf1" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Thème nuit : même couleurs de marque, surfaces sombres -->
-        <item name="colorPrimary">@color/mint_accent</item>
-        <item name="colorOnPrimary">@color/forest</item>
+        <item name="colorPrimary">@color/emerald</item>
+        <item name="colorOnPrimary">@color/alabaster</item>
         <item name="colorPrimaryContainer">@color/forest</item>
         <item name="colorOnPrimaryContainer">@color/mint</item>
         <item name="colorSecondary">@color/emerald</item>
@@ -43,6 +43,13 @@
         <item name="materialAlertDialogTheme">@style/ThemeOverlay.Masrouf.AlertDialog.Night</item>
         <!-- CORRECTIF CRITIQUE : forcer le texte saisi en foncé dans les EditText en mode nuit -->
         <item name="editTextStyle">@style/Widget.Masrouf.EditText.Night</item>
+        <item name="materialButtonStyle">@style/Widget.Masrouf.Button.Material.Night</item>
+    </style>
+
+    <style name="Widget.Masrouf.Button.Material.Night" parent="Widget.Material3.Button">
+        <item name="android:minHeight">48dp</item>
+        <item name="backgroundTint">@color/emerald</item>
+        <item name="android:textColor">@color/alabaster</item>
     </style>
 
     <!-- TextInputEditText night : fond blanc, texte sombre -->

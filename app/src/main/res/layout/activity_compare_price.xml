@@ -30,7 +30,7 @@
             <TextView android:id="@+id/compare_unit_price" android:layout_width="match_parent" android:layout_height="wrap_content" android:padding="8dp" android:textColor="@color/forest" android:textStyle="bold" />
             <TextView android:id="@+id/price_indicator" android:layout_width="match_parent" android:layout_height="wrap_content" android:padding="12dp" android:textColor="@color/forest" android:textStyle="bold" />
             <TextView android:id="@+id/envelope_impact" android:layout_width="match_parent" android:layout_height="wrap_content" android:padding="8dp" android:textColor="@color/muted_green" />
-            <com.google.android.material.button.MaterialButton android:id="@+id/compare_save" android:layout_width="match_parent" android:layout_height="54dp" android:text="@string/confirm_save_purchase" app:backgroundTint="@color/forest" app:cornerRadius="16dp" />
+            <com.google.android.material.button.MaterialButton android:id="@+id/compare_save" android:layout_width="match_parent" android:layout_height="54dp" android:text="@string/confirm_save_purchase" android:textColor="@color/alabaster" app:backgroundTint="@color/forest" app:cornerRadius="16dp" />
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 </ScrollView>

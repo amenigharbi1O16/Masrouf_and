@@ -149,15 +149,13 @@
         <!-- Bouton Voir mes points (secondaire) -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/congrats_points_button"
-            style="@style/Widget.Material3.Button.OutlinedButton"
             android:layout_width="match_parent"
             android:layout_height="52dp"
             android:layout_marginTop="10dp"
             android:text="@string/nav_rewards"
-            android:textColor="@color/forest"
-            app:cornerRadius="16dp"
-            app:strokeColor="@color/forest"
-            app:strokeWidth="1.5dp" />
+            android:textColor="@color/alabaster"
+            app:backgroundTint="@color/emerald"
+            app:cornerRadius="16dp" />
 
     </LinearLayout>
 </ScrollView>

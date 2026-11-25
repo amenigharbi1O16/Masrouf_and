@@ -53,22 +53,31 @@ public final class ChooseAccountTypeActivity extends AppCompatActivity {
         LinearLayout row = findViewById(R.id.choose_languages);
         if (row == null) return;
         row.removeAllViews();
-        String[] tags = {"en", "fr", "ar"};
-        String[] labels = {"EN", "FR", "عربي"};
+        String currentTag = androidx.appcompat.app.AppCompatDelegate.getApplicationLocales().toLanguageTags();
+        if (currentTag.isEmpty()) currentTag = java.util.Locale.getDefault().getLanguage();
+        String activeLang = currentTag.length() >= 2 ? currentTag.substring(0, 2).toLowerCase(java.util.Locale.ROOT) : "fr";
+        String[] tags = {"fr", "ar", "en"};
+        String[] labels = {"FR", "AR", "EN"};
         for (int i = 0; i < tags.length; i++) {
             final String tag = tags[i];
             final String label = labels[i];
+            boolean selected = tag.equals(activeLang);
             TextView tv = new TextView(this);
             tv.setText(label);
             tv.setGravity(android.view.Gravity.CENTER);
             tv.setTextSize(13f);
-            tv.setPadding(dp(10), dp(6), dp(10), dp(6));
-            tv.setTextColor(getColor(R.color.muted_green));
+            tv.setPadding(dp(12), dp(6), dp(12), dp(6));
+            tv.setTextColor(getColor(selected ? R.color.alabaster : R.color.muted_green));
+            tv.setBackground(getDrawable(selected ? R.drawable.bg_lang_selected : R.drawable.bg_lang_unselected));
+            tv.setTypeface(null, selected ? android.graphics.Typeface.BOLD : android.graphics.Typeface.NORMAL);
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+            params.setMarginStart(dp(4));
             tv.setOnClickListener(v -> {
                 LocaleController.apply(tag);
                 // setApplicationLocales() automatically recreates — no manual recreate() needed
             });
-            row.addView(tv);
+            row.addView(tv, params);
         }
     }
 

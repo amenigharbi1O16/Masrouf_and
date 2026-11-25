@@ -14,7 +14,7 @@
                 <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="4dp">
                     <com.google.android.material.textfield.TextInputEditText android:id="@+id/product_brand" android:layout_width="match_parent" android:layout_height="58dp" android:hint="@string/hint_product_brand" android:inputType="text" android:singleLine="true" android:textColor="@color/ink" />
                 </com.google.android.material.textfield.TextInputLayout>
-                <com.google.android.material.button.MaterialButton android:id="@+id/product_photo" android:layout_width="match_parent" android:layout_height="48dp" android:text="@string/product_photo_optional" app:cornerRadius="16dp" />
+                <com.google.android.material.button.MaterialButton android:id="@+id/product_photo" android:layout_width="match_parent" android:layout_height="48dp" android:text="@string/product_photo_optional" android:textColor="@color/alabaster" app:backgroundTint="@color/emerald" app:cornerRadius="16dp" />
                 <TextView style="@style/FormFieldLabel" android:labelFor="@id/product_category" android:text="@string/field_category" />
                 <Spinner android:id="@+id/product_category" android:layout_width="match_parent" android:layout_height="52dp" android:contentDescription="@string/field_category" />
                 <TextView style="@style/FormFieldLabel" android:labelFor="@id/product_price" android:text="@string/total_price_dt" />
@@ -34,7 +34,7 @@
                 </com.google.android.material.textfield.TextInputLayout>
                 <TextView style="@style/FormFieldLabel" android:labelFor="@id/product_date" android:text="@string/purchase_date" />
                 <TextView android:id="@+id/product_date" android:layout_width="match_parent" android:layout_height="52dp" android:gravity="center_vertical" android:hint="@string/hint_date" android:paddingHorizontal="10dp" android:textColor="@color/ink" />
-                <com.google.android.material.button.MaterialButton android:id="@+id/save_product" android:layout_width="match_parent" android:layout_height="54dp" android:layout_marginTop="8dp" android:text="@string/save_product_purchase" app:backgroundTint="@color/forest" app:cornerRadius="16dp" />
+                <com.google.android.material.button.MaterialButton android:id="@+id/save_product" android:layout_width="match_parent" android:layout_height="54dp" android:layout_marginTop="8dp" android:text="@string/save_product_purchase" android:textColor="@color/alabaster" app:backgroundTint="@color/forest" app:cornerRadius="16dp" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
     </LinearLayout>

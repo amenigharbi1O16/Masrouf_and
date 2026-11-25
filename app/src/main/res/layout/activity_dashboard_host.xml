@@ -81,14 +81,13 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/personal_logout"
-                style="@style/Widget.Material3.Button.OutlinedButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:text="@string/logout"
-                android:textColor="@color/coral"
-                app:cornerRadius="16dp"
-                app:strokeColor="@color/coral" />
+                android:textColor="@color/alabaster"
+                app:backgroundTint="@color/danger_text"
+                app:cornerRadius="16dp" />
         </LinearLayout>
 
         <include layout="@layout/drawer_admin" />

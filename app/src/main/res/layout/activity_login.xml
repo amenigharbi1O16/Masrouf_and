@@ -224,6 +224,7 @@
                 android:layout_height="56dp"
                 android:layout_marginTop="22dp"
                 android:text="@string/login_action"
+                android:textColor="@color/alabaster"
                 android:textSize="16sp"
                 app:backgroundTint="@color/forest"
                 app:cornerRadius="28dp" />
@@ -235,11 +236,10 @@
                 android:layout_height="52dp"
                 android:layout_marginTop="8dp"
                 android:text="@string/login_no_account"
-                android:textColor="@color/emerald"
+                android:textColor="@color/alabaster"
                 android:textSize="15sp"
-                app:backgroundTint="@color/mint"
-                app:cornerRadius="28dp"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+                app:backgroundTint="@color/emerald"
+                app:cornerRadius="28dp" />
 
         </LinearLayout>
 

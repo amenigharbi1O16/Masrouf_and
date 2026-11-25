@@ -24,7 +24,6 @@ import com.example.masrouf1.db.MasroufEntities.UserEntity;
 import com.example.masrouf1.db.SystemCategoryCatalog;
 import com.example.masrouf1.ui.CategoryIconResources;
 import com.google.android.material.button.MaterialButton;
-import com.google.android.material.card.MaterialCardView;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -32,11 +31,11 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * OnboardingActivity — Post-login 3-step onboarding:
+ * OnboardingActivity – Post-login 3-step onboarding:
  *
  *  Step 1 (01/03): Welcome + hero card + sample transactions → "Sélection des catégories"
  *  Step 2 (02/03): Category selection per-user (Produits / Dépenses) → "Vérifier les N catégories"
- *  Step 3 (03/03): Confirmation — shows selected categories + budget tip → "Accéder à l'accueil"
+ *  Step 3 (03/03): Confirmation – shows selected categories + budget tip → "Accéder à l'accueil"
  *
  * Per-user: each user's selections saved to user_categories table (not shared).
  * categoriesSelected + onboarded flags set on UserEntity after Step 3 confirmation.
@@ -73,43 +72,65 @@ public final class OnboardingActivity extends AppCompatActivity {
     // ─── ViewModel ────────────────────────────────────────────────────────────
     private MasroufViewModel viewModel;
 
+    private static final String STATE_STEP = "onboarding_step";
+    private static final String STATE_SELECTED_KEYS = "onboarding_selected_keys";
+    private boolean restoredSelectionState = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_onboarding);
 
         userId = getIntent().getLongExtra("USER_ID", SessionStore.userId(this));
+        if (userId <= 0L) {
+            startActivity(new Intent(this, WelcomeActivity.class)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK));
+            finish();
+            return;
+        }
+        if (savedInstanceState != null) {
+            step = savedInstanceState.getInt(STATE_STEP, 1);
+            ArrayList<String> restored = savedInstanceState.getStringArrayList(STATE_SELECTED_KEYS);
+            if (restored != null) {
+                selectedKeys.addAll(restored);
+                restoredSelectionState = true;
+            }
+        }
         viewModel = new androidx.lifecycle.ViewModelProvider(
                 this, new MasroufViewModelFactory(this)).get(MasroufViewModel.class);
 
         // Bind views
-        stepOne = findViewById(R.id.onboarding_step_one);
-        stepTwo = findViewById(R.id.onboarding_step_two);
+        stepOne   = findViewById(R.id.onboarding_step_one);
+        stepTwo   = findViewById(R.id.onboarding_step_two);
         stepThree = findViewById(R.id.onboarding_step_three);
         stepLabel = findViewById(R.id.onboarding_step_label);
-        titleBar = findViewById(R.id.onboarding_title_bar);
-        backBtn = findViewById(R.id.onboarding_back);
-        nextBtn = findViewById(R.id.onboarding_next);
+        titleBar  = findViewById(R.id.onboarding_title_bar);
+        backBtn   = findViewById(R.id.onboarding_back);
+        nextBtn   = findViewById(R.id.onboarding_next);
         modifyBtn = findViewById(R.id.onboarding_modify_selection);
-        saveProgress = findViewById(R.id.onboarding_save_progress);
+        saveProgress   = findViewById(R.id.onboarding_save_progress);
         categoryLoading = findViewById(R.id.onboarding_category_loading);
         sampleTransactions = findViewById(R.id.onboarding_sample_transactions);
-        categoryList = findViewById(R.id.onboarding_category_list);
+        categoryList    = findViewById(R.id.onboarding_category_list);
         categoryCountLabel = findViewById(R.id.onboarding_category_count);
         categoryCountBadge = findViewById(R.id.category_count_badge);
         summaryList = findViewById(R.id.onboarding_summary_list);
         selectionSummaryText = findViewById(R.id.onboarding_selection_summary_text);
 
         // Category RecyclerView
-        categoryList.setLayoutManager(new LinearLayoutManager(this));
+        if (categoryList != null) {
+            categoryList.setLayoutManager(new LinearLayoutManager(this));
+        }
 
         // Navigation
-        backBtn.setOnClickListener(v -> handleBack());
-        nextBtn.setOnClickListener(v -> advance());
-        modifyBtn.setOnClickListener(v -> {
-            step = 2;
-            renderStep();
-        });
+        if (backBtn != null) backBtn.setOnClickListener(v -> handleBack());
+        if (nextBtn != null) nextBtn.setOnClickListener(v -> advance());
+        if (modifyBtn != null) {
+            modifyBtn.setOnClickListener(v -> {
+                step = 2;
+                renderStep();
+            });
+        }
 
         // Load user and categories
         loadData();
@@ -121,7 +142,7 @@ public final class OnboardingActivity extends AppCompatActivity {
     // ─── Data Loading ─────────────────────────────────────────────────────────
 
     private void loadData() {
-        categoryLoading.setVisibility(View.VISIBLE);
+        if (categoryLoading != null) categoryLoading.setVisibility(View.VISIBLE);
         viewModel.<OnboardingData>request(
                 repository -> {
                     UserEntity user = repository.user(userId);
@@ -131,7 +152,7 @@ public final class OnboardingActivity extends AppCompatActivity {
                     return new OnboardingData(user, cats, selectedIds);
                 },
                 state -> {
-                    categoryLoading.setVisibility(View.GONE);
+                    if (categoryLoading != null) categoryLoading.setVisibility(View.GONE);
                     if (state.data == null) {
                         Toast.makeText(this, R.string.category_selection_failed, Toast.LENGTH_LONG).show();
                         return;
@@ -139,10 +160,13 @@ public final class OnboardingActivity extends AppCompatActivity {
                     currentUser = state.data.user;
                     availableCategories = state.data.categories;
 
-                    // Restore previously selected keys
-                    Set<Long> selectedIdSet = new HashSet<>(state.data.selectedCatalogIds);
-                    for (SystemCategoryEntity cat : availableCategories) {
-                        if (selectedIdSet.contains(cat.id)) selectedKeys.add(cat.key);
+                    // Restore previously selected keys (per-user) unless mid-flow state already restored
+                    if (!restoredSelectionState) {
+                        selectedKeys.clear();
+                        Set<Long> selectedIdSet = new HashSet<>(state.data.selectedCatalogIds);
+                        for (SystemCategoryEntity cat : availableCategories) {
+                            if (selectedIdSet.contains(cat.id)) selectedKeys.add(cat.key);
+                        }
                     }
 
                     // Build adapter
@@ -152,7 +176,12 @@ public final class OnboardingActivity extends AppCompatActivity {
                     // Build step-1 sample transactions
                     buildSampleTransactions();
 
-                    // If already onboarded, skip to step 1 for review
+                    // If restored directly into step 3, populate summary cards too
+                    if (step == 3) {
+                        buildSummary();
+                    }
+
+                    // Re-render with loaded data
                     renderStep();
                 }
         );
@@ -163,18 +192,18 @@ public final class OnboardingActivity extends AppCompatActivity {
         sampleTransactions.removeAllViews();
         // Sample rows matching the screenshot
         String[][] samples = {
-                {"food",       getString(R.string.category_food),     "−42.500 DT", getString(R.string.onboarding_sample_desc1)},
-                {"food",       getString(R.string.onboarding_sample_product), "−14.500 DT", getString(R.string.onboarding_sample_desc2)},
-                {"transport",  getString(R.string.category_transport), "−35.000 DT", getString(R.string.onboarding_sample_desc3)},
+                {"food",      getString(R.string.category_food),     "−42.500 DT", getString(R.string.onboarding_sample_desc1)},
+                {"food",      getString(R.string.onboarding_sample_product), "−14.500 DT", getString(R.string.onboarding_sample_desc2)},
+                {"transport", getString(R.string.category_transport), "−35.000 DT", getString(R.string.onboarding_sample_desc3)},
         };
         for (String[] row : samples) {
             View itemView = LayoutInflater.from(this).inflate(R.layout.item_summary_category, sampleTransactions, false);
             ImageView icon = itemView.findViewById(R.id.summary_category_icon);
-            TextView name = itemView.findViewById(R.id.summary_category_name);
-            TextView type = itemView.findViewById(R.id.summary_category_type);
+            TextView name  = itemView.findViewById(R.id.summary_category_name);
+            TextView type  = itemView.findViewById(R.id.summary_category_type);
 
             if (name != null) name.setText(row[1]);
-            if (type != null) type.setText(row[3]); // description under name
+            if (type != null) type.setText(row[3]);
             SystemCategoryEntity catEntity = findCategoryByKey(row[0]);
             if (catEntity != null && icon != null) {
                 icon.setImageResource(CategoryIconResources.resolve(catEntity.iconName, catEntity.type));
@@ -186,7 +215,9 @@ public final class OnboardingActivity extends AppCompatActivity {
     // ─── Category Adapter ─────────────────────────────────────────────────────
 
     private void buildCategoryAdapter() {
+        if (categoryList == null) return;
         categoryAdapter = new CategorySelectionAdapter(availableCategories, selectedKeys, key -> {
+            // Toggle selection (per-user, not shared)
             if (selectedKeys.contains(key)) {
                 selectedKeys.remove(key);
             } else {
@@ -194,6 +225,8 @@ public final class OnboardingActivity extends AppCompatActivity {
             }
             updateCategoryCount();
             refreshNextButton();
+            // Refresh the whole adapter so Select/Selected state updates correctly
+            categoryAdapter.notifyDataSetChanged();
         });
         categoryList.setAdapter(categoryAdapter);
     }
@@ -235,42 +268,59 @@ public final class OnboardingActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(STATE_STEP, step);
+        outState.putStringArrayList(STATE_SELECTED_KEYS, new ArrayList<>(selectedKeys));
+    }
+
     private void handleBack() {
         if (step > 1) {
             step--;
             renderStep();
         } else {
+            if (currentUser == null || !currentUser.categoriesSelected) {
+                SessionStore.clear(this);
+            }
             finish();
         }
     }
 
     private void renderStep() {
-        stepOne.setVisibility(step == 1 ? View.VISIBLE : View.GONE);
-        stepTwo.setVisibility(step == 2 ? View.VISIBLE : View.GONE);
-        stepThree.setVisibility(step == 3 ? View.VISIBLE : View.GONE);
+        if (stepOne != null)   stepOne.setVisibility(step == 1 ? View.VISIBLE : View.GONE);
+        if (stepTwo != null)   stepTwo.setVisibility(step == 2 ? View.VISIBLE : View.GONE);
+        if (stepThree != null) stepThree.setVisibility(step == 3 ? View.VISIBLE : View.GONE);
 
         // Back button visible from step 2
         if (backBtn != null) backBtn.setVisibility(step > 1 ? View.VISIBLE : View.INVISIBLE);
 
-        // Step label (e.g. "01 / 03 · BIENVENUE DANS MASROUF")
+        if (nextBtn == null) return;
+
         switch (step) {
             case 1:
-                stepLabel.setText(getString(R.string.onboarding_step_label_1));
-                titleBar.setText(R.string.onboarding_discover);
+                if (stepLabel != null) stepLabel.setText(getString(R.string.onboarding_step_label_1));
+                if (titleBar != null)  titleBar.setText(R.string.onboarding_discover);
                 nextBtn.setText(R.string.onboarding_select_categories_btn);
-                modifyBtn.setVisibility(View.GONE);
+                nextBtn.setTextColor(getColor(R.color.alabaster));
+                if (modifyBtn != null) modifyBtn.setVisibility(View.GONE);
                 break;
             case 2:
-                stepLabel.setText(getString(R.string.onboarding_step_label_2));
-                titleBar.setText(R.string.onboarding_your_categories);
+                if (stepLabel != null) stepLabel.setText(getString(R.string.onboarding_step_label_2));
+                if (titleBar != null)  titleBar.setText(R.string.onboarding_your_categories);
                 updateCategoryCount();
-                modifyBtn.setVisibility(View.GONE);
+                if (modifyBtn != null) modifyBtn.setVisibility(View.GONE);
+                nextBtn.setTextColor(getColor(R.color.alabaster));
                 break;
             case 3:
-                stepLabel.setText(getString(R.string.onboarding_step_label_3));
-                titleBar.setText(R.string.onboarding_your_selection);
+                if (stepLabel != null) stepLabel.setText(getString(R.string.onboarding_step_label_3));
+                if (titleBar != null)  titleBar.setText(R.string.onboarding_your_selection);
                 nextBtn.setText(R.string.go_home);
-                modifyBtn.setVisibility(View.VISIBLE);
+                nextBtn.setTextColor(getColor(R.color.alabaster));
+                if (modifyBtn != null) {
+                    modifyBtn.setVisibility(View.VISIBLE);
+                    modifyBtn.setTextColor(getColor(R.color.alabaster));
+                }
                 break;
         }
 
@@ -278,6 +328,7 @@ public final class OnboardingActivity extends AppCompatActivity {
     }
 
     private void refreshNextButton() {
+        if (nextBtn == null) return;
         if (step == 2) {
             int count = selectedKeys.size();
             nextBtn.setText(getString(R.string.onboarding_verify_categories, count));
@@ -305,16 +356,15 @@ public final class OnboardingActivity extends AppCompatActivity {
             if (!selectedKeys.contains(cat.key)) continue;
             View itemView = LayoutInflater.from(this).inflate(R.layout.item_summary_category, summaryList, false);
             ImageView icon = itemView.findViewById(R.id.summary_category_icon);
-            TextView name = itemView.findViewById(R.id.summary_category_name);
-            TextView type = itemView.findViewById(R.id.summary_category_type);
+            TextView name  = itemView.findViewById(R.id.summary_category_name);
+            TextView type  = itemView.findViewById(R.id.summary_category_type);
 
             if (icon != null) {
                 icon.setImageResource(CategoryIconResources.resolve(cat.iconName, cat.type));
             }
+            int nameRes = SystemCategoryCatalog.titleResource(cat.key);
             if (name != null) {
-                name.setText(SystemCategoryCatalog.titleResource(cat.key) != 0
-                        ? getString(SystemCategoryCatalog.titleResource(cat.key))
-                        : cat.name);
+                name.setText(nameRes != 0 ? getString(nameRes) : cat.name);
             }
             if (type != null) {
                 type.setText("product".equalsIgnoreCase(cat.type)
@@ -330,11 +380,13 @@ public final class OnboardingActivity extends AppCompatActivity {
     private void saveAndGoHome() {
         if (saving) return;
         saving = true;
-        nextBtn.setEnabled(false);
-        nextBtn.setText(R.string.onboarding_saving);
-        saveProgress.setVisibility(View.VISIBLE);
+        if (nextBtn != null) {
+            nextBtn.setEnabled(false);
+            nextBtn.setText(R.string.onboarding_saving);
+        }
+        if (saveProgress != null) saveProgress.setVisibility(View.VISIBLE);
 
-        // Build list of selected SystemCategoryEntity objects
+        // Build list of selected SystemCategoryEntity objects (this user's choices only)
         ArrayList<SystemCategoryEntity> chosen = new ArrayList<>();
         for (SystemCategoryEntity cat : availableCategories) {
             if (selectedKeys.contains(cat.key)) chosen.add(cat);
@@ -345,15 +397,26 @@ public final class OnboardingActivity extends AppCompatActivity {
                 result -> {
                     if (!Boolean.TRUE.equals(result.data)) {
                         saving = false;
-                        saveProgress.setVisibility(View.GONE);
-                        nextBtn.setEnabled(true);
-                        nextBtn.setText(R.string.go_home);
+                        if (saveProgress != null) saveProgress.setVisibility(View.GONE);
+                        if (nextBtn != null) {
+                            nextBtn.setEnabled(true);
+                            nextBtn.setText(R.string.go_home);
+                        }
                         Toast.makeText(this, R.string.category_selection_failed, Toast.LENGTH_LONG).show();
                         return;
                     }
+                    // Mark this user's onboarding complete in session and preserve exact profile/role
+                    if (currentUser != null) {
+                        currentUser.onboarded = true;
+                        currentUser.categoriesSelected = true;
+                        SessionStore.save(this, currentUser);
+                    }
                     SessionStore.markOnboardingComplete(this);
-                    startActivity(new Intent(this, com.example.masrouf1.MainActivity.class)
-                            .putExtra("USER_ID", userId));
+                    // Route to MainActivity — it reads the user's role and shows the correct dashboard
+                    Intent home = new Intent(this, com.example.masrouf1.MainActivity.class);
+                    home.putExtra("USER_ID", userId);
+                    home.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    startActivity(home);
                     finish();
                 }
         );
@@ -371,11 +434,12 @@ public final class OnboardingActivity extends AppCompatActivity {
     // ─── Category selection adapter ───────────────────────────────────────────
 
     /**
-     * Adapter that shows categories in two sections:
+     * Shows categories in two sections:
      *   "Catégories de produits" → all type=product
      *   "Catégories de dépenses" → all type=expense
      *
      * Each row: icon | name | "Sélectionner" / "Sélectionné" toggle
+     * Select/Selected state is dynamic — changes immediately on tap.
      */
     private static final class CategorySelectionAdapter
             extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
@@ -399,9 +463,21 @@ public final class OnboardingActivity extends AppCompatActivity {
 
         private void build(List<SystemCategoryEntity> cats) {
             items.clear();
-            // Products section
+            List<String> preferredOrder = java.util.Arrays.asList(
+                    "food", "clothing", "hygiene", "home_equip", "computer", "health",
+                    "housing", "transport", "bills", "education", "leisure", "children",
+                    "family_aid", "savings", "donations", "banking", "other");
+            List<SystemCategoryEntity> sorted = new ArrayList<>(cats);
+            java.util.Collections.sort(sorted, (a, b) -> {
+                int ia = preferredOrder.indexOf(a.key);
+                int ib = preferredOrder.indexOf(b.key);
+                if (ia < 0) ia = "other".equals(a.key) ? 999 : 500;
+                if (ib < 0) ib = "other".equals(b.key) ? 999 : 500;
+                return Integer.compare(ia, ib);
+            });
+            // Products section first
             boolean hasProducts = false;
-            for (SystemCategoryEntity c : cats) {
+            for (SystemCategoryEntity c : sorted) {
                 if ("product".equalsIgnoreCase(c.type)) {
                     if (!hasProducts) {
                         items.add("PRODUCTS_HEADER");
@@ -410,9 +486,9 @@ public final class OnboardingActivity extends AppCompatActivity {
                     items.add(c);
                 }
             }
-            // Expenses section
+            // Expenses section second
             boolean hasExpenses = false;
-            for (SystemCategoryEntity c : cats) {
+            for (SystemCategoryEntity c : sorted) {
                 if ("expense".equalsIgnoreCase(c.type)) {
                     if (!hasExpenses) {
                         items.add("EXPENSES_HEADER");
@@ -460,31 +536,43 @@ public final class OnboardingActivity extends AppCompatActivity {
                 // Icon
                 h.icon.setImageResource(CategoryIconResources.resolve(cat.iconName, cat.type));
 
-                // Name
+                // Name (use localized string if available)
                 int nameRes = SystemCategoryCatalog.titleResource(cat.key);
                 h.name.setText(nameRes != 0
                         ? holder.itemView.getContext().getString(nameRes)
                         : cat.name);
 
-                // Toggle button
+                // Toggle button: dynamic "Sélectionner" <-> "Sélectionné" ("Select" <-> "Selected")
                 boolean isSelected = selected.contains(cat.key);
+                if (h.rowContainer != null) {
+                    h.rowContainer.setBackgroundColor(holder.itemView.getContext().getColor(
+                            isSelected ? R.color.mint_light : android.R.color.transparent));
+                }
                 if (isSelected) {
                     h.toggle.setText(R.string.selected_btn);
-                    h.toggle.setTextColor(holder.itemView.getContext().getColor(R.color.muted_green));
+                    h.toggle.setBackgroundResource(R.drawable.bg_lang_selected);
+                    h.toggle.setTextColor(holder.itemView.getContext().getColor(R.color.alabaster));
                 } else {
                     h.toggle.setText(R.string.select_btn);
-                    h.toggle.setTextColor(holder.itemView.getContext().getColor(R.color.emerald));
+                    h.toggle.setBackgroundResource(R.drawable.bg_btn_select);
+                    h.toggle.setTextColor(holder.itemView.getContext().getColor(R.color.alabaster));
                 }
 
-                // Divider: skip — no item_divider id in this layout
-
+                // Click on row OR on toggle button — both toggle the selection
+                // Use getBindingAdapterPosition() to avoid stale position from lambda
                 h.itemView.setOnClickListener(v -> {
-                    listener.onToggle(cat.key);
-                    notifyItemChanged(position);
+                    int pos = h.getBindingAdapterPosition();
+                    if (pos == RecyclerView.NO_POSITION) return;
+                    Object item = items.get(pos);
+                    if (!(item instanceof SystemCategoryEntity)) return;
+                    listener.onToggle(((SystemCategoryEntity) item).key);
                 });
                 h.toggle.setOnClickListener(v -> {
-                    listener.onToggle(cat.key);
-                    notifyItemChanged(position);
+                    int pos = h.getBindingAdapterPosition();
+                    if (pos == RecyclerView.NO_POSITION) return;
+                    Object item = items.get(pos);
+                    if (!(item instanceof SystemCategoryEntity)) return;
+                    listener.onToggle(((SystemCategoryEntity) item).key);
                 });
             }
         }
@@ -498,12 +586,14 @@ public final class OnboardingActivity extends AppCompatActivity {
         }
 
         static class ItemHolder extends RecyclerView.ViewHolder {
+            final View rowContainer;
             final ImageView icon;
             final TextView name, toggle;
             ItemHolder(View v) {
                 super(v);
-                icon = v.findViewById(R.id.item_category_icon);
-                name = v.findViewById(R.id.item_category_name);
+                rowContainer = v.findViewById(R.id.item_category_row);
+                icon   = v.findViewById(R.id.item_category_icon);
+                name   = v.findViewById(R.id.item_category_name);
                 toggle = v.findViewById(R.id.item_category_toggle);
             }
         }

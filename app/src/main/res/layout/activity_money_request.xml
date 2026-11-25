@@ -62,7 +62,7 @@
                         android:textColor="@color/ink" />
                 </com.google.android.material.textfield.TextInputLayout>
                 <TextView android:id="@+id/request_feedback" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:visibility="gone" />
-                <com.google.android.material.button.MaterialButton android:id="@+id/request_submit" android:layout_width="match_parent" android:layout_height="52dp" android:layout_marginTop="14dp" android:text="@string/money_request_submit" app:backgroundTint="@color/forest" app:cornerRadius="16dp" />
+                <com.google.android.material.button.MaterialButton android:id="@+id/request_submit" android:layout_width="match_parent" android:layout_height="52dp" android:layout_marginTop="14dp" android:text="@string/money_request_submit" android:textColor="@color/alabaster" app:backgroundTint="@color/forest" app:cornerRadius="16dp" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="20dp" android:text="@string/money_request_history" android:textColor="@color/forest" android:textSize="18sp" android:textStyle="bold" />

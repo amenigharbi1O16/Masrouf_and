@@ -389,11 +389,10 @@
                     android:layout_height="52dp"
                     android:layout_marginTop="8dp"
                     android:text="@string/go_to_login"
-                    android:textColor="@color/emerald"
+                    android:textColor="@color/alabaster"
                     android:textSize="15sp"
-                    app:backgroundTint="@color/mint"
-                    app:cornerRadius="28dp"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+                    app:backgroundTint="@color/emerald"
+                    app:cornerRadius="28dp" />
 
             </LinearLayout>
 

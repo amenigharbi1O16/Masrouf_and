@@ -14,6 +14,6 @@
             <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:padding="14dp" android:text="@string/allocation_cap_error" android:textColor="@color/alabaster" android:textStyle="bold" />
         </com.google.android.material.card.MaterialCardView>
         <LinearLayout android:id="@+id/allocate_category_rows" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="14dp" android:orientation="vertical" />
-        <com.google.android.material.button.MaterialButton android:id="@+id/allocate_save" android:layout_width="match_parent" android:layout_height="56dp" android:layout_marginTop="18dp" android:text="@string/save" app:backgroundTint="@color/forest" app:cornerRadius="16dp" />
+        <com.google.android.material.button.MaterialButton android:id="@+id/allocate_save" android:layout_width="match_parent" android:layout_height="56dp" android:layout_marginTop="18dp" android:text="@string/save" android:textColor="@color/alabaster" app:backgroundTint="@color/forest" app:cornerRadius="16dp" />
     </LinearLayout>
 </ScrollView>

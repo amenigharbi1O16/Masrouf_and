@@ -8,6 +8,6 @@
             <LinearLayout android:id="@+id/parent_money_requests_rows" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" />
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
-    <com.google.android.material.button.MaterialButton android:id="@+id/child_management_create" android:layout_width="match_parent" android:layout_height="52dp" android:layout_marginTop="14dp" android:text="@string/add_child" app:backgroundTint="@color/forest" app:cornerRadius="16dp" />
+    <com.google.android.material.button.MaterialButton android:id="@+id/child_management_create" android:layout_width="match_parent" android:layout_height="52dp" android:layout_marginTop="14dp" android:text="@string/add_child" android:textColor="@color/alabaster" app:backgroundTint="@color/forest" app:cornerRadius="16dp" />
     <androidx.recyclerview.widget.RecyclerView android:id="@+id/children_management_list" android:layout_width="match_parent" android:layout_height="0dp" android:layout_marginTop="12dp" android:layout_weight="1" android:clipToPadding="false" android:paddingBottom="12dp" />
 </LinearLayout>

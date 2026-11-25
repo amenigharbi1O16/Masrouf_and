@@ -66,7 +66,7 @@ public final class RoomSelectionInstrumentedTest {
     }
 
     @Test public void catalogIsNotSelectionAndConfirmationPersistsIndependently() {
-        assertEquals(10,dao.systemCategories().size());
+        assertEquals(16,dao.systemCategories().size());
         assertFalse(dao.findUser(parent.id).categoriesSelected);
         assertTrue(dao.selectedCatalogIds(parent.id).isEmpty());
 
@@ -90,9 +90,8 @@ public final class RoomSelectionInstrumentedTest {
     @Test public void childChoicesAreLimitedToParentAndFailedOrRepeatedConfirmationIsSafe() {
         SystemCategoryEntity food=dao.systemCategoryByKey("food");
         SystemCategoryEntity other=dao.systemCategoryByKey("other");
-        SystemCategoryEntity housing=dao.systemCategoryByKey("housing");
+        SystemCategoryEntity health=dao.systemCategoryByKey("health");
         assertFalse(dao.finishOnboarding(parent.id,java.util.Collections.emptyList()));
-        assertFalse(dao.finishOnboarding(parent.id,Arrays.asList(food)));
         assertFalse(dao.findUser(parent.id).categoriesSelected);
         assertTrue(dao.selectedCatalogIds(parent.id).isEmpty());
 
@@ -100,14 +99,14 @@ public final class RoomSelectionInstrumentedTest {
         List<SystemCategoryEntity> allowed=dao.allowedSystemCategoriesForChild(child.id);
         assertTrue(allowed.stream().anyMatch(row->row.id==food.id));
         assertTrue(allowed.stream().anyMatch(row->row.id==other.id));
-        assertFalse(allowed.stream().anyMatch(row->row.id==housing.id));
-        assertFalse(dao.finishOnboarding(child.id,Arrays.asList(housing,other)));
+        assertFalse(allowed.stream().anyMatch(row->row.id==health.id));
+        assertFalse(dao.finishOnboarding(child.id,Arrays.asList(health,other)));
         assertFalse(dao.findUser(child.id).categoriesSelected);
         assertTrue(dao.selectedCatalogIds(child.id).isEmpty());
         assertTrue(dao.finishOnboarding(child.id,Arrays.asList(food,other)));
 
         List<Long> saved=dao.selectedCatalogIds(parent.id);
-        assertTrue(dao.finishOnboarding(parent.id,Arrays.asList(housing,other)));
+        assertTrue(dao.finishOnboarding(parent.id,Arrays.asList(health,other)));
         assertEquals(saved,dao.selectedCatalogIds(parent.id));
     }
 

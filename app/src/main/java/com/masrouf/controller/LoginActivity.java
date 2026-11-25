@@ -89,8 +89,12 @@ public final class LoginActivity extends AppCompatActivity {
                     if (user == null) { showError(); return; }
                     binding.loginErrorCard.setVisibility(View.GONE);
                     SessionStore.save(this, user);
-                    Intent target = new Intent(this, user.categoriesSelected && user.onboarded ? MainActivity.class : OnboardingActivity.class);
+                    boolean completedOnboarding = user.categoriesSelected && user.onboarded;
+                    Intent target = new Intent(this, completedOnboarding ? MainActivity.class : OnboardingActivity.class);
                     target.putExtra("USER_ID", user.id);
+                    if (completedOnboarding) {
+                        target.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    }
                     startActivity(target);
                     finish();
                 }));
