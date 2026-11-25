@@ -2,9 +2,8 @@ package com.masrouf.controller;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.Gravity;
 import android.view.View;
-import android.widget.LinearLayout;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -28,8 +27,15 @@ public final class LoginActivity extends AppCompatActivity {
 
         viewModel = new androidx.lifecycle.ViewModelProvider(this, new MasroufViewModelFactory(this)).get(MasroufViewModel.class);
 
-        // Wire language switcher
-        buildLanguageButtons();
+        // Wire back button
+        ImageView backBtn = findViewById(R.id.login_back);
+        if (backBtn != null) backBtn.setOnClickListener(v -> finish());
+
+        // Wire language switcher (3 TextViews: lang_fr, lang_ar, lang_en)
+        wireLangTab(R.id.lang_fr, "fr");
+        wireLangTab(R.id.lang_ar, "ar");
+        wireLangTab(R.id.lang_en, "en");
+        highlightActiveLang();
 
         if (getIntent().hasExtra("EMAIL")) binding.loginEmail.setText(getIntent().getStringExtra("EMAIL"));
         binding.loginEmail.addTextChangedListener(new FormValidationTextWatcher(binding.loginEmailFeedback));
@@ -37,26 +43,31 @@ public final class LoginActivity extends AppCompatActivity {
         binding.loginToRegister.setOnClickListener(v -> startActivity(new Intent(this, RegisterActivity.class).putExtra("TYPE", "personal")));
     }
 
-    private void buildLanguageButtons() {
-        LinearLayout row = findViewById(R.id.login_languages);
-        if (row == null) return;
-        row.removeAllViews();
-        String[] tags = {"fr", "ar", "en"};
-        String[] labels = {"FR", "العربية", "EN"};
+    private void wireLangTab(int viewId, String tag) {
+        TextView tv = findViewById(viewId);
+        if (tv == null) return;
+        tv.setOnClickListener(v -> {
+            LocaleController.apply(tag);
+        });
+    }
+
+    private void highlightActiveLang() {
         String currentTag = androidx.appcompat.app.AppCompatDelegate.getApplicationLocales().toLanguageTags();
-        for (int i = 0; i < tags.length; i++) {
-            final String tag = tags[i];
-            final String label = labels[i];
-            TextView tv = new TextView(this);
-            tv.setText(label);
-            tv.setGravity(Gravity.CENTER);
-            tv.setTextSize(13f);
-            tv.setPadding(dp(14), dp(8), dp(14), dp(8));
-            boolean isSelected = currentTag.startsWith(tag);
-            tv.setBackground(getDrawable(isSelected ? R.drawable.bg_lang_selected : R.drawable.bg_lang_unselected));
-            tv.setTextColor(getColor(isSelected ? R.color.alabaster : R.color.muted_green));
-            tv.setOnClickListener(v -> LocaleController.apply(tag));
-            row.addView(tv);
+        if (currentTag.isEmpty()) currentTag = java.util.Locale.getDefault().getLanguage();
+        String activeLang = currentTag.length() >= 2 ? currentTag.substring(0, 2).toLowerCase(java.util.Locale.ROOT) : "fr";
+
+        int[][] langPairs = new int[0][];
+        // Map view id -> lang tag
+        int[] ids = {R.id.lang_fr, R.id.lang_ar, R.id.lang_en};
+        String[] tags = {"fr", "ar", "en"};
+        for (int i = 0; i < ids.length; i++) {
+            TextView tv = findViewById(ids[i]);
+            if (tv == null) continue;
+            boolean selected = tags[i].equals(activeLang);
+            tv.setBackground(selected ? getDrawable(R.drawable.bg_lang_selected) : null);
+            tv.setTextColor(getColor(selected ? R.color.alabaster : R.color.muted_green));
+            if (selected) tv.setTypeface(null, android.graphics.Typeface.BOLD);
+            else tv.setTypeface(null, android.graphics.Typeface.NORMAL);
         }
     }
 
@@ -87,4 +98,3 @@ public final class LoginActivity extends AppCompatActivity {
 
     private void showError() { binding.loginErrorCard.setVisibility(View.VISIBLE); }
 }
-

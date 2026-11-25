@@ -433,6 +433,10 @@
     <string name="family_feature4">ميزانيات وتقارير تحليلية موحدة للعائلة</string>
     <string name="choose_personal_account">اختر الحساب الشخصي</string>
     <string name="choose_family_account">اختر الحساب العائلي</string>
+    <!-- Login screen extras -->
+    <string name="login_subtitle_label">تسجيل الدخول إلى مصروف</string>
+    <string name="login_no_account">ليس لديك حساب؟ إنشاء حساب</string>
+
     <string name="register_subtitle">متابعة الميزانية العائلية</string>
     <string name="family_account_info_banner">حساب الأب: وصول كامل للفضاء الشخصي والفضاء العائلي</string>
     <string name="local_storage_note">تُخزَّن ميزانياتك ومشترياتك ونفقاتك محلياً على هذا الجهاز.</string>

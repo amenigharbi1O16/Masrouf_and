@@ -433,6 +433,10 @@
     <string name="family_feature4">Consolidated family budgets and analytics</string>
     <string name="choose_personal_account">Choose Personal Account</string>
     <string name="choose_family_account">Choose Family Account</string>
+    <!-- Login screen extras -->
+    <string name="login_subtitle_label">SIGN IN TO MASROUF</string>
+    <string name="login_no_account">No account yet? Create an account</string>
+
     <string name="register_subtitle">FAMILY BUDGET TRACKER</string>
     <string name="family_account_info_banner">Parent Account: Full access to Personal Space and Family Space</string>
     <string name="local_storage_note">Your budgets, purchases and expenses are stored locally on this device.</string>
