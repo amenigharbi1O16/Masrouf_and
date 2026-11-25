@@ -605,5 +605,31 @@
     <string name="delete_action">Supprimer</string>
     <string name="confirm_action">Confirmer</string>
     <string name="home_manage_budget">Gérer le budget</string>
+    <string name="choisir_dates_debut_fin">Choisissez une date de début et de fin.</string>
+    <string name="verifier_ce_budget">Vérifiez ce budget</string>
+
+    <!-- Complete Settings Page -->
+    <string name="settings_identity_eyebrow_personal">COMPTE PERSONNEL</string>
+    <string name="settings_identity_eyebrow_family">COMPTE FAMILLE</string>
+    <string name="settings_identity_eyebrow_child">COMPTE ENFANT</string>
+    <string name="settings_save_name">Enregistrer le nom</string>
+    <string name="settings_name_saved">Nom enregistré.</string>
+    <string name="settings_name_invalid">Saisissez un nom complet.</string>
+    <string name="settings_followed_categories">Catégories sélectionnées</string>
+    <string name="settings_followed_count">%1$d suivies</string>
+    <string name="settings_edit_categories">Modifier ma sélection de catégories</string>
+    <string name="settings_preferences_title">Préférences et accès rapides</string>
+    <string name="settings_budget_detail_none">Définir une période et un montant</string>
+    <string name="settings_categories_detail">Activer, ajouter ou réorganiser vos catégories</string>
+    <string name="settings_calendar_detail">Consulter vos mois et périodes budgétaires</string>
+    <string name="settings_points_detail">Suivre vos points et récompenses</string>
+    <string name="settings_family_analytics_detail">Budgets du foyer et suivi des enfants</string>
+    <string name="settings_children_detail">Gérer les profils enfants et les dotations</string>
+    <string name="settings_password_detail">Mettre à jour votre mot de passe</string>
+    <string name="settings_manual_detail">Consulter le guide complet d\'utilisation</string>
+    <string name="settings_backup_detail">Exporter une copie de sécurité hors ligne</string>
+    <string name="settings_child_parent_budget">Budget alloué par le parent</string>
+    <string name="settings_communication_section">Assistance &amp; Foyer</string>
+    <string name="settings_language_section">Langue</string>
 
 </resources>

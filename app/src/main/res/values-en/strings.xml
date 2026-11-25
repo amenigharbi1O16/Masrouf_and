@@ -549,5 +549,31 @@
     <string name="delete_action">Delete</string>
     <string name="confirm_action">Confirm</string>
     <string name="home_manage_budget">Manage budget</string>
+    <string name="choisir_dates_debut_fin">Choose a start and end date.</string>
+    <string name="verifier_ce_budget">Review this budget</string>
+
+    <!-- Complete Settings Page -->
+    <string name="settings_identity_eyebrow_personal">PERSONAL ACCOUNT</string>
+    <string name="settings_identity_eyebrow_family">FAMILY ACCOUNT</string>
+    <string name="settings_identity_eyebrow_child">CHILD ACCOUNT</string>
+    <string name="settings_save_name">Save name</string>
+    <string name="settings_name_saved">Name saved.</string>
+    <string name="settings_name_invalid">Enter a full name.</string>
+    <string name="settings_followed_categories">Selected categories</string>
+    <string name="settings_followed_count">%1$d followed</string>
+    <string name="settings_edit_categories">Edit my category selection</string>
+    <string name="settings_preferences_title">Preferences &amp; Quick Access</string>
+    <string name="settings_budget_detail_none">Set a period and budget amount</string>
+    <string name="settings_categories_detail">Toggle, add, or organize your categories</string>
+    <string name="settings_calendar_detail">Explore months and budget periods</string>
+    <string name="settings_points_detail">View your points and rewards</string>
+    <string name="settings_family_analytics_detail">Household budgets and children tracking</string>
+    <string name="settings_children_detail">Manage child profiles and allowances</string>
+    <string name="settings_password_detail">Update your account password</string>
+    <string name="settings_manual_detail">Open the complete user guide</string>
+    <string name="settings_backup_detail">Create an offline database backup</string>
+    <string name="settings_child_parent_budget">Budget allocated by parent</string>
+    <string name="settings_communication_section">Support &amp; Household</string>
+    <string name="settings_language_section">Language</string>
 
 </resources>

@@ -182,4 +182,40 @@ public final class BudgetPeriodMath {
         if (safe % 10 == 0) return String.format(Locale.US, "%.1f", safe / 100.0);
         return String.format(Locale.US, "%.2f", safe / 100.0);
     }
+
+    /**
+     * Flexibly parses any entered budget/amount string (supporting commas, spaces, trailing "DT",
+     * whole numbers, or arbitrary decimals rounded HALF_UP to millimes) without arbitrary ceilings.
+     */
+    public static long parseSignedOrUnsignedBudgetMilli(String raw) {
+        if (raw == null) throw new NumberFormatException("empty");
+        String normalized = raw.trim()
+                .replace("\u00a0", "")
+                .replace("\u202f", "")
+                .replace("\u2009", "")
+                .replace("DT", "")
+                .replace("dt", "")
+                .replace(" ", "")
+                .replace(',', '.');
+        if (normalized.isEmpty()) throw new NumberFormatException("empty");
+        BigDecimal bd = new BigDecimal(normalized);
+        return bd.multiply(BigDecimal.valueOf(1_000L))
+                .setScale(0, RoundingMode.HALF_UP)
+                .longValueExact();
+    }
+
+    /** Parses a budget total string and verifies only that it is strictly greater than zero (> 0). */
+    public static long parsePositiveBudgetMilli(String raw) {
+        long milli = parseSignedOrUnsignedBudgetMilli(raw);
+        if (milli <= 0L) throw new NumberFormatException("must be > 0");
+        return milli;
+    }
+
+    public static long parseNonNegativeBudgetMilli(String raw) {
+        String trimmed = raw == null ? "" : raw.trim();
+        if (trimmed.isEmpty()) return 0L;
+        long milli = parseSignedOrUnsignedBudgetMilli(trimmed);
+        if (milli < 0L) throw new NumberFormatException("negative");
+        return milli;
+    }
 }

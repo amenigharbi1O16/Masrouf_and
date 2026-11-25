@@ -27,6 +27,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -153,6 +154,169 @@ public final class RoomSelectionInstrumentedTest {
         List<PriceHistoryEntity> history=dao.priceHistory(child.id,product.id);
         assertEquals(1,history.size());assertEquals(2_500L,history.get(0).priceMilli);
         assertEquals(1,dao.recentSpendingTransactions(child.id).size());
+    }
+
+    @Test public void budgetOverlapRejectedAndPlannedPercentBpsPersistsWithoutForcing100Percent() {
+        assertTrue(dao.finishOnboarding(parent.id,Arrays.asList(dao.systemCategoryByKey("food"),dao.systemCategoryByKey("bills"))));
+        CategoryEntity food=dao.selectedCategoryForCatalog(parent.id,dao.systemCategoryByKey("food").id);
+        CategoryEntity bills=dao.selectedCategoryForCatalog(parent.id,dao.systemCategoryByKey("bills").id);
+
+        long novStart=BudgetPeriodMath.parseIsoDateStartMillis("2026-11-01");
+        long novEnd=BudgetPeriodMath.parseIsoDateEndMillis("2026-11-30");
+        BudgetEntity nov=new BudgetEntity();nov.userId=parent.id;nov.name="Nov";nov.monthlyLimitMilli=1_000_000L;
+        nov.periodStart=novStart;nov.periodEnd=novEnd;nov.status="ACTIVE";
+
+        BudgetLineEntity foodLine=new BudgetLineEntity();foodLine.categoryId=food.id;foodLine.limitMilli=250_000L;foodLine.plannedPercentBps=2500;
+        BudgetLineEntity billsLine=new BudgetLineEntity();billsLine.categoryId=bills.id;billsLine.limitMilli=150_000L;billsLine.plannedPercentBps=1500;
+        long novId=dao.insertBudgetWithEnvelopes(nov,Arrays.asList(foodLine,billsLine));
+        assertTrue(novId>0L);
+
+        List<BudgetLineEntity> loaded=dao.budgetLines(novId);
+        assertEquals(2,loaded.size());
+        assertEquals(2500,dao.budgetLineForCategory(novId,food.id).plannedPercentBps);
+        assertEquals(1500,dao.budgetLineForCategory(novId,bills.id).plannedPercentBps);
+
+        BudgetEntity overlapping=new BudgetEntity();overlapping.userId=parent.id;overlapping.name="Overlap";
+        overlapping.monthlyLimitMilli=500_000L;
+        overlapping.periodStart=BudgetPeriodMath.parseIsoDateStartMillis("2026-11-15");
+        overlapping.periodEnd=BudgetPeriodMath.parseIsoDateEndMillis("2026-12-10");
+        overlapping.status="ACTIVE";
+        assertEquals(-2L,dao.insertBudgetWithEnvelopes(overlapping,Collections.emptyList()));
+
+        BudgetEntity dec=new BudgetEntity();dec.userId=parent.id;dec.name="Dec";
+        dec.monthlyLimitMilli=800_000L;
+        dec.periodStart=BudgetPeriodMath.parseIsoDateStartMillis("2026-12-01");
+        dec.periodEnd=BudgetPeriodMath.parseIsoDateEndMillis("2026-12-31");
+        dec.status="ACTIVE";
+        assertTrue(dao.insertBudgetWithEnvelopes(dec,Collections.emptyList())>0L);
+    }
+
+    @Test public void manageCategoriesUpdatesActiveEnvelopesAndPreservesTransactionsAndClosedBudgets() {
+        SystemCategoryEntity sysFood=dao.systemCategoryByKey("food");
+        SystemCategoryEntity sysBills=dao.systemCategoryByKey("bills");
+        SystemCategoryEntity sysTransport=dao.systemCategoryByKey("transport");
+        assertTrue(dao.finishOnboarding(parent.id,Arrays.asList(sysFood,sysBills)));
+        CategoryEntity food=dao.selectedCategoryForCatalog(parent.id,sysFood.id);
+        CategoryEntity bills=dao.selectedCategoryForCatalog(parent.id,sysBills.id);
+
+        BudgetEntity closedOct=new BudgetEntity();closedOct.userId=parent.id;closedOct.name="Oct";closedOct.monthlyLimitMilli=500_000L;
+        closedOct.periodStart=BudgetPeriodMath.parseIsoDateStartMillis("2026-10-01");
+        closedOct.periodEnd=BudgetPeriodMath.parseIsoDateEndMillis("2026-10-31");
+        closedOct.status="CLOSED";
+        BudgetLineEntity octBills=new BudgetLineEntity();octBills.categoryId=bills.id;octBills.limitMilli=100_000L;octBills.spentMilli=40_000L;octBills.plannedPercentBps=2000;
+        long octId=dao.insertBudgetWithEnvelopes(closedOct,Collections.singletonList(octBills));
+
+        BudgetEntity activeNov=new BudgetEntity();activeNov.userId=parent.id;activeNov.name="Nov";activeNov.monthlyLimitMilli=1_000_000L;
+        activeNov.periodStart=BudgetPeriodMath.parseIsoDateStartMillis("2026-11-01");
+        activeNov.periodEnd=BudgetPeriodMath.parseIsoDateEndMillis("2026-11-30");
+        activeNov.status="ACTIVE";
+        BudgetLineEntity novFood=new BudgetLineEntity();novFood.categoryId=food.id;novFood.limitMilli=300_000L;novFood.spentMilli=10_000L;novFood.plannedPercentBps=3000;
+        BudgetLineEntity novBills=new BudgetLineEntity();novBills.categoryId=bills.id;novBills.limitMilli=200_000L;novBills.spentMilli=50_000L;novBills.plannedPercentBps=2000;
+        long novId=dao.insertBudgetWithEnvelopes(activeNov,Arrays.asList(novFood,novBills));
+
+        TransactionEntity tx=new TransactionEntity();tx.userId=parent.id;tx.budgetId=novId;tx.categoryId=bills.id;
+        tx.kind="expense";tx.label="STEG";tx.amountMilli=50_000L;tx.occurredAt=BudgetPeriodMath.parseIsoDateStartMillis("2026-11-05");
+        long txId=dao.recordExpense(tx);
+        assertTrue(txId>0L);
+
+        assertTrue(dao.updateUserCategorySelections(
+                parent.id,
+                Arrays.asList(sysFood.id,sysTransport.id),
+                Collections.<Long>emptyList(),
+                BudgetPeriodMath.parseIsoDateStartMillis("2026-11-01")));
+        List<CategoryEntity> nowSelected=dao.selectedCategoriesForUser(parent.id);
+        assertEquals(2,nowSelected.size());
+
+        // Historical transaction and closed October budget must remain untouched
+        assertNotNull(dao.findBudget(octId));
+        assertNotNull(dao.budgetLineForCategory(octId,bills.id));
+        assertEquals(1,dao.recentSpendingTransactions(parent.id).size());
+
+        // Active November keeps bills line with spend=50_000 (no data loss) and adds new transport envelope
+        CategoryEntity transport=dao.selectedCategoryForCatalog(parent.id,sysTransport.id);
+        assertNotNull(transport);
+        assertNotNull(dao.budgetLineForCategory(novId,transport.id));
+        assertNotNull(dao.budgetLineForCategory(novId,bills.id));
+    }
+
+    @Test public void accountIsolationAndEnfantsCategoryWorkIndependentlyPerUser() {
+        UserEntity personal=createUser("personal@example.com","user",0L,2L);
+        SystemCategoryEntity enfants=dao.systemCategoryByKey("children");
+        assertNotNull(enfants);
+        assertEquals("expense",enfants.type);
+        assertTrue(dao.finishOnboarding(parent.id,Arrays.asList(enfants,dao.systemCategoryByKey("food"))));
+        assertTrue(dao.finishOnboarding(personal.id,Collections.singletonList(dao.systemCategoryByKey("bills"))));
+
+        assertEquals(2,dao.selectedCatalogIds(parent.id).size());
+        assertEquals(1,dao.selectedCatalogIds(personal.id).size());
+        assertEquals(dao.systemCategoryByKey("bills").id,(long)dao.selectedCatalogIds(personal.id).get(0));
+
+        BudgetEntity parentBudget=new BudgetEntity();parentBudget.userId=parent.id;parentBudget.name="Foyer";
+        parentBudget.monthlyLimitMilli=2_000_000L;
+        parentBudget.periodStart=BudgetPeriodMath.parseIsoDateStartMillis("2026-11-01");
+        parentBudget.periodEnd=BudgetPeriodMath.parseIsoDateEndMillis("2026-11-30");
+        parentBudget.status="ACTIVE";
+        assertTrue(dao.insertBudgetWithEnvelopes(parentBudget,Collections.emptyList())>0L);
+
+        assertEquals(1,dao.budgetsForUser(parent.id).size());
+        assertEquals(0,dao.budgetsForUser(personal.id).size());
+    }
+
+    @Test public void deleteCustomCategoryRemovesUnusedAndProtectsUsedCategory() {
+        CategoryEntity unused=new CategoryEntity();unused.userId=parent.id;unused.name="Café";unused.colorHex="#2E7D43";unused.type="expense";unused.allocationPercent=0;
+        assertTrue(dao.addCategoryWithAllocation(unused));
+        CategoryEntity used=new CategoryEntity();used.userId=parent.id;used.name="Taxi";used.colorHex="#2E7D43";used.type="expense";used.allocationPercent=0;
+        assertTrue(dao.addCategoryWithAllocation(used));
+
+        long unusedId=0L, usedId=0L;
+        for(CategoryEntity c:dao.categoriesForUser(parent.id)) {
+            if("Café".equals(c.name)) unusedId=c.id;
+            if("Taxi".equals(c.name)) usedId=c.id;
+        }
+        assertTrue(unusedId>0L && usedId>0L);
+
+        BudgetEntity b=new BudgetEntity();b.userId=parent.id;b.name="Test";b.monthlyLimitMilli=100_000L;
+        b.periodStart=1L;b.periodEnd=Long.MAX_VALUE;b.status="ACTIVE";
+        long bId=dao.insert(b);
+
+        TransactionEntity tx=new TransactionEntity();tx.userId=parent.id;tx.budgetId=bId;tx.categoryId=usedId;
+        tx.kind="expense";tx.label="Course";tx.amountMilli=12_000L;tx.occurredAt=100L;
+        dao.insert(tx);
+
+        assertTrue(dao.deleteCustomCategory(parent.id,unusedId));
+        assertFalse(dao.deleteCustomCategory(parent.id,usedId));
+    }
+
+    @Test public void allThreeUserTypesCanSaveAnyPositiveBudgetAndUpdateProfileName() {
+        MasroufRepository repo=new MasroufRepository(context,database);
+        long start=BudgetPeriodMath.parseIsoDateStartMillis("2026-11-01");
+        long end=BudgetPeriodMath.parseIsoDateEndMillis("2026-11-30");
+
+        // Personal user
+        BudgetEntity personalBudget=new BudgetEntity();personalBudget.userId=user.id;personalBudget.name="Personal";
+        personalBudget.monthlyLimitMilli=1_563_000L;personalBudget.periodStart=start;personalBudget.periodEnd=end;personalBudget.status="ACTIVE";
+        assertTrue(repo.createBudget(personalBudget,Collections.emptyList())>0L);
+
+        // Parent (even with existing child allocations or large/small amounts, only > 0 applies)
+        assertTrue(repo.updateName(parent.id,"Amira Updated").succeeded());
+        assertEquals("Amira Updated",dao.findUser(parent.id).name);
+        BudgetEntity parentBudget=new BudgetEntity();parentBudget.userId=parent.id;parentBudget.name="Family";
+        parentBudget.monthlyLimitMilli=1_000L;parentBudget.periodStart=start;parentBudget.periodEnd=end;parentBudget.status="ACTIVE";
+        long parentBudgetId=repo.createBudget(parentBudget,Collections.emptyList());
+        assertTrue(parentBudgetId>0L);
+        parentBudget.id=parentBudgetId;
+        parentBudget.monthlyLimitMilli=25_000_000L;
+        assertTrue(repo.updateBudget(parentBudget,Collections.emptyList()));
+        assertEquals(25_000_000L,dao.findBudget(parentBudgetId).monthlyLimitMilli);
+
+        // Child user can also define, update, and load allocation for any positive budget > 0
+        BudgetEntity childBudget=new BudgetEntity();childBudget.userId=child.id;childBudget.name="Child";
+        childBudget.monthlyLimitMilli=500_000_000L;childBudget.periodStart=start;childBudget.periodEnd=end;childBudget.status="ACTIVE";
+        long childBudgetId=repo.createBudget(childBudget,Collections.emptyList());
+        assertTrue(childBudgetId>0L);
+        assertEquals(500_000_000L,dao.findBudget(childBudgetId).monthlyLimitMilli);
+        assertTrue(repo.loadBudgetAllocation(child.id,false,true,childBudgetId,start).authorized);
+        assertNotNull(repo.loadSettingsData(parent.id).activeBudget);
     }
 
     private UserEntity createUser(String email,String role,long balance,long householdId) {

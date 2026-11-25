@@ -218,6 +218,13 @@ public final class MainActivity extends AppCompatActivity {
         setIntent(intent);
         String tab = intent.getStringExtra(EXTRA_CENTRAL_TAB);
         if (tab != null) openCentralTab(tab);
+        String successMsg = intent.getStringExtra("EXTRA_SUCCESS_MESSAGE");
+        if (successMsg != null && !successMsg.trim().isEmpty()) {
+            Fragment homeFrag = getSupportFragmentManager().findFragmentByTag("central-tab-" + R.id.tab_home);
+            if (homeFrag instanceof com.masrouf.controller.HomeFragment) {
+                ((com.masrouf.controller.HomeFragment) homeFrag).showFeedbackBanner(successMsg);
+            }
+        }
     }
 
     private void showCentralTab(int tabId) {

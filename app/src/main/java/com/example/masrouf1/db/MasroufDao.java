@@ -63,6 +63,7 @@ public interface MasroufDao {
     @Query("SELECT * FROM users WHERE id = :id LIMIT 1") LiveData<UserEntity> observeUser(long id);
     @Query("SELECT * FROM users WHERE email = :email COLLATE NOCASE LIMIT 1") UserEntity findUserByEmail(String email);
     @Query("UPDATE users SET email = :email WHERE id = :userId") int updateEmail(long userId,String email);
+    @Query("UPDATE users SET name = :name WHERE id = :userId") int updateName(long userId,String name);
     /** Met à jour le hash du mot de passe d'un utilisateur (utilisé par ChangePasswordActivity). */
     @Query("UPDATE users SET passwordHash = :passwordHash WHERE id = :userId") int updatePasswordHash(long userId,String passwordHash);
     @Query("UPDATE users SET onboarded = :onboarded WHERE id = :userId") int updateOnboarding(long userId, boolean onboarded);
@@ -344,8 +345,6 @@ public interface MasroufDao {
         if(findOverlappingBudget(budget.userId,budget.periodStart,budget.periodEnd,0L)!=null) return -2L;
         long sum=0; for(BudgetLineEntity line:lines) sum=MoneyMath.add(sum,line.limitMilli);
         if(sum>budget.monthlyLimitMilli) return -1L;
-        UserEntity owner=findUser(budget.userId);
-        if(owner!=null&&("parent".equalsIgnoreCase(owner.role)||"admin".equalsIgnoreCase(owner.role))&&totalChildAllocations(owner.id)>budget.monthlyLimitMilli) return -1L;
         for(BudgetLineEntity line:lines) if(categoryOwnedByUser(line.categoryId,budget.userId)==0) return -1L;
         long id=insert(budget); for(BudgetLineEntity line:lines) line.budgetId=id;
         if(!lines.isEmpty()) insertBudgetLines(lines); return id;
@@ -358,8 +357,6 @@ public interface MasroufDao {
         long sum=0; for(BudgetLineEntity line:lines) sum=MoneyMath.add(sum,line.limitMilli);
         BudgetEntity current=findBudget(budget.id);
         if(current==null||current.userId!=budget.userId||sum>budget.monthlyLimitMilli) return false;
-        UserEntity owner=findUser(budget.userId);
-        if(owner!=null&&("parent".equalsIgnoreCase(owner.role)||"admin".equalsIgnoreCase(owner.role))&&totalChildAllocations(owner.id)>budget.monthlyLimitMilli) return false;
         for(BudgetLineEntity line:lines) if(categoryOwnedByUser(line.categoryId,budget.userId)==0) return false;
         if(update(budget)==0) return false;
         deleteBudgetLines(budget.id); for(BudgetLineEntity line:lines) line.budgetId=budget.id;
@@ -519,7 +516,7 @@ public interface MasroufDao {
             if(category==null) {
                 category=new CategoryEntity();category.userId=userId;category.name=canonical.name;
                 category.colorHex=canonical.colorHex;category.type=canonical.type;
-                category.isEssential=canonical.protectedCategory;category.allocationPercent=0;
+                category.isEssential=canonical.protectedCategory;category.allocationPercent=canonical.recommendedPercent;
                 category.id=insert(category);
             }
             UserCategoryEntity relation=new UserCategoryEntity();relation.userId=userId;relation.categoryId=category.id;
@@ -532,10 +529,11 @@ public interface MasroufDao {
 
     @Transaction
     default boolean addCategoryWithAllocation(CategoryEntity category) {
-        if(category.allocationPercent<0||category.allocationPercent>100)return false;
+        int safePct=Math.max(0,Math.min(100,category.allocationPercent));
+        category.allocationPercent=safePct;
         BudgetEntity budget=activeBudgetForUser(category.userId);
         if(budget!=null) {
-            long envelopeLimit=MoneyMath.portion(budget.monthlyLimitMilli,category.allocationPercent);
+            long envelopeLimit=MoneyMath.portion(budget.monthlyLimitMilli,safePct);
             if(MoneyMath.add(allocatedEnvelopes(budget.id),envelopeLimit)>budget.monthlyLimitMilli) {
                 long remaining=Math.max(0L,MoneyMath.subtract(budget.monthlyLimitMilli,allocatedEnvelopes(budget.id)));
                 envelopeLimit=Math.min(envelopeLimit,remaining);
@@ -545,7 +543,7 @@ public interface MasroufDao {
             UserCategoryEntity relation=new UserCategoryEntity();relation.userId=category.userId;relation.categoryId=categoryId;relation.catalogId=null;relation.active=true;insertUserCategory(relation);
             BudgetLineEntity line=new BudgetLineEntity(); line.budgetId=budget.id; line.categoryId=categoryId;
             line.limitMilli=envelopeLimit; line.spentMilli=0;
-            line.plannedPercentBps=budget.monthlyLimitMilli>0?(int)((envelopeLimit*10_000L)/budget.monthlyLimitMilli):(category.allocationPercent*100);
+            line.plannedPercentBps=budget.monthlyLimitMilli>0?(int)((envelopeLimit*10_000L)/budget.monthlyLimitMilli):(safePct*100);
             insert(line);
             return true;
         }

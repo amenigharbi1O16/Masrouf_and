@@ -549,5 +549,31 @@
     <string name="delete_action">حذف</string>
     <string name="confirm_action">تأكيد</string>
     <string name="home_manage_budget">إدارة الميزانية</string>
+    <string name="choisir_dates_debut_fin">اختر تاريخ البداية والنهاية.</string>
+    <string name="verifier_ce_budget">تحقق من هذه الميزانية</string>
+
+    <!-- Complete Settings Page -->
+    <string name="settings_identity_eyebrow_personal">حساب شخصي</string>
+    <string name="settings_identity_eyebrow_family">حساب عائلي</string>
+    <string name="settings_identity_eyebrow_child">حساب طفل</string>
+    <string name="settings_save_name">حفظ الاسم</string>
+    <string name="settings_name_saved">تم حفظ الاسم.</string>
+    <string name="settings_name_invalid">أدخل الاسم الكامل.</string>
+    <string name="settings_followed_categories">الفئات المحددة</string>
+    <string name="settings_followed_count">%1$d فئات</string>
+    <string name="settings_edit_categories">تعديل اختيار الفئات</string>
+    <string name="settings_preferences_title">التفضيلات والوصول السريع</string>
+    <string name="settings_budget_detail_none">تحديد الفترة ومبلغ الميزانية</string>
+    <string name="settings_categories_detail">تفعيل أو إضافة أو تنظيم الفئات</string>
+    <string name="settings_calendar_detail">استعراض الأشهر وفترات الميزانية</string>
+    <string name="settings_points_detail">متابعة النقاط والمكافآت</string>
+    <string name="settings_family_analytics_detail">ميزانيات العائلة ومتابعة الأبناء</string>
+    <string name="settings_children_detail">إدارة حسابات الأبناء والمخصصات</string>
+    <string name="settings_password_detail">تحديث كلمة المرور</string>
+    <string name="settings_manual_detail">فتح دليل الاستخدام الكامل</string>
+    <string name="settings_backup_detail">حفظ نسخة احتياطية محلية</string>
+    <string name="settings_child_parent_budget">الميزانية المخصصة من الوالد</string>
+    <string name="settings_communication_section">الدعم والعائلة</string>
+    <string name="settings_language_section">اللغة</string>
 
 </resources>
