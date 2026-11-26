@@ -97,7 +97,9 @@
             style="@style/Widget.Masrouf.TextInputLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:endIconMode="password_toggle"
+            app:endIconContentDescription="@string/show_password"
+            app:endIconDrawable="@drawable/ic_eye_closed"
+            app:endIconMode="custom"
             app:endIconTint="@color/black"
             app:hintEnabled="false">
 
@@ -179,12 +181,46 @@
                 android:src="@drawable/ic_mic_dark" />
         </LinearLayout>
 
+        <LinearLayout
+            android:id="@+id/dialog_child_context_card"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/bg_card_form_beige"
+            android:orientation="vertical"
+            android:padding="12dp"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/dialog_child_context_enfant"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/black"
+                android:textSize="12.5sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/dialog_child_context_monthly"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:textColor="@color/ink_secondary"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <com.example.masrouf1.ui.AlertBannerView
+            android:id="@+id/dialog_child_overrun_banner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:visibility="gone" />
+
         <TextView
             android:id="@+id/dialog_child_error"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:textColor="@color/coral"
+            android:textColor="@color/danger_text"
             android:textSize="13sp"
             android:textStyle="bold"
             android:visibility="gone" />

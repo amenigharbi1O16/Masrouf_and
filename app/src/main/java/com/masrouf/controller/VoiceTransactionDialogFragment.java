@@ -598,8 +598,6 @@ public final class VoiceTransactionDialogFragment extends DialogFragment {
                         if (state.data != null && state.data == 0) {
                             Toast.makeText(requireContext(), R.string.family_gift_saved, Toast.LENGTH_SHORT).show();
                             notifySavedAndDismiss();
-                        } else if (state.data != null && state.data == -2) {
-                            showFeedback(AlertBannerView.Tone.DANGER, getString(R.string.parent_allocation_cap), "");
                         } else {
                             showFeedback(AlertBannerView.Tone.DANGER, getString(R.string.parent_budget_required), "");
                         }

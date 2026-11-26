@@ -285,7 +285,9 @@
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="4dp"
                     app:boxBackgroundColor="@color/form_beige"
-                    app:endIconMode="password_toggle"
+                    app:endIconContentDescription="@string/show_password"
+                    app:endIconDrawable="@drawable/ic_eye_closed"
+                    app:endIconMode="custom"
                     app:endIconTint="@color/black">
 
                     <com.google.android.material.textfield.TextInputEditText
@@ -328,7 +330,9 @@
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="12dp"
                     app:boxBackgroundColor="@color/form_beige"
-                    app:endIconMode="password_toggle"
+                    app:endIconContentDescription="@string/show_password"
+                    app:endIconDrawable="@drawable/ic_eye_closed"
+                    app:endIconMode="custom"
                     app:endIconTint="@color/black">
 
                     <com.google.android.material.textfield.TextInputEditText

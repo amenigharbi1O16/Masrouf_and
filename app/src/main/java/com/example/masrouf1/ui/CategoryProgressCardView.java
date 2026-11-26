@@ -53,10 +53,24 @@ public final class CategoryProgressCardView extends MaterialCardView {
         planned.setText(getContext().getString(R.string.category_planned_percent_str,com.example.masrouf1.BudgetPeriodMath.formatPercentFromBps(effectiveBps)));
         allocated.setText(getContext().getString(R.string.category_allocated,CurrencyFormatter.formatMilli(allocatedMilli)));
         spent.setText(getContext().getString(R.string.category_spent,CurrencyFormatter.formatMilli(spentMilli)));
-        int tint=spentMilli>0&&allocatedMilli<=0?R.color.coral:consumedPercent>=100?R.color.coral:consumedPercent>=80?R.color.amber:R.color.mint_accent;
-        progress.setProgress(Math.min(100,consumedPercent));progress.setProgressTintList(ColorStateList.valueOf(getContext().getColor(tint)));
+        boolean isExceeded = (allocatedMilli > 0L && spentMilli > allocatedMilli) || (allocatedMilli <= 0L && spentMilli > 0L);
+        setCardBackgroundColor(getContext().getColor(isExceeded ? R.color.danger_surface : R.color.alabaster));
+        setStrokeColor(getContext().getColor(isExceeded ? R.color.coral : R.color.card_border));
+        int tint=isExceeded?R.color.coral:consumedPercent>=100?R.color.coral:consumedPercent>=80?R.color.amber:R.color.mint_accent;
+        progress.setProgress(isExceeded?100:Math.min(100,Math.max(0,consumedPercent)));
+        progress.setProgressTintList(ColorStateList.valueOf(getContext().getColor(tint)));
         progress.setProgressBackgroundTintList(ColorStateList.valueOf(getContext().getColor(R.color.mint_light)));
-        consumed.setText(allocatedMilli<=0&&spentMilli<=0?getContext().getString(R.string.category_unallocated):getContext().getString(R.string.category_consumed_percent,consumedPercent));consumed.setTextColor(getContext().getColor(tint==R.color.mint_accent?R.color.muted_green:tint));
+        if (allocatedMilli > 0L && spentMilli > allocatedMilli) {
+            long overMilli = com.example.masrouf1.MoneyMath.subtract(spentMilli, allocatedMilli);
+            consumed.setText(getContext().getString(R.string.category_overrun_detail, CurrencyFormatter.formatMilli(overMilli), Math.max(101, consumedPercent)));
+            consumed.setTextColor(getContext().getColor(R.color.danger_text));
+        } else if (allocatedMilli <= 0L && spentMilli > 0L) {
+            consumed.setText(getContext().getString(R.string.category_unalloc_overrun_detail, CurrencyFormatter.formatMilli(spentMilli)));
+            consumed.setTextColor(getContext().getColor(R.color.danger_text));
+        } else {
+            consumed.setText(allocatedMilli<=0&&spentMilli<=0?getContext().getString(R.string.category_unallocated):getContext().getString(R.string.category_consumed_percent,consumedPercent));
+            consumed.setTextColor(getContext().getColor(tint==R.color.mint_accent?R.color.muted_green:tint));
+        }
     }
     private int dp(int value){return (int)(value*getResources().getDisplayMetrics().density+.5f);}
 }

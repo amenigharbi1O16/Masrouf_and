@@ -154,15 +154,24 @@ public final class SettingsFragment extends Fragment {
                     }
 
                     if (role == AppRole.CHILD) {
-                        long childBudget = state.data.childProfile != null
-                                && state.data.childProfile.allocatedTotalMilli > 0L
-                                        ? state.data.childProfile.allocatedTotalMilli
-                                        : (state.data.activeBudget != null
-                                                && state.data.activeBudget.monthlyLimitMilli > 0L
-                                                        ? state.data.activeBudget.monthlyLimitMilli
-                                                        : state.data.totalAllowanceMilli);
+                        long childBudget = Math.max(
+                                state.data.childProfile != null ? state.data.childProfile.allocatedTotalMilli : 0L,
+                                Math.max(state.data.activeBudget != null ? state.data.activeBudget.monthlyLimitMilli : 0L,
+                                        state.data.totalAllowanceMilli));
+                        long receivedTotal = Math.max(state.data.totalAllowanceMilli, childBudget);
+                        long spentTotal = state.data.childSpentMilli;
+                        long balanceNow = Math.max(0L, state.data.user.balanceMilli);
                         childAllocCard.setVisibility(View.VISIBLE);
                         childAllocValue.setText(CurrencyFormatter.formatMilli(childBudget));
+                        TextView childAllocDetails = getView() == null ? null : getView().findViewById(R.id.settings_child_allocation_details);
+                        if (childAllocDetails != null) {
+                            childAllocDetails.setText(getString(R.string.settings_child_parent_budget_details,
+                                    CurrencyFormatter.formatMilli(receivedTotal),
+                                    CurrencyFormatter.formatMilli(spentTotal),
+                                    CurrencyFormatter.formatMilli(balanceNow)));
+                            childAllocDetails.setTextColor(requireContext().getColor(
+                                    childBudget > 0L && spentTotal > childBudget ? R.color.danger_text : R.color.ink));
+                        }
                     } else {
                         childAllocCard.setVisibility(View.GONE);
                     }

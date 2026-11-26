@@ -813,4 +813,31 @@
     <string name="share_budget_summary">مشاركة ملخصي</string>
     <string name="share_summary_chooser">مشاركة ملخص مصروف</string>
     <string name="share_summary_body">مصروف · %1$s (%2$s)\nالميزانية المخصصة: %3$s\nالمصروف: %4$s\nالمتبقي: %5$s</string>
+    <string name="show_password">إظهار كلمة المرور</string>
+    <string name="hide_password">إخفاء كلمة المرور</string>
+
+    <string name="child_initial_allowance_note">الميزانية الأولية</string>
+    <string name="child_initial_allocation_title">منحة أولية · %1$s</string>
+    <string name="enfant_envelope_summary_title">ميزانية فئة الأطفال · ميزانية الشهر</string>
+    <string name="enfant_envelope_metrics">المخصّص: %1$s · المصروف: %2$s · المتبقي: %3$s</string>
+    <string name="enfant_envelope_metrics_over">المخصّص: %1$s · المصروف: %2$s · تجاوز: +%3$s</string>
+    <string name="enfant_envelope_unallocated_metrics">لم تُحدَّد ميزانية للفئة · المستعمل هذا الشهر: %1$s (مقتطع من الميزانية الإجمالية)</string>
+    <string name="monthly_budget_remaining_line">المتبقي من ميزانية الشهر الإجمالية: %1$s</string>
+    <string name="monthly_budget_over_line">تم تجاوز ميزانية الشهر الإجمالية بـ +%1$s</string>
+    <string name="overrun_warn_enfant_title">تجاوز ميزانية فئة الأطفال</string>
+    <string name="overrun_warn_enfant_body">يتجاوز ميزانية فئة الأطفال بـ +%1$s. سيتم اقتطاع المبلغ الكامل من ميزانية الشهر الإجمالية.</string>
+    <string name="overrun_warn_enfant_unalloc_body">لا توجد ميزانية محددة لفئة الأطفال (تجاوز %1$s). سيتم اقتطاع هذا المبلغ من ميزانية الشهر.</string>
+    <string name="overrun_warn_monthly_title">تجاوز ميزانية الشهر الإجمالية!</string>
+    <string name="overrun_warn_monthly_body">يتجاوز هذا المبلغ فئة الأطفال وميزانية الشهر الإجمالية بـ +%1$s. عند التأكيد سيتم خصمه من الميزانية الإجمالية.</string>
+    <string name="overrun_confirm_dialog_msg">تنبيه: هذا المبلغ (%1$s) يتجاوز %2$s وسيُخصم من ميزانية الشهر الإجمالية (%3$s). هل تريد التأكيد؟</string>
+    <string name="donate_anyway">تأكيد على أي حال</string>
+    <string name="family_gift_saved_over">تم شحن الرصيد · تم تسجيل التجاوز واقتطاعه من ميزانية الشهر</string>
+    <string name="category_overrun_detail">تجاوز بـ +%1$s (%2$d%%)</string>
+    <string name="category_unalloc_overrun_detail">تجاوز · دون مخصّص (اقتطاع %1$s من الميزانية)</string>
+    <string name="notif_cat_unalloc_over_body">فئة « %1$s » لا تملك ميزانية مخصصة (تم اقتطاع %2$s من ميزانية الشهر).</string>
+    <string name="parent_badge_cat_over">تنبيه: فئة « %1$s » تجاوزت ميزانيتها (+%2$s مقتطعة من إجمالي الشهر).</string>
+    <string name="home_cat_overrun_banner_title">تجاوز في « %1$s »</string>
+    <string name="home_cat_overrun_banner_body">تجاوز بـ +%1$s (المصروف %2$s)، تم اقتطاعه من ميزانية الشهر الإجمالية.</string>
+    <string name="settings_child_parent_budget_details">المستلم إجمالاً: %1$s · المصروف: %2$s · الرصيد: %3$s</string>
+    <string name="dashboard_family_summary_v2">الميزانية المستعملة: %1$s · المتبقي للشهر: %2$s · الأطفال: %3$d · العمليات: %4$d · الطلبات: %5$d</string>
 </resources>

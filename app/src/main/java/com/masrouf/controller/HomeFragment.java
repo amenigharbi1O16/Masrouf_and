@@ -134,17 +134,19 @@ public final class HomeFragment extends Fragment {
                     name.isEmpty() ? getString(R.string.greeting_hello) : getString(R.string.greeting_hello) + ", " + name);
 
             currentBudget = data.budget;
-            childAllocation = data.childProfile == null ? 0L : data.childProfile.allocatedTotalMilli;
+            childAllocation = Math.max(
+                    data.childProfile == null ? 0L : data.childProfile.allocatedTotalMilli,
+                    data.totalAllowanceMilli);
             if (currentBudget != null) {
                 SessionStore.setSelectedBudgetId(requireContext(), userId, currentBudget.id);
             }
 
             ((TextView) root.findViewById(R.id.home_period)).setText(periodLabel(data.budget));
             root.findViewById(R.id.home_period).setContentDescription(periodLabel(data.budget));
-            renderBudget(data.budget, data.childAllocations, data.parentSpent,
-                    data.user == null ? 0L : data.user.balanceMilli, data.settings);
-
             allCategoryProgress = data.categoryProgress == null ? java.util.Collections.emptyList() : data.categoryProgress;
+            renderBudget(data.budget, data.childAllocations, data.parentSpent,
+                    data.user == null ? 0L : data.user.balanceMilli, data.totalAllowanceMilli, data.settings);
+
             boolean noCategories = allCategoryProgress.isEmpty();
             renderCategoriesList();
             root.findViewById(R.id.home_categories_empty_card).setVisibility(noCategories ? View.VISIBLE : View.GONE);
@@ -159,14 +161,13 @@ public final class HomeFragment extends Fragment {
 
             TextView summary = root.findViewById(R.id.home_summary);
             if (parentMode) {
-                long familySpent = data.parentSpent;
-                for (ChildSpendingSummary child : data.children) {
-                    familySpent = MoneyMath.add(familySpent, child.spentMilli);
-                }
+                long usedMonthBudget = data.budget == null
+                        ? data.parentSpent
+                        : Math.max(0L, Math.max(data.budget.spentMilli, data.parentSpent));
                 long householdRemaining = data.budget == null
-                        ? 0L : MoneyMath.subtract(data.budget.monthlyLimitMilli, familySpent);
-                summary.setText(getString(R.string.dashboard_family_summary,
-                        CurrencyFormatter.formatMilli(familySpent),
+                        ? 0L : MoneyMath.subtract(data.budget.monthlyLimitMilli, usedMonthBudget);
+                summary.setText(getString(R.string.dashboard_family_summary_v2,
+                        CurrencyFormatter.formatMilli(usedMonthBudget),
                         CurrencyFormatter.formatMilli(householdRemaining),
                         data.children.size(),
                         data.transactionCount,
@@ -312,26 +313,23 @@ public final class HomeFragment extends Fragment {
     }
 
     private void renderBudget(BudgetEntity budget, long childrenAllocated, long parentSpent,
-                              long childBalance, SettingEntity settings) {
-        long spent = parentMode ? parentSpent : (budget == null ? 0L : budget.spentMilli);
+                              long childBalance, long childTotalAllowance, SettingEntity settings) {
+        long spent = budget == null ? (parentMode ? Math.max(0L, parentSpent) : 0L) : Math.max(0L, budget.spentMilli);
         long total;
         if (childMode) {
             long budgetLimit = budget == null ? 0L : Math.max(0L, budget.monthlyLimitMilli);
             long ledgerTotal = MoneyMath.add(Math.max(0L, spent), Math.max(0L, childBalance));
-            total = Math.max(budgetLimit, ledgerTotal);
-        } else if (parentMode) {
-            total = budget == null ? 0L : Math.max(0L, MoneyMath.subtract(budget.monthlyLimitMilli, childrenAllocated));
+            total = Math.max(Math.max(budgetLimit, ledgerTotal), Math.max(childAllocation, childTotalAllowance));
         } else {
             total = budget == null ? 0L : budget.monthlyLimitMilli;
         }
-        if (childMode) spent = Math.max(0L, spent);
         long remaining = MoneyMath.subtract(total, spent);
         int greenUntil = settings == null ? 79 : Math.max(0, settings.greenUntil);
         int warningFrom = settings == null ? 80 : Math.max(greenUntil + 1, settings.orangeFrom);
         int dangerFrom = settings == null ? 100 : Math.max(warningFrom, settings.redFrom);
 
         BudgetCardView budgetCard = root.findViewById(R.id.home_budget_card);
-        String totalLabel = parentMode ? getString(R.string.parent_personal_share) : getString(R.string.limit_label);
+        String totalLabel = getString(R.string.limit_label);
         if (budget == null && total <= 0L) {
             budgetCard.setBudgetUnavailable(totalLabel);
         } else {
@@ -345,11 +343,30 @@ public final class HomeFragment extends Fragment {
         root.findViewById(R.id.home_child_no_budget_message).setVisibility(View.GONE);
         root.findViewById(R.id.home_partition_child_budget).setVisibility(childMode && total > 0L && budget != null ? View.VISIBLE : View.GONE);
 
+        HomeCategoryProgress overCategory = null;
+        if (allCategoryProgress != null) {
+            for (HomeCategoryProgress item : allCategoryProgress) {
+                if (item.spentMilli > item.allocatedMilli) {
+                    overCategory = item;
+                    if ("children".equals(item.catalogKey)) break;
+                }
+            }
+        }
+
         AlertBannerView alert = root.findViewById(R.id.home_threshold_card);
         if ((total <= 0L && spent > 0L) || (total > 0L && MoneyMath.atLeastPercent(spent, total, dangerFrom))) {
             long overage = total <= 0L ? spent : Math.max(0L, remaining == Long.MIN_VALUE ? Long.MAX_VALUE : -remaining);
             alert.setAlert(AlertBannerView.Tone.DANGER, getString(R.string.budget_over_100),
                     getString(R.string.budget_status_danger_detail, CurrencyFormatter.formatMilli(overage)));
+        } else if (overCategory != null && parentMode) {
+            long catOverAmt = overCategory.allocatedMilli > 0L
+                    ? MoneyMath.subtract(overCategory.spentMilli, overCategory.allocatedMilli)
+                    : overCategory.spentMilli;
+            alert.setAlert(AlertBannerView.Tone.WARNING,
+                    getString(R.string.home_cat_overrun_banner_title, overCategory.name),
+                    getString(R.string.home_cat_overrun_banner_body,
+                            CurrencyFormatter.formatMilli(catOverAmt),
+                            CurrencyFormatter.formatMilli(overCategory.spentMilli)));
         } else if (total > 0L && MoneyMath.atLeastPercent(spent, total, warningFrom)) {
             alert.setAlert(AlertBannerView.Tone.WARNING, getString(R.string.budget_alert_80),
                     getString(R.string.budget_status_warning_detail, Math.max(0, MoneyMath.percentOf(spent, total))));
@@ -489,13 +506,15 @@ public final class HomeFragment extends Fragment {
 
     private void renderChildSummary(HomeDashboardData data) {
         root.findViewById(R.id.home_child_summary).setVisibility(View.VISIBLE);
+        long displayReceived = Math.max(data.totalAllowanceMilli,
+                data.childProfile == null ? 0L : data.childProfile.allocatedTotalMilli);
         String latest = data.latestAllowance == null
-                ? getString(R.string.no_recent_allowance)
+                ? (displayReceived > 0L ? CurrencyFormatter.formatMilli(displayReceived) : getString(R.string.no_recent_allowance))
                 : CurrencyFormatter.formatMilli(data.latestAllowance.amountMilli) + " · "
                         + DateFormat.getDateInstance(DateFormat.MEDIUM, Locale.getDefault())
                                 .format(new Date(data.latestAllowance.occurredAt));
         ((TextView) root.findViewById(R.id.home_child_received)).setText(
-                getString(R.string.child_received_summary, CurrencyFormatter.formatMilli(data.totalAllowanceMilli), latest));
+                getString(R.string.child_received_summary, CurrencyFormatter.formatMilli(displayReceived), latest));
         TextView goalLabel = root.findViewById(R.id.home_child_goal);
         ProgressBar goalProgress = root.findViewById(R.id.home_child_goal_progress);
         if (data.goal == null) {

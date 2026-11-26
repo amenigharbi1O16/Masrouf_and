@@ -120,12 +120,12 @@ public final class BudgetNotificationManager {
             }
         }
 
-        // 2. Category envelope threshold alerts (80% / >100%)
+        // 2. Category envelope threshold alerts (80% / >100% / unallocated Enfant(s) overrun)
         if (categoryId > 0L) {
             BudgetLineEntity line = dao.budgetLineForCategory(budget.id, categoryId);
+            long catSpent = Math.max(line == null ? 0L : line.spentMilli,
+                    dao.categoryTotalSpendBetween(userId, categoryId, budget.periodStart, safeEnd));
             if (line != null && line.limitMilli > 0L) {
-                long catSpent = Math.max(line.spentMilli,
-                        dao.categoryTotalSpendBetween(userId, categoryId, budget.periodStart, safeEnd));
                 String catDisplay = resolveCategoryName(app, dao, userId, categoryId);
                 int catPct = Math.max(0, MoneyMath.percentOf(catSpent, line.limitMilli));
                 if (catSpent > line.limitMilli) {
@@ -147,6 +147,19 @@ public final class BudgetNotificationManager {
                             CurrencyFormatter.formatMilli(catSpent),
                             CurrencyFormatter.formatMilli(line.limitMilli));
                     persistSyncAndPost(app, dao, userId, key, "category_caution", title, msg, timestamp,
+                            stableNotifId(key), NotificationsActivity.class);
+                }
+            } else if (catSpent > 0L && (AppRole.PARENT.value().equalsIgnoreCase(actor.role) || "admin".equalsIgnoreCase(actor.role))) {
+                CategoryEntity childrenCat = dao.childrenCategory(userId);
+                if (childrenCat != null && childrenCat.id == categoryId) {
+                    String catDisplay = resolveCategoryName(app, dao, userId, categoryId);
+                    String key = "cat:" + budget.id + ":" + categoryId + ":unalloc:over";
+                    String title = app.getString(R.string.notif_cat_over_title, catDisplay);
+                    String msg = app.getString(
+                            R.string.notif_cat_unalloc_over_body,
+                            catDisplay,
+                            CurrencyFormatter.formatMilli(catSpent));
+                    persistSyncAndPost(app, dao, userId, key, "category_over", title, msg, timestamp,
                             stableNotifId(key), NotificationsActivity.class);
                 }
             }

@@ -1,12 +1,103 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@color/form_beige" android:orientation="vertical" android:padding="16dp">
-    <TextView style="@style/FormFieldLabel" android:labelFor="@id/dialog_gift_amount" android:text="@string/gift_amount" />
-    <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="4dp" app:boxBackgroundColor="@color/form_beige">
-        <com.google.android.material.textfield.TextInputEditText android:id="@+id/dialog_gift_amount" android:layout_width="match_parent" android:layout_height="58dp" android:hint="@string/hint_amount" android:inputType="numberDecimal" android:singleLine="true" android:textColor="@color/black" android:textColorHint="@color/black" />
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/form_beige"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:id="@+id/dialog_gift_context_card"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        android:background="@drawable/bg_card_form_beige"
+        android:orientation="vertical"
+        android:padding="12dp"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/dialog_gift_context_enfant"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/black"
+            android:textSize="12.5sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/dialog_gift_context_monthly"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3dp"
+            android:textColor="@color/ink_secondary"
+            android:textSize="12sp" />
+    </LinearLayout>
+
+    <TextView
+        style="@style/FormFieldLabel"
+        android:labelFor="@id/dialog_gift_amount"
+        android:text="@string/gift_amount"
+        android:textColor="@color/black" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        style="@style/Widget.Masrouf.TextInputLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="4dp"
+        app:boxBackgroundColor="@color/form_beige"
+        app:hintEnabled="false">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/dialog_gift_amount"
+            android:layout_width="match_parent"
+            android:layout_height="58dp"
+            android:hint="@string/hint_amount"
+            android:inputType="numberDecimal"
+            android:singleLine="true"
+            android:textColor="@color/black"
+            android:textColorHint="@color/black" />
     </com.google.android.material.textfield.TextInputLayout>
-    <TextView style="@style/FormFieldLabel" android:labelFor="@id/dialog_gift_note" android:text="@string/gift_note" />
-    <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="4dp" app:boxBackgroundColor="@color/form_beige">
-        <com.google.android.material.textfield.TextInputEditText android:id="@+id/dialog_gift_note" android:layout_width="match_parent" android:layout_height="58dp" android:hint="@string/expense_note" android:inputType="text" android:singleLine="true" android:textColor="@color/black" android:textColorHint="@color/black" />
+
+    <com.example.masrouf1.ui.AlertBannerView
+        android:id="@+id/dialog_gift_overrun_banner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:layout_marginBottom="6dp"
+        android:visibility="gone" />
+
+    <TextView
+        style="@style/FormFieldLabel"
+        android:labelFor="@id/dialog_gift_note"
+        android:text="@string/gift_note"
+        android:textColor="@color/black" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        style="@style/Widget.Masrouf.TextInputLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="4dp"
+        app:boxBackgroundColor="@color/form_beige"
+        app:hintEnabled="false">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/dialog_gift_note"
+            android:layout_width="match_parent"
+            android:layout_height="58dp"
+            android:hint="@string/expense_note"
+            android:inputType="text"
+            android:singleLine="true"
+            android:textColor="@color/black"
+            android:textColorHint="@color/black" />
     </com.google.android.material.textfield.TextInputLayout>
-    <TextView android:id="@+id/dialog_gift_error" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/coral" />
+
+    <TextView
+        android:id="@+id/dialog_gift_error"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@color/danger_text"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        android:visibility="gone" />
 </LinearLayout>

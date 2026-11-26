@@ -869,4 +869,31 @@
     <string name="share_budget_summary">Partager mon bilan</string>
     <string name="share_summary_chooser">Partager le bilan Masrouf</string>
     <string name="share_summary_body">Masrouf · %1$s (%2$s)\nBudget alloué : %3$s\nDépensé : %4$s\nSolde disponible : %5$s</string>
+    <string name="show_password">Afficher le mot de passe</string>
+    <string name="hide_password">Masquer le mot de passe</string>
+
+    <string name="child_initial_allowance_note">Dotation initiale</string>
+    <string name="child_initial_allocation_title">Dotation initiale · %1$s</string>
+    <string name="enfant_envelope_summary_title">Enveloppe Enfant(s) · Budget du mois</string>
+    <string name="enfant_envelope_metrics">Alloué : %1$s · Utilisé : %2$s · Reste : %3$s</string>
+    <string name="enfant_envelope_metrics_over">Alloué : %1$s · Utilisé : %2$s · Dépassement : +%3$s</string>
+    <string name="enfant_envelope_unallocated_metrics">Aucune enveloppe définie · Utilisé ce mois : %1$s (retiré du budget total)</string>
+    <string name="monthly_budget_remaining_line">Budget total du mois restant : %1$s</string>
+    <string name="monthly_budget_over_line">Budget total du mois déjà dépassé de +%1$s</string>
+    <string name="overrun_warn_enfant_title">Dépassement du budget Enfant(s)</string>
+    <string name="overrun_warn_enfant_body">Dépasse l\'enveloppe Enfant(s) de +%1$s. Le montant complet sera retiré du budget total du mois.</string>
+    <string name="overrun_warn_enfant_unalloc_body">Aucune enveloppe Enfant(s) définie (%1$s en dépassement). Ce montant sera retiré du budget total du mois.</string>
+    <string name="overrun_warn_monthly_title">Dépassement du budget total du mois !</string>
+    <string name="overrun_warn_monthly_body">Ce montant dépasse Enfant(s) ET votre budget total du mois de +%1$s. Si vous confirmez, il sera retiré du budget total.</string>
+    <string name="overrun_confirm_dialog_msg">Attention : ce versement de %1$s dépasse %2$s et sera retiré du budget total du mois (%3$s). Confirmer quand même ?</string>
+    <string name="donate_anyway">Donner quand même</string>
+    <string name="family_gift_saved_over">Montant crédité · Dépassement Enfant(s) enregistré et retiré du budget du mois</string>
+    <string name="category_overrun_detail">Dépassement de +%1$s (%2$d%%)</string>
+    <string name="category_unalloc_overrun_detail">Dépassement · Hors enveloppe (%1$s retirés du budget)</string>
+    <string name="notif_cat_unalloc_over_body">La catégorie « %1$s » n\'a pas d\'enveloppe allouée (%2$s retirés du budget total du mois).</string>
+    <string name="parent_badge_cat_over">Attention : « %1$s » a dépassé son budget (+%2$s prélevés sur le total du mois).</string>
+    <string name="home_cat_overrun_banner_title">Dépassement sur « %1$s »</string>
+    <string name="home_cat_overrun_banner_body">Dépassement de +%1$s (%2$s dépensés), retiré de votre budget total du mois.</string>
+    <string name="settings_child_parent_budget_details">Reçu au total : %1$s · Dépensé : %2$s · Solde : %3$s</string>
+    <string name="dashboard_family_summary_v2">Budget utilisé : %1$s · Reste du mois : %2$s · Enfants : %3$d · Opérations : %4$d · Demandes : %5$d</string>
 </resources>

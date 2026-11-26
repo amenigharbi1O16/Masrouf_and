@@ -532,14 +532,37 @@ public final class AnalyticsRenderer {
         legend.addView(legRight);
         hBody.addView(legend);
 
+        AnalyticsSummaryData.CategoryStat overCat = null;
+        if (data.categoryStats != null) {
+            for (AnalyticsSummaryData.CategoryStat cs : data.categoryStats) {
+                boolean csOver = (cs.hasBudget && cs.spentMilli > cs.allocatedMilli)
+                        || (!cs.hasBudget && "children".equals(cs.catalogKey) && cs.spentMilli > 0L);
+                if (csOver) {
+                    overCat = cs;
+                    if ("children".equals(cs.catalogKey)) break;
+                }
+            }
+        }
+        boolean catExceededWarning = !isOverBudget && overCat != null;
         TextView statusBadge = new TextView(ctx);
-        statusBadge.setText(ctx.getString(isOverBudget ? R.string.parent_badge_over : R.string.parent_badge_ok));
-        statusBadge.setTextColor(ctx.getColor(isOverBudget ? R.color.danger_text : R.color.forest));
+        if (isOverBudget) {
+            statusBadge.setText(ctx.getString(R.string.parent_badge_over));
+        } else if (catExceededWarning) {
+            long overAmt = overCat.hasBudget
+                    ? MoneyMath.subtract(overCat.spentMilli, overCat.allocatedMilli)
+                    : overCat.spentMilli;
+            statusBadge.setText(ctx.getString(R.string.parent_badge_cat_over,
+                    overCat.name, CurrencyFormatter.formatMilli(overAmt)));
+        } else {
+            statusBadge.setText(ctx.getString(R.string.parent_badge_ok));
+        }
+        boolean warnOrDanger = isOverBudget || catExceededWarning;
+        statusBadge.setTextColor(ctx.getColor(isOverBudget ? R.color.danger_text : (catExceededWarning ? R.color.warning_text : R.color.forest)));
         statusBadge.setTextSize(12);
         statusBadge.setTypeface(null, Typeface.BOLD);
         statusBadge.setPadding(dp(d, 12), dp(d, 9), dp(d, 12), dp(d, 9));
         GradientDrawable sbBg = new GradientDrawable();
-        sbBg.setColor(ctx.getColor(isOverBudget ? R.color.danger_surface : R.color.success_surface));
+        sbBg.setColor(ctx.getColor(isOverBudget ? R.color.danger_surface : (warnOrDanger ? R.color.warning_surface : R.color.success_surface)));
         sbBg.setCornerRadius(dp(d, 10));
         statusBadge.setBackground(sbBg);
         hBody.addView(statusBadge);
@@ -581,7 +604,8 @@ public final class AnalyticsRenderer {
             root.addView(emptyCat, marginBottom(d, 16));
         } else {
             for (AnalyticsSummaryData.CategoryStat cat : data.categoryStats) {
-                boolean isOver = cat.hasBudget && cat.spentMilli > cat.allocatedMilli;
+                boolean isUnallocChildrenOver = !cat.hasBudget && "children".equals(cat.catalogKey) && cat.spentMilli > 0L;
+                boolean isOver = (cat.hasBudget && cat.spentMilli > cat.allocatedMilli) || isUnallocChildrenOver;
                 int cColor = isOver ? R.color.coral : (cat.consumptionPct >= 80.0 ? R.color.amber : R.color.forest);
                 MaterialCardView cCard = card(ctx, d,
                         isOver ? R.color.danger_surface : R.color.alabaster,
@@ -601,12 +625,17 @@ public final class AnalyticsRenderer {
                 cTop.addView(cAmt);
                 cBody.addView(cTop);
 
-                int ratio = (int) Math.min(100L, Math.round(cat.hasBudget ? cat.consumptionPct : cat.shareOfTotal));
+                int ratio = isUnallocChildrenOver ? 100
+                        : (int) Math.min(100L, Math.round(cat.hasBudget ? cat.consumptionPct : cat.shareOfTotal));
                 cBody.addView(progressTrack(ctx, d, ratio, cColor, 7, 8));
 
                 LinearLayout cBot = horizontal(ctx);
                 cBot.setPadding(0, dp(d, 6), 0, 0);
-                if (isOver) {
+                if (isUnallocChildrenOver) {
+                    cBot.addView(labelText(ctx,
+                            ctx.getString(R.string.category_unalloc_overrun_detail, CurrencyFormatter.formatMilli(cat.spentMilli)),
+                            11, R.color.danger_text, true), new LinearLayout.LayoutParams(0, -2, 1));
+                } else if (isOver) {
                     long overAmt = MoneyMath.subtract(cat.spentMilli, cat.allocatedMilli);
                     cBot.addView(labelText(ctx,
                             ctx.getString(R.string.parent_cat_over_detail, CurrencyFormatter.formatMilli(overAmt), (int) Math.round(cat.consumptionPct)),

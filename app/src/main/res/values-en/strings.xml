@@ -813,4 +813,31 @@
     <string name="share_budget_summary">Share summary</string>
     <string name="share_summary_chooser">Share Masrouf summary</string>
     <string name="share_summary_body">Masrouf · %1$s (%2$s)\nAllocated budget: %3$s\nSpent: %4$s\nRemaining: %5$s</string>
+    <string name="show_password">Show password</string>
+    <string name="hide_password">Hide password</string>
+
+    <string name="child_initial_allowance_note">Initial allowance</string>
+    <string name="child_initial_allocation_title">Initial allowance · %1$s</string>
+    <string name="enfant_envelope_summary_title">Children Envelope · Monthly budget</string>
+    <string name="enfant_envelope_metrics">Allocated: %1$s · Spent: %2$s · Remaining: %3$s</string>
+    <string name="enfant_envelope_metrics_over">Allocated: %1$s · Spent: %2$s · Exceeded: +%3$s</string>
+    <string name="enfant_envelope_unallocated_metrics">No envelope allocated · Used this month: %1$s (deducted from total)</string>
+    <string name="monthly_budget_remaining_line">Remaining monthly total budget: %1$s</string>
+    <string name="monthly_budget_over_line">Monthly total budget already exceeded by +%1$s</string>
+    <string name="overrun_warn_enfant_title">Children budget exceeded</string>
+    <string name="overrun_warn_enfant_body">Exceeds Children category by +%1$s. The full amount will be deducted from the monthly total budget.</string>
+    <string name="overrun_warn_enfant_unalloc_body">No Children envelope set (%1$s overrun). This amount will be deducted from the monthly total budget.</string>
+    <string name="overrun_warn_monthly_title">Monthly total budget exceeded!</string>
+    <string name="overrun_warn_monthly_body">This exceeds both Children category AND your monthly total budget by +%1$s. Confirming will deduct it from the total budget.</string>
+    <string name="overrun_confirm_dialog_msg">Warning: this %1$s allocation exceeds %2$s and will be deducted from the monthly total budget (%3$s). Confirm anyway?</string>
+    <string name="donate_anyway">Confirm anyway</string>
+    <string name="family_gift_saved_over">Amount credited · Children overrun recorded &amp; deducted from monthly budget</string>
+    <string name="category_overrun_detail">Exceeded by +%1$s (%2$d%%)</string>
+    <string name="category_unalloc_overrun_detail">Overrun · Unallocated (%1$s deducted from budget)</string>
+    <string name="notif_cat_unalloc_over_body">Category \"%1$s\" has no allocated envelope (%2$s deducted from the monthly total budget).</string>
+    <string name="parent_badge_cat_over">Warning: \"%1$s\" exceeded its budget (+%2$s deducted from monthly total).</string>
+    <string name="home_cat_overrun_banner_title">Overrun on \"%1$s\"</string>
+    <string name="home_cat_overrun_banner_body">Exceeded by +%1$s (%2$s spent), deducted from your monthly total budget.</string>
+    <string name="settings_child_parent_budget_details">Total received: %1$s · Spent: %2$s · Balance: %3$s</string>
+    <string name="dashboard_family_summary_v2">Used budget: %1$s · Month remaining: %2$s · Children: %3$d · Transactions: %4$d · Requests: %5$d</string>
 </resources>

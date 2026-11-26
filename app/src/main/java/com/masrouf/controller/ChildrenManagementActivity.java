@@ -4,6 +4,8 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -39,6 +41,7 @@ import com.example.masrouf1.db.MasroufEntities.UserEntity;
 import com.example.masrouf1.db.MoneyRequestSummary;
 import com.example.masrouf1.ui.AlertBannerView;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.card.MaterialCardView;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -65,7 +68,8 @@ public final class ChildrenManagementActivity extends AppCompatActivity {
     private ChildAdapter adapter;
     private LinearLayout requestRows;
     private View requestCard, emptyCard;
-    private TextView countTitle, bellBadge;
+    private MaterialCardView envelopeCard;
+    private TextView countTitle, bellBadge, envelopeMetrics, envelopeMonthly, envelopeBadge;
     private MaterialButton createTopBtn, createEmptyBtn;
     private boolean authorizedParent;
 
@@ -92,6 +96,10 @@ public final class ChildrenManagementActivity extends AppCompatActivity {
             countTitle.setText(getString(R.string.children_my_children_count, 0));
         }
         emptyCard = findViewById(R.id.children_empty_card);
+        envelopeCard = findViewById(R.id.children_enfant_envelope_card);
+        envelopeMetrics = findViewById(R.id.children_enfant_envelope_metrics);
+        envelopeMonthly = findViewById(R.id.children_enfant_monthly_metrics);
+        envelopeBadge = findViewById(R.id.children_enfant_badge);
         requestRows = findViewById(R.id.parent_money_requests_rows);
         requestCard = findViewById(R.id.parent_money_requests_card);
 
@@ -167,7 +175,58 @@ public final class ChildrenManagementActivity extends AppCompatActivity {
             if (emptyCard != null) emptyCard.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
             recycler.setVisibility(isEmpty ? View.GONE : View.VISIBLE);
         });
+        viewModel.<GiftEnvelopeData>request(repository -> repository.giftEnvelope(parentId), state -> {
+            if (!state.loading && !isFinishing() && !isDestroyed()) {
+                bindEnvelopeSummaryCard(state.data);
+            }
+        });
         loadMoneyRequests();
+    }
+
+    private void bindEnvelopeSummaryCard(GiftEnvelopeData env) {
+        if (envelopeCard == null) return;
+        if (env == null || env.budget == null) {
+            envelopeCard.setVisibility(View.GONE);
+            return;
+        }
+        envelopeCard.setVisibility(View.VISIBLE);
+        boolean catOver = (!env.hasEnfantEnvelope && env.categorySpentMilli > 0L)
+                || (env.hasEnfantEnvelope && env.categorySpentMilli > env.categoryAllocatedMilli);
+        boolean monthlyOver = env.monthlyRemainingMilli < 0L;
+        envelopeCard.setCardBackgroundColor(getColor(catOver || monthlyOver ? R.color.danger_surface : R.color.alabaster));
+        envelopeCard.setStrokeColor(getColor(catOver || monthlyOver ? R.color.coral : R.color.card_border));
+        if (envelopeBadge != null) {
+            envelopeBadge.setVisibility(catOver || monthlyOver ? View.VISIBLE : View.GONE);
+        }
+        if (envelopeMetrics != null) {
+            if (!env.hasEnfantEnvelope) {
+                envelopeMetrics.setText(getString(R.string.enfant_envelope_unallocated_metrics,
+                        CurrencyFormatter.formatMilli(env.categorySpentMilli)));
+            } else if (env.categorySpentMilli > env.categoryAllocatedMilli) {
+                long over = MoneyMath.subtract(env.categorySpentMilli, env.categoryAllocatedMilli);
+                envelopeMetrics.setText(getString(R.string.enfant_envelope_metrics_over,
+                        CurrencyFormatter.formatMilli(env.categoryAllocatedMilli),
+                        CurrencyFormatter.formatMilli(env.categorySpentMilli),
+                        CurrencyFormatter.formatMilli(over)));
+            } else {
+                envelopeMetrics.setText(getString(R.string.enfant_envelope_metrics,
+                        CurrencyFormatter.formatMilli(env.categoryAllocatedMilli),
+                        CurrencyFormatter.formatMilli(env.categorySpentMilli),
+                        CurrencyFormatter.formatMilli(env.remainingMilli)));
+            }
+            envelopeMetrics.setTextColor(getColor(catOver ? R.color.danger_text : R.color.black));
+        }
+        if (envelopeMonthly != null) {
+            if (monthlyOver) {
+                long over = Math.abs(env.monthlyRemainingMilli);
+                envelopeMonthly.setText(getString(R.string.monthly_budget_over_line, CurrencyFormatter.formatMilli(over)));
+                envelopeMonthly.setTextColor(getColor(R.color.danger_text));
+            } else {
+                envelopeMonthly.setText(getString(R.string.monthly_budget_remaining_line,
+                        CurrencyFormatter.formatMilli(env.monthlyRemainingMilli)));
+                envelopeMonthly.setTextColor(getColor(R.color.ink_secondary));
+            }
+        }
     }
 
     private void showAddChildDialog() {
@@ -179,10 +238,17 @@ public final class ChildrenManagementActivity extends AppCompatActivity {
         EditText allocation = form.findViewById(R.id.dialog_child_allocation);
         TextView error = form.findViewById(R.id.dialog_child_error);
         AlertBannerView voiceBanner = form.findViewById(R.id.dialog_child_voice_banner);
+        View contextCard = form.findViewById(R.id.dialog_child_context_card);
+        TextView contextEnfant = form.findViewById(R.id.dialog_child_context_enfant);
+        TextView contextMonthly = form.findViewById(R.id.dialog_child_context_monthly);
+        AlertBannerView overrunBanner = form.findViewById(R.id.dialog_child_overrun_banner);
+        final GiftEnvelopeData[] envHolder = new GiftEnvelopeData[1];
 
         voiceFieldHelper.setStatusBanner(voiceBanner);
         voiceFieldHelper.bindField(form.findViewById(R.id.dialog_child_name_mic), name);
         voiceFieldHelper.bindField(form.findViewById(R.id.dialog_child_allocation_mic), allocation);
+        PasswordVisibilityHelper.attachAll(form);
+        bindDialogEnvelopePreview(contextCard, contextEnfant, contextMonthly, overrunBanner, allocation, envHolder);
 
         AlertDialog dialog = new AlertDialog.Builder(this)
                 .setTitle(R.string.add_child)
@@ -224,7 +290,19 @@ public final class ChildrenManagementActivity extends AppCompatActivity {
                     return;
                 }
             }
-            createChildAccount(dialog, error, childName, childEmail, secret, parentPhone, initial);
+            final long finalInitial = initial;
+            GiftEnvelopeData env = envHolder[0];
+            if (finalInitial > 0L && (env == null || env.budget == null)) {
+                error.setText(R.string.parent_budget_required);
+                error.setVisibility(View.VISIBLE);
+                return;
+            }
+            if (finalInitial > 0L && env != null && (env.willExceedCategory(finalInitial) || env.willExceedMonthly(finalInitial))) {
+                confirmOverrunIfNeeded(env, finalInitial,
+                        () -> createChildAccount(dialog, error, childName, childEmail, secret, parentPhone, finalInitial));
+                return;
+            }
+            createChildAccount(dialog, error, childName, childEmail, secret, parentPhone, finalInitial);
         }));
         dialog.show();
     }
@@ -264,9 +342,11 @@ public final class ChildrenManagementActivity extends AppCompatActivity {
                 if ("gmail".equals(failure)) error.setText(R.string.gmail_invalid);
                 else if ("password".equals(failure)) error.setText(R.string.password_rules);
                 else if ("duplicate".equals(failure)) error.setText(R.string.email_error);
-                else if ("parent".equals(failure)) error.setText(R.string.parent_budget_required);
-                else if (failure != null && failure.contains("budget")) error.setText(R.string.parent_allocation_cap);
-                else error.setText(R.string.child_creation_invalid);
+                else if ("parent".equals(failure) || "parent_budget_required".equals(failure)) {
+                    error.setText(R.string.parent_budget_required);
+                } else {
+                    error.setText(R.string.child_creation_invalid);
+                }
                 error.setVisibility(View.VISIBLE);
                 return;
             }
@@ -292,6 +372,12 @@ public final class ChildrenManagementActivity extends AppCompatActivity {
         EditText amountInput = form.findViewById(R.id.dialog_gift_amount);
         EditText noteInput = form.findViewById(R.id.dialog_gift_note);
         TextView error = form.findViewById(R.id.dialog_gift_error);
+        View contextCard = form.findViewById(R.id.dialog_gift_context_card);
+        TextView contextEnfant = form.findViewById(R.id.dialog_gift_context_enfant);
+        TextView contextMonthly = form.findViewById(R.id.dialog_gift_context_monthly);
+        AlertBannerView overrunBanner = form.findViewById(R.id.dialog_gift_overrun_banner);
+        final GiftEnvelopeData[] envHolder = new GiftEnvelopeData[1];
+        bindDialogEnvelopePreview(contextCard, contextEnfant, contextMonthly, overrunBanner, amountInput, envHolder);
 
         AlertDialog dialog = new AlertDialog.Builder(this)
                 .setTitle(getString(R.string.give_money_title, child.nickname))
@@ -311,10 +397,136 @@ public final class ChildrenManagementActivity extends AppCompatActivity {
                 return;
             }
             String note = noteInput.getText().toString().trim();
+            GiftEnvelopeData loaded = envHolder[0];
+            if (loaded != null) {
+                if (loaded.budget == null) {
+                    error.setText(R.string.parent_budget_required);
+                    error.setVisibility(View.VISIBLE);
+                    return;
+                }
+                boolean exceeded = loaded.willExceedCategory(amount) || loaded.willExceedMonthly(amount);
+                if (exceeded) {
+                    confirmOverrunIfNeeded(loaded, amount, () -> commitGift(dialog, error, child, amount, note, true));
+                    return;
+                }
+                commitGift(dialog, error, child, amount, note, false);
+                return;
+            }
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
             inspectChildEnvelope(dialog, error, child, amount, note);
         }));
         dialog.show();
+    }
+
+    private void bindDialogEnvelopePreview(View contextCard,
+                                           TextView contextEnfant,
+                                           TextView contextMonthly,
+                                           AlertBannerView overrunBanner,
+                                           EditText amountInput,
+                                           GiftEnvelopeData[] envHolder) {
+        viewModel.<GiftEnvelopeData>request(repository -> repository.giftEnvelope(parentId), state -> {
+            if (state.loading || isFinishing() || isDestroyed()) return;
+            GiftEnvelopeData env = state.data;
+            envHolder[0] = env;
+            if (env == null || env.budget == null) {
+                if (contextCard != null) contextCard.setVisibility(View.GONE);
+                return;
+            }
+            if (contextCard != null) contextCard.setVisibility(View.VISIBLE);
+            if (contextEnfant != null) {
+                if (!env.hasEnfantEnvelope) {
+                    contextEnfant.setText(getString(R.string.enfant_envelope_unallocated_metrics,
+                            CurrencyFormatter.formatMilli(env.categorySpentMilli)));
+                } else if (env.categorySpentMilli > env.categoryAllocatedMilli) {
+                    long over = MoneyMath.subtract(env.categorySpentMilli, env.categoryAllocatedMilli);
+                    contextEnfant.setText(getString(R.string.enfant_envelope_metrics_over,
+                            CurrencyFormatter.formatMilli(env.categoryAllocatedMilli),
+                            CurrencyFormatter.formatMilli(env.categorySpentMilli),
+                            CurrencyFormatter.formatMilli(over)));
+                } else {
+                    contextEnfant.setText(getString(R.string.enfant_envelope_metrics,
+                            CurrencyFormatter.formatMilli(env.categoryAllocatedMilli),
+                            CurrencyFormatter.formatMilli(env.categorySpentMilli),
+                            CurrencyFormatter.formatMilli(env.remainingMilli)));
+                }
+            }
+            if (contextMonthly != null) {
+                if (env.monthlyRemainingMilli < 0L) {
+                    contextMonthly.setText(getString(R.string.monthly_budget_over_line,
+                            CurrencyFormatter.formatMilli(Math.abs(env.monthlyRemainingMilli))));
+                    contextMonthly.setTextColor(getColor(R.color.danger_text));
+                } else {
+                    contextMonthly.setText(getString(R.string.monthly_budget_remaining_line,
+                            CurrencyFormatter.formatMilli(env.monthlyRemainingMilli)));
+                    contextMonthly.setTextColor(getColor(R.color.ink_secondary));
+                }
+            }
+            updateOverrunPreview(overrunBanner, env, parsePositiveAmount(amountInput));
+        });
+        amountInput.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) { }
+            @Override public void afterTextChanged(Editable s) {
+                updateOverrunPreview(overrunBanner, envHolder[0], parsePositiveAmount(amountInput));
+            }
+        });
+    }
+
+    private static long parsePositiveAmount(EditText input) {
+        if (input == null || input.getText() == null) return 0L;
+        String raw = input.getText().toString().trim();
+        if (raw.isEmpty()) return 0L;
+        try {
+            long milli = MoneyInput.toMilli(raw);
+            return Math.max(0L, milli);
+        } catch (NumberFormatException ignored) {
+            return 0L;
+        }
+    }
+
+    private void updateOverrunPreview(AlertBannerView banner, GiftEnvelopeData env, long amountMilli) {
+        if (banner == null) return;
+        if (env == null || env.budget == null || amountMilli <= 0L) {
+            banner.setVisibility(View.GONE);
+            return;
+        }
+        if (env.willExceedMonthly(amountMilli)) {
+            long overMonthly = MoneyMath.subtract(amountMilli, env.monthlyRemainingMilli);
+            banner.setAlert(AlertBannerView.Tone.DANGER,
+                    getString(R.string.overrun_warn_monthly_title),
+                    getString(R.string.overrun_warn_monthly_body, CurrencyFormatter.formatMilli(overMonthly)));
+            banner.setVisibility(View.VISIBLE);
+        } else if (env.willExceedCategory(amountMilli)) {
+            String msg = env.hasEnfantEnvelope
+                    ? getString(R.string.overrun_warn_enfant_body,
+                            CurrencyFormatter.formatMilli(MoneyMath.subtract(amountMilli, env.remainingMilli)))
+                    : getString(R.string.overrun_warn_enfant_unalloc_body,
+                            CurrencyFormatter.formatMilli(amountMilli));
+            banner.setAlert(AlertBannerView.Tone.WARNING,
+                    getString(R.string.overrun_warn_enfant_title), msg);
+            banner.setVisibility(View.VISIBLE);
+        } else {
+            banner.setVisibility(View.GONE);
+        }
+    }
+
+    private void confirmOverrunIfNeeded(GiftEnvelopeData env, long amountMilli, Runnable onConfirm) {
+        String whatExceeded = getString(R.string.category_children);
+        long afterMonthly = MoneyMath.subtract(env.monthlyRemainingMilli, amountMilli);
+        String monthlyNote = afterMonthly >= 0L
+                ? getString(R.string.monthly_budget_remaining_line, CurrencyFormatter.formatMilli(afterMonthly))
+                : getString(R.string.monthly_budget_over_line, CurrencyFormatter.formatMilli(Math.abs(afterMonthly)));
+        new AlertDialog.Builder(this)
+                .setTitle(env.willExceedMonthly(amountMilli)
+                        ? R.string.overrun_warn_monthly_title
+                        : R.string.overrun_warn_enfant_title)
+                .setMessage(getString(R.string.overrun_confirm_dialog_msg,
+                        CurrencyFormatter.formatMilli(amountMilli),
+                        whatExceeded,
+                        monthlyNote))
+                .setNegativeButton(android.R.string.cancel, null)
+                .setPositiveButton(R.string.donate_anyway, (w, which) -> onConfirm.run())
+                .show();
     }
 
     private void inspectChildEnvelope(AlertDialog dialog, TextView error, ChildSpendingSummary child, long amount, String note) {
@@ -327,38 +539,28 @@ public final class ChildrenManagementActivity extends AppCompatActivity {
                 error.setVisibility(View.VISIBLE);
                 return;
             }
-            if (envelope.ready && amount > envelope.remainingMilli) {
-                new AlertDialog.Builder(this)
-                        .setTitle(R.string.donate_money)
-                        .setMessage(getString(R.string.budget_envelope_warning,
-                                CurrencyFormatter.formatMilli(amount),
-                                CurrencyFormatter.formatMilli(Math.max(0L, envelope.remainingMilli))))
-                        .setNegativeButton(android.R.string.cancel, null)
-                        .setPositiveButton(R.string.donate_money, (w, which) -> commitGift(dialog, error, child, amount, note))
-                        .show();
+            boolean exceeded = envelope.willExceedCategory(amount) || envelope.willExceedMonthly(amount);
+            if (exceeded) {
+                confirmOverrunIfNeeded(envelope, amount, () -> commitGift(dialog, error, child, amount, note, true));
                 return;
             }
-            commitGift(dialog, error, child, amount, note);
+            commitGift(dialog, error, child, amount, note, false);
         });
     }
 
-    private void commitGift(AlertDialog dialog, TextView error, ChildSpendingSummary child, long amount, String note) {
+    private void commitGift(AlertDialog dialog, TextView error, ChildSpendingSummary child, long amount, String note, boolean overrunRecorded) {
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
         viewModel.<Integer>request(repository -> repository.giveMoney(parentId, child.childProfileId, amount, note, System.currentTimeMillis()), state -> {
             if (state.loading) return;
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);
             Integer result = state.data;
-            if (result != null && result == -2) {
-                error.setText(R.string.parent_allocation_cap);
-                error.setVisibility(View.VISIBLE);
-                return;
-            }
             if (result == null || result != 0) {
                 error.setText(R.string.parent_budget_required);
                 error.setVisibility(View.VISIBLE);
                 return;
             }
             dialog.dismiss();
+            Toast.makeText(this, overrunRecorded ? R.string.family_gift_saved_over : R.string.family_gift_saved, Toast.LENGTH_LONG).show();
             refresh();
         });
     }
@@ -377,17 +579,30 @@ public final class ChildrenManagementActivity extends AppCompatActivity {
         label.setTypeface(null, Typeface.BOLD);
         wrap.addView(label);
 
-        EditText passwordField = new EditText(this);
-        passwordField.setBackgroundResource(R.drawable.bg_allocation_input);
+        com.google.android.material.textfield.TextInputLayout passwordLayout =
+                new com.google.android.material.textfield.TextInputLayout(this);
+        passwordLayout.setBoxBackgroundMode(com.google.android.material.textfield.TextInputLayout.BOX_BACKGROUND_OUTLINE);
+        passwordLayout.setBoxBackgroundColor(getColor(R.color.form_beige));
+        passwordLayout.setBoxStrokeColor(getColor(R.color.forest));
+        float r = dp(12);
+        passwordLayout.setBoxCornerRadii(r, r, r, r);
+        passwordLayout.setHintEnabled(false);
+
+        com.google.android.material.textfield.TextInputEditText passwordField =
+                new com.google.android.material.textfield.TextInputEditText(passwordLayout.getContext());
         passwordField.setHint(R.string.hint_password);
         passwordField.setTextColor(getColor(R.color.black));
-        passwordField.setHintTextColor(getColor(R.color.ink_secondary));
+        passwordField.setHintTextColor(getColor(R.color.black));
         passwordField.setMinHeight(dp(48));
-        passwordField.setPadding(dp(12), dp(10), dp(12), dp(10));
+        passwordField.setSingleLine(true);
         passwordField.setInputType(android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        passwordField.setTypeface(Typeface.DEFAULT);
+        passwordLayout.addView(passwordField, new LinearLayout.LayoutParams(-1, -2));
+        PasswordVisibilityHelper.attach(passwordLayout, passwordField);
+
         LinearLayout.LayoutParams inputLp = new LinearLayout.LayoutParams(-1, -2);
         inputLp.topMargin = dp(6);
-        wrap.addView(passwordField, inputLp);
+        wrap.addView(passwordLayout, inputLp);
 
         AlertDialog dialog = new AlertDialog.Builder(this)
                 .setTitle(R.string.reset_child_password)
@@ -486,8 +701,8 @@ public final class ChildrenManagementActivity extends AppCompatActivity {
         viewModel.<Integer>request(repository -> repository.resolveMoneyRequest(parentId, requestId, approve, ""), result -> {
             if (result.loading) return;
             Integer code = result.data;
-            if (code != null && code == -2) {
-                Toast.makeText(this, R.string.parent_allocation_cap, Toast.LENGTH_SHORT).show();
+            if (code != null && (code == -2 || code == -3)) {
+                Toast.makeText(this, R.string.parent_budget_required, Toast.LENGTH_SHORT).show();
                 return;
             }
             if (code == null || code != 0) {
@@ -546,8 +761,12 @@ public final class ChildrenManagementActivity extends AppCompatActivity {
             holder.available.setText(getString(R.string.child_available_summary,
                     CurrencyFormatter.formatMilli(remaining)));
             int percent = MoneyMath.percentOf(child.spentMilli, child.allocatedTotalMilli);
-            holder.percent.setText(percent + "%");
+            boolean childOver = child.allocatedTotalMilli > 0L && child.spentMilli > child.allocatedTotalMilli;
+            holder.percent.setText(childOver ? getString(R.string.parent_child_pct_over, percent) : (percent + "%"));
+            holder.percent.setTextColor(getColor(childOver ? R.color.danger_text : R.color.black));
             holder.progress.setProgress(Math.min(100, Math.max(0, percent)));
+            holder.progress.setProgressTintList(android.content.res.ColorStateList.valueOf(
+                    getColor(childOver ? R.color.coral : R.color.emerald)));
             holder.balance.setText(getString(R.string.child_balance_summary,
                     CurrencyFormatter.formatMilli(child.balanceMilli)));
 

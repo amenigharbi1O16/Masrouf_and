@@ -85,6 +85,7 @@ public final class RegisterActivity extends AppCompatActivity {
 
         // Back
         backBtn.setOnClickListener(v -> finish());
+        PasswordVisibilityHelper.attachAll(findViewById(android.R.id.content));
 
         // Language toggles
         buildLanguageButtons();

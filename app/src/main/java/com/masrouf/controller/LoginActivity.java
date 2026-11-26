@@ -39,6 +39,7 @@ public final class LoginActivity extends AppCompatActivity {
 
         if (getIntent().hasExtra("EMAIL")) binding.loginEmail.setText(getIntent().getStringExtra("EMAIL"));
         binding.loginEmail.addTextChangedListener(new FormValidationTextWatcher(binding.loginEmailFeedback));
+        PasswordVisibilityHelper.attachAll(binding.getRoot());
         binding.loginSubmit.setOnClickListener(new LoginClickListener(this));
         binding.loginToRegister.setOnClickListener(v -> startActivity(new Intent(this, RegisterActivity.class).putExtra("TYPE", "personal")));
     }

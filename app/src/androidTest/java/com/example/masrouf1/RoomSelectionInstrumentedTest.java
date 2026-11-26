@@ -491,6 +491,132 @@ public final class RoomSelectionInstrumentedTest {
         }
     }
 
+    @Test public void childBudgetDeductsFromEnfantCategoryIndicatesOverrunWithdrawsMonthlyTotalAndUpdatesChildProfile() {
+        MasroufRepository repo=new MasroufRepository(context,database);
+        SystemCategoryEntity sysFood=dao.systemCategoryByKey("food");
+        SystemCategoryEntity sysChildren=dao.systemCategoryByKey("children");
+        assertNotNull(sysChildren);
+        assertTrue(dao.finishOnboarding(parent.id,Arrays.asList(sysFood)));
+
+        long start=BudgetPeriodMath.startOfMonthMillis(2026,java.util.Calendar.NOVEMBER);
+        long end=BudgetPeriodMath.endOfMonthMillis(2026,java.util.Calendar.NOVEMBER);
+
+        // Parent creates monthly budget of 500 DT with Food=300 DT and Enfants=100 DT
+        CategoryEntity pFood=dao.selectedCategoryForCatalog(parent.id,sysFood.id);
+        CategoryEntity pChildren=dao.childrenCategory(parent.id);
+        assertNotNull(pChildren);
+        BudgetEntity pBudget=new BudgetEntity();pBudget.userId=parent.id;pBudget.name="FamilyBudget";pBudget.monthlyLimitMilli=500_000L;
+        pBudget.periodStart=start;pBudget.periodEnd=end;pBudget.status="ACTIVE";
+        BudgetLineEntity foodLine=new BudgetLineEntity();foodLine.categoryId=pFood.id;foodLine.limitMilli=300_000L;foodLine.plannedPercentBps=6000;
+        BudgetLineEntity enfLine=new BudgetLineEntity();enfLine.categoryId=pChildren.id;enfLine.limitMilli=100_000L;enfLine.plannedPercentBps=2000;
+        long pBudgetId=repo.createBudget(pBudget,Arrays.asList(foodLine,enfLine));
+        assertTrue(pBudgetId>0L);
+
+        // 1. Create Child with initial allocation of 80 DT (within 100 DT Enfant(s) budget)
+        UserEntity newChild=new UserEntity();newChild.name="Youssef";newChild.email="youssef@gmail.com";
+        newChild.role=AppRole.CHILD.value();newChild.accountType=AppRole.CHILD.value();
+        newChild.balanceMilli=80_000L;newChild.createdAt=start+1_000L;
+        ChildProfileEntity profile=new ChildProfileEntity();profile.parentUserId=parent.id;profile.nickname="Youssef";
+        profile.allocatedTotalMilli=80_000L;profile.createdAt=start+1_000L;
+        BudgetEntity childInitBudget=new BudgetEntity();childInitBudget.name="Dotation";childInitBudget.monthlyLimitMilli=80_000L;
+        childInitBudget.periodStart=start;childInitBudget.periodEnd=end;childInitBudget.status="ACTIVE";
+        OperationResult<Long> created=repo.createChildAccount(newChild,profile,childInitBudget,Collections.emptyList(),"StrongPass1!");
+        assertTrue(created.succeeded());
+        long newChildId=created.value;
+
+        assertEquals(80_000L,dao.findBudget(pBudgetId).spentMilli);
+        assertEquals(80_000L,dao.budgetLineForCategory(pBudgetId,pChildren.id).spentMilli);
+        GiftEnvelopeData envAfterCreate=repo.giftEnvelope(parent.id);
+        assertEquals(20_000L,envAfterCreate.remainingMilli);
+        assertEquals(420_000L,envAfterCreate.monthlyRemainingMilli);
+        assertEquals(80_000L,dao.totalAllowanceReceived(newChildId));
+        assertEquals(80_000L,dao.findUser(newChildId).balanceMilli);
+
+        // 2. Give 50 DT more -> total Enfant(s) = 130 DT (>100 DT overrun of +30 DT!), deducted from 500 DT monthly total -> 370 DT left
+        ChildProfileEntity persistedProfile=dao.childProfileForUser(newChildId);
+        assertNotNull(persistedProfile);
+        assertEquals(0,repo.giveMoney(parent.id,persistedProfile.id,50_000L,"Argent de poche",start+2_000L));
+
+        assertEquals(130_000L,dao.findBudget(pBudgetId).spentMilli);
+        assertEquals(130_000L,dao.budgetLineForCategory(pBudgetId,pChildren.id).spentMilli);
+        assertEquals(130_000L,dao.totalAllowanceReceived(newChildId));
+        assertEquals(130_000L,dao.findUser(newChildId).balanceMilli);
+        assertEquals(130_000L,dao.childProfileForUser(newChildId).allocatedTotalMilli);
+
+        // Parent receives category overrun notification
+        boolean gotEnfantOver=false;
+        for(NotificationEntity n:dao.notificationsForUser(parent.id)) {
+            if("category_over".equals(n.kind)) gotEnfantOver=true;
+        }
+        assertTrue(gotEnfantOver);
+
+        // Parent Home & Analytics reflect Enfant(s) category overrun + deduction from Monthly Total Budget
+        HomeDashboardData pHome=repo.loadHome(parent.id,true,false,pBudgetId);
+        assertEquals(130_000L,pHome.budget.spentMilli);
+        HomeCategoryProgress pEnfProgress=null;
+        for(HomeCategoryProgress item:pHome.categoryProgress) {
+            if(item.categoryId==pChildren.id) pEnfProgress=item;
+        }
+        assertNotNull(pEnfProgress);
+        assertEquals(100_000L,pEnfProgress.allocatedMilli);
+        assertEquals(130_000L,pEnfProgress.spentMilli);
+        assertTrue(pEnfProgress.consumedPercent>=130);
+
+        AnalyticsSummaryData pAnalytics=repo.loadAnalytics(parent.id,pBudgetId);
+        assertEquals(130_000L,pAnalytics.currentSpentMilli);
+        assertNotNull(pAnalytics.attentionCategory);
+        assertEquals(pChildren.id,pAnalytics.attentionCategory.categoryId);
+        boolean foundYoussef=false;
+        for(AnalyticsSummaryData.ChildAnalyticsItem item:pAnalytics.childrenProgress) {
+            if(item.childUserId==newChildId) {
+                foundYoussef=true;
+                assertEquals(130_000L,item.allocatedMilli);
+            }
+        }
+        assertTrue(foundYoussef);
+
+        // 3. Child spends 25 DT -> Child Profile (Settings), Home & Analytics stay completely synchronized
+        assertTrue(dao.finishOnboarding(newChildId,Arrays.asList(sysFood)));
+        CategoryEntity childFood=dao.selectedCategoryForCatalog(newChildId,sysFood.id);
+        BudgetEntity childBudget=dao.activeBudgetForUser(newChildId);
+        assertNotNull(childBudget);
+        assertEquals(130_000L,childBudget.monthlyLimitMilli);
+        TransactionEntity cSpend=new TransactionEntity();cSpend.userId=newChildId;cSpend.budgetId=childBudget.id;
+        cSpend.categoryId=childFood.id;cSpend.kind="expense";cSpend.label="Livres";cSpend.amountMilli=25_000L;cSpend.occurredAt=start+3_000L;
+        assertTrue(repo.saveExpense(cSpend,newChildId)>0L);
+
+        SettingsData childSettings=repo.loadSettingsData(newChildId);
+        assertEquals(130_000L,childSettings.totalAllowanceMilli);
+        assertEquals(130_000L,childSettings.childProfile.allocatedTotalMilli);
+        assertEquals(25_000L,childSettings.childSpentMilli);
+        assertEquals(105_000L,childSettings.user.balanceMilli);
+
+        AnalyticsSummaryData cAnalytics=repo.loadAnalytics(newChildId,childBudget.id);
+        assertEquals(25_000L,cAnalytics.currentSpentMilli);
+        assertEquals(130_000L,cAnalytics.budget.monthlyLimitMilli);
+
+        // 4. Child requests 20 DT & Parent approves -> deducts from Enfant(s) (150 DT) & monthly total (350 DT left) & adds to Child
+        com.example.masrouf1.db.MasroufEntities.MoneyRequestEntity moneyReq=new com.example.masrouf1.db.MasroufEntities.MoneyRequestEntity();
+        moneyReq.childUserId=newChildId;moneyReq.amountMilli=20_000L;moneyReq.reason="Cahiers";moneyReq.createdAt=start+3_500L;
+        long reqId=repo.requestMoney(newChildId,20_000L,"Cahiers");
+        assertTrue(reqId>0L);
+        assertEquals(0,repo.resolveMoneyRequest(parent.id,reqId,true,"OK"));
+        assertEquals(150_000L,dao.findBudget(pBudgetId).spentMilli);
+        assertEquals(150_000L,dao.budgetLineForCategory(pBudgetId,pChildren.id).spentMilli);
+        assertEquals(150_000L,repo.loadSettingsData(newChildId).totalAllowanceMilli);
+        assertEquals(125_000L,repo.loadSettingsData(newChildId).user.balanceMilli);
+
+        // 5. Giving 400 DT exceeds Monthly Total Budget (550 DT > 500 DT) -> succeeds & triggers budget_over while Child reaches 550 DT
+        assertEquals(0,repo.giveMoney(parent.id,persistedProfile.id,400_000L,"Grosse dotation",start+4_000L));
+        assertEquals(550_000L,dao.findBudget(pBudgetId).spentMilli);
+        assertEquals(550_000L,repo.loadSettingsData(newChildId).totalAllowanceMilli);
+        boolean gotBudgetOver=false;
+        for(NotificationEntity n:dao.notificationsForUser(parent.id)) {
+            if("budget_over".equals(n.kind)) gotBudgetOver=true;
+        }
+        assertTrue(gotBudgetOver);
+    }
+
     private UserEntity createUser(String email,String role,long balance,long householdId) {
         UserEntity row=new UserEntity();row.name=role;row.email=email;row.role=role;
         row.accountType="child".equals(role)?"family":"personal";row.passwordHash="test-hash";

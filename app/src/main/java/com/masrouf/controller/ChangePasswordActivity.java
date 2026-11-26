@@ -66,6 +66,7 @@ public final class ChangePasswordActivity extends AppCompatActivity {
         currentPasswordField = findViewById(R.id.current_password);
         newPasswordField = findViewById(R.id.new_password);
         confirmNewPasswordField = findViewById(R.id.confirm_new_password);
+        PasswordVisibilityHelper.attachAll(findViewById(android.R.id.content));
         errorCard = findViewById(R.id.change_password_error_card);
         successCard = findViewById(R.id.change_password_success_card);
         errorText = findViewById(R.id.change_password_error_text);

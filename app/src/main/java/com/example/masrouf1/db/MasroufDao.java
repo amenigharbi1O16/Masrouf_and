@@ -122,10 +122,10 @@ public interface MasroufDao {
     @Query("SELECT * FROM notifications WHERE userId = :userId ORDER BY createdAt DESC, id DESC") List<NotificationEntity> notificationsForUser(long userId);
     @Query("UPDATE notifications SET read = 1 WHERE id = :notificationId AND userId = :userId") int markNotificationRead(long notificationId,long userId);
     @Query("UPDATE notifications SET read = 1 WHERE userId = :userId") int markAllNotificationsRead(long userId);
-    @Query("SELECT * FROM categories WHERE userId = :userId AND name = 'Enfants' COLLATE NOCASE LIMIT 1") CategoryEntity childrenCategory(long userId);
+    @Query("SELECT categories.* FROM categories LEFT JOIN user_categories ON user_categories.categoryId = categories.id AND user_categories.userId = categories.userId WHERE categories.userId = :userId AND (user_categories.catalogId = 14 OR lower(trim(categories.name)) IN ('enfants','enfant','children','child')) ORDER BY CASE WHEN user_categories.active = 1 THEN 0 ELSE 1 END, categories.id LIMIT 1") CategoryEntity childrenCategory(long userId);
     @Query("SELECT COALESCE(SUM(amountMilli),0) FROM money_transactions WHERE userId = :userId AND categoryId = :categoryId AND kind IN ('expense','donation') AND occurredAt >= :from AND occurredAt <= :to") long categoryExpenseBetween(long userId,long categoryId,long from,long to);
     @Query("SELECT * FROM budget_lines WHERE budgetId = :budgetId AND categoryId = :categoryId LIMIT 1") BudgetLineEntity budgetLineForCategory(long budgetId,long categoryId);
-    @Query("SELECT COALESCE(SUM(amountMilli),0) FROM money_transactions WHERE userId = :userId AND kind IN ('expense','donation','purchase') AND occurredAt >= :from AND occurredAt <= :to AND categoryId NOT IN (SELECT id FROM categories WHERE userId = :userId AND name = 'Enfants' COLLATE NOCASE)") long personalSpendingBetween(long userId,long from,long to);
+    @Query("SELECT COALESCE(SUM(amountMilli),0) FROM money_transactions WHERE userId = :userId AND kind IN ('expense','donation','purchase') AND occurredAt >= :from AND occurredAt <= :to AND categoryId NOT IN (SELECT categories.id FROM categories LEFT JOIN user_categories ON user_categories.categoryId = categories.id AND user_categories.userId = categories.userId WHERE categories.userId = :userId AND (user_categories.catalogId = 14 OR lower(trim(categories.name)) IN ('enfants','enfant','children','child')))") long personalSpendingBetween(long userId,long from,long to);
     @Query("SELECT budgets.periodStart, budgets.monthlyLimitMilli AS allocatedMilli, budgets.spentMilli, budgets.pointsAwarded FROM budgets INNER JOIN child_profiles ON child_profiles.childUserId = budgets.userId WHERE budgets.userId = :childUserId AND child_profiles.parentUserId = :parentUserId ORDER BY budgets.periodStart DESC LIMIT 4") List<BudgetHistoryRow> childBudgetHistory(long childUserId,long parentUserId);
     @Query("SELECT users.email FROM users INNER JOIN child_profiles ON child_profiles.childUserId = users.id WHERE child_profiles.id = :profileId AND child_profiles.parentUserId = :parentId LIMIT 1") String childEmailForProfile(long profileId,long parentId);
     @Query("UPDATE users SET passwordHash = :passwordHash WHERE id = (SELECT childUserId FROM child_profiles WHERE id = :profileId AND parentUserId = :parentId)") int resetChildPassword(long profileId,long parentId,String passwordHash);
@@ -257,30 +257,106 @@ public interface MasroufDao {
     @Update int updateBudgetLines(List<BudgetLineEntity> rows);
 
     @Transaction
-    default long ensureChildrenCategory(long parentUserId) {
+    default long ensureChildrenCategoryRow(long parentUserId) {
+        SystemCategoryEntity canonical=systemCategoryByKey("children");
         CategoryEntity category=childrenCategory(parentUserId);
-        if(category==null) { category=new CategoryEntity(); category.userId=parentUserId; category.name="Enfants"; category.type="expense"; category.colorHex="#E9B66B"; category.isEssential=true; category.allocationPercent=0; category.id=insert(category); }
+        if(category==null && canonical!=null) category=selectedCategoryForCatalog(parentUserId,canonical.id);
+        if(category==null) {
+            category=new CategoryEntity(); category.userId=parentUserId;
+            category.name=canonical!=null?canonical.name:"Enfants"; category.type="expense";
+            category.colorHex=canonical!=null?canonical.colorHex:"#DC7770";
+            category.isEssential=true; category.allocationPercent=canonical!=null?canonical.recommendedPercent:3;
+            category.id=insert(category);
+        }
         BudgetEntity budget=activeBudgetForUser(parentUserId);
-        if(budget!=null && budgetLineForCategory(budget.id,category.id)==null) { BudgetLineEntity line=new BudgetLineEntity(); line.budgetId=budget.id; line.categoryId=category.id; insert(line); }
+        if(budget==null) budget=currentBudgetAt(parentUserId,System.currentTimeMillis());
+        if(budget!=null && budgetLineForCategory(budget.id,category.id)==null) {
+            BudgetLineEntity line=new BudgetLineEntity(); line.budgetId=budget.id; line.categoryId=category.id; insert(line);
+        }
         return category.id;
     }
 
     @Transaction
+    default long ensureChildrenCategory(long parentUserId) {
+        long categoryId=ensureChildrenCategoryRow(parentUserId);
+        SystemCategoryEntity canonical=systemCategoryByKey("children");
+        UserCategoryEntity matchingLink=null;
+        for(UserCategoryEntity link:userCategoryLinks(parentUserId)) {
+            if(link.categoryId==categoryId){matchingLink=link;break;}
+        }
+        Long targetCatalogId=canonical!=null?canonical.id:null;
+        if(matchingLink==null) {
+            UserCategoryEntity link=new UserCategoryEntity();
+            link.userId=parentUserId; link.categoryId=categoryId;
+            link.catalogId=targetCatalogId; link.active=true;
+            insertUserCategory(link);
+        } else if(!matchingLink.active || (matchingLink.catalogId==null && targetCatalogId!=null)) {
+            updateUserCategoryLink(matchingLink.id,true,matchingLink.catalogId!=null?matchingLink.catalogId:targetCatalogId);
+        }
+        return categoryId;
+    }
+
+    @Transaction
     default long createChildAccount(UserEntity child,ChildProfileEntity profile,BudgetEntity initialBudget,List<CategoryEntity> categories) {
+        return createChildAccount(child,profile,initialBudget,categories,"Dotation initiale","","");
+    }
+
+    @Transaction
+    default long createChildAccount(UserEntity child,ChildProfileEntity profile,BudgetEntity initialBudget,List<CategoryEntity> categories,
+                                    String initialNote,String notificationTitle,String notificationMessage) {
         UserEntity parent=findUser(profile.parentUserId);
         if(parent==null||!("parent".equalsIgnoreCase(parent.role)||"admin".equalsIgnoreCase(parent.role))||!"child".equalsIgnoreCase(child.role)) throw new IllegalArgumentException("invalid child account owner");
-        ensureChildrenCategory(profile.parentUserId);
+        long enfantsCategoryId=ensureChildrenCategory(profile.parentUserId);
+        long now=profile.createdAt>0L?profile.createdAt:System.currentTimeMillis();
         BudgetEntity parentBudget=activeBudgetForUser(profile.parentUserId);
-        if(parentBudget!=null)profile.allocationPeriodStart=parentBudget.periodStart;
+        if(parentBudget==null) parentBudget=currentBudgetAt(profile.parentUserId,now);
+        if(parentBudget!=null) profile.allocationPeriodStart=parentBudget.periodStart;
         if(profile.allocatedTotalMilli>0) {
-            if(parentBudget==null||MoneyMath.add(totalChildAllocations(profile.parentUserId),profile.allocatedTotalMilli)>parentBudget.monthlyLimitMilli) throw new IllegalArgumentException("child allocation exceeds household budget");
+            if(parentBudget==null) throw new IllegalArgumentException("parent_budget_required");
+            if(initialBudget==null) initialBudget=new BudgetEntity();
+            initialBudget.monthlyLimitMilli=profile.allocatedTotalMilli;
+            initialBudget.periodStart=parentBudget.periodStart; initialBudget.periodEnd=parentBudget.periodEnd;
+            initialBudget.status="ACTIVE";
+        } else if(initialBudget!=null && parentBudget!=null) {
             initialBudget.periodStart=parentBudget.periodStart; initialBudget.periodEnd=parentBudget.periodEnd;
         }
         child.onboarded=false;child.categoriesSelected=false;
         if(profile.allocatedTotalMilli>0 && child.balanceMilli<profile.allocatedTotalMilli) child.balanceMilli=profile.allocatedTotalMilli;
-        long childId=insertChildUser(child); profile.childUserId=childId; insert(profile);
+        long childId=insertChildUser(child); child.id=childId; profile.childUserId=childId; insert(profile);
+        long childBudgetId=0L;
         // Parent-created default suggestions are not a child's confirmed selections; only the onboarding transaction may select them.
-        if(initialBudget!=null) { initialBudget.userId=childId; insert(initialBudget); }
+        if(initialBudget!=null) {
+            initialBudget.userId=childId;
+            childBudgetId=insert(initialBudget);
+            initialBudget.id=childBudgetId;
+        }
+        if(profile.allocatedTotalMilli>0 && parentBudget!=null) {
+            long effectiveAt=(now<parentBudget.periodStart||now>parentBudget.periodEnd)
+                    ?Math.max(parentBudget.periodStart,Math.min(parentBudget.periodEnd,now)):now;
+            String safeNick=(profile.nickname==null||profile.nickname.trim().isEmpty())
+                    ?(child.name==null?"Enfant":child.name.trim()):profile.nickname.trim();
+            String safeNote=(initialNote==null||initialNote.trim().isEmpty())?"Dotation initiale":initialNote.trim();
+            insertFamilyAllocation(profile.parentUserId,parentBudget.id,enfantsCategoryId,safeNick,profile.allocatedTotalMilli,safeNote,effectiveAt);
+            TransactionEntity expense=new TransactionEntity();
+            expense.userId=profile.parentUserId; expense.budgetId=parentBudget.id;
+            expense.categoryId=enfantsCategoryId; expense.kind="expense";
+            expense.label=safeNote+" · "+safeNick;
+            expense.amountMilli=profile.allocatedTotalMilli; expense.occurredAt=effectiveAt;
+            recordExpense(expense);
+            TransactionEntity received=new TransactionEntity();
+            received.userId=childId; received.budgetId=childBudgetId;
+            received.kind="allowance_received"; received.label=""; received.note=safeNote;
+            received.amountMilli=profile.allocatedTotalMilli; received.occurredAt=effectiveAt;
+            long receivedId=insert(received);
+            if(receivedId>0L && notificationTitle!=null && !notificationTitle.trim().isEmpty()) {
+                NotificationEntity notification=new NotificationEntity();
+                notification.userId=childId; notification.title=notificationTitle;
+                notification.message=notificationMessage==null?"":notificationMessage;
+                notification.kind="gift_received"; notification.createdAt=effectiveAt;
+                notification.eventKey="allowance:"+receivedId;
+                insertNotificationOnce(notification);
+            }
+        }
         return childId;
     }
 
@@ -288,9 +364,8 @@ public interface MasroufDao {
     default boolean updateChildFamilyAllocation(long profileId,long allocatedTotalMilli,long periodStart,long periodEnd) {
         ChildProfileEntity profile=childProfile(profileId); if(profile==null || allocatedTotalMilli<=0) return false;
         BudgetEntity parentBudget=activeBudgetForUser(profile.parentUserId);
+        if(parentBudget==null) parentBudget=currentBudgetAt(profile.parentUserId,System.currentTimeMillis());
         if(parentBudget==null)return false;
-        long currentAllocation=profile.allocationPeriodStart==parentBudget.periodStart?profile.allocatedTotalMilli:0L;
-        if(MoneyMath.add(MoneyMath.subtract(totalChildAllocations(profile.parentUserId),currentAllocation),allocatedTotalMilli)>parentBudget.monthlyLimitMilli) return false;
         BudgetEntity budget=activeBudgetForUser(profile.childUserId);
         if(budget!=null && allocatedEnvelopes(budget.id)>allocatedTotalMilli) return false;
         if(setChildAllocation(profileId,allocatedTotalMilli,parentBudget.periodStart)==0) return false;
@@ -316,14 +391,20 @@ public interface MasroufDao {
                                  String notificationTitle,String notificationMessage,boolean notifyChild) {
         ChildProfileEntity profile=childProfile(profileId); UserEntity parent=findUser(parentUserId);
         if(profile==null||profile.parentUserId!=parentUserId||parent==null||!("parent".equalsIgnoreCase(parent.role)||"admin".equalsIgnoreCase(parent.role))||amountMilli<=0) return -1;
+        long rawTs=occurredAt>0L?occurredAt:System.currentTimeMillis();
         BudgetEntity parentBudget=activeBudgetForUser(parentUserId);
-        if(parentBudget==null||MoneyMath.add(totalChildAllocations(parentUserId),amountMilli)>parentBudget.monthlyLimitMilli) return -2;
+        if(parentBudget==null) parentBudget=currentBudgetAt(parentUserId,rawTs);
+        if(parentBudget==null) return -3;
         UserEntity childUser=findUser(profile.childUserId); if(childUser==null) return -1;
+        long effectiveAt=(rawTs<parentBudget.periodStart||rawTs>parentBudget.periodEnd)
+                ?Math.max(parentBudget.periodStart,Math.min(parentBudget.periodEnd,rawTs)):rawTs;
         long categoryId=ensureChildrenCategory(parentUserId);
-        insertFamilyAllocation(parentUserId,parentBudget.id,categoryId,profile.nickname,amountMilli,note,occurredAt);
+        insertFamilyAllocation(parentUserId,parentBudget.id,categoryId,profile.nickname,amountMilli,note,effectiveAt);
         TransactionEntity expense=new TransactionEntity(); expense.userId=parentUserId; expense.budgetId=parentBudget.id;
-        expense.categoryId=categoryId; expense.kind="expense"; expense.label="Dotation · "+profile.nickname;
-        expense.amountMilli=amountMilli; expense.occurredAt=occurredAt; recordExpense(expense);
+        expense.categoryId=categoryId; expense.kind="expense";
+        String suffix=(note==null||note.trim().isEmpty())?"":" · "+note.trim();
+        expense.label="Dotation · "+profile.nickname+suffix;
+        expense.amountMilli=amountMilli; expense.occurredAt=effectiveAt; recordExpense(expense);
         long newChildTotal=profile.allocationPeriodStart==parentBudget.periodStart?MoneyMath.add(profile.allocatedTotalMilli,amountMilli):amountMilli;
         if(addChildAllocation(profileId,amountMilli,parentBudget.periodStart)==0||addChildBalance(profile.childUserId,amountMilli)==0) return -1;
         BudgetEntity childBudget=activeBudgetForUser(profile.childUserId);
@@ -331,9 +412,9 @@ public interface MasroufDao {
             childBudget=new BudgetEntity(); childBudget.userId=profile.childUserId; childBudget.name="Dotation familiale";
             childBudget.monthlyLimitMilli=newChildTotal; childBudget.periodStart=parentBudget.periodStart; childBudget.periodEnd=parentBudget.periodEnd; childBudget.status="ACTIVE";
             insert(childBudget);
-        } else { childBudget.monthlyLimitMilli=newChildTotal; update(childBudget); }
+        } else { childBudget.monthlyLimitMilli=newChildTotal; childBudget.periodStart=parentBudget.periodStart; childBudget.periodEnd=parentBudget.periodEnd; update(childBudget); }
         TransactionEntity received=new TransactionEntity();received.userId=profile.childUserId;received.budgetId=childBudget.id;
-        received.kind="allowance_received";received.label="";received.note=note;received.amountMilli=amountMilli;received.occurredAt=occurredAt;
+        received.kind="allowance_received";received.label="";received.note=note;received.amountMilli=amountMilli;received.occurredAt=effectiveAt;
         long receivedId=insert(received);
         if(notifyChild&&receivedId>0){NotificationEntity notification=new NotificationEntity();notification.userId=profile.childUserId;
             notification.title=notificationTitle;notification.message=notificationMessage;notification.kind="gift_received";
@@ -543,7 +624,7 @@ public interface MasroufDao {
             relation.catalogId=id;relation.active=true;insertUserCategory(relation);
         }
         if(completeOnboardingAndCategorySelection(userId)==0)throw new IllegalStateException("User onboarding state could not be updated");
-        if("parent".equalsIgnoreCase(user.role)||"admin".equalsIgnoreCase(user.role))ensureChildrenCategory(userId);
+        if("parent".equalsIgnoreCase(user.role)||"admin".equalsIgnoreCase(user.role))ensureChildrenCategoryRow(userId);
         return true;
     }
 
@@ -720,7 +801,8 @@ public interface MasroufDao {
     @Transaction
     default boolean deleteCustomCategory(long userId, long categoryId) {
         CategoryEntity category=findCategoryForUser(categoryId,userId);
-        if(category==null||countCatalogLinkForCategory(categoryId)>0||"Enfants".equalsIgnoreCase(category.name)) return false;
+        if(category==null||countCatalogLinkForCategory(categoryId)>0
+                ||"Enfants".equalsIgnoreCase(category.name)||"Enfant".equalsIgnoreCase(category.name)) return false;
         if(countProductsInCategory(categoryId)>0||countTransactionsInCategory(categoryId)>0) return false;
         return deleteCategoryRow(categoryId,userId)>0;
     }

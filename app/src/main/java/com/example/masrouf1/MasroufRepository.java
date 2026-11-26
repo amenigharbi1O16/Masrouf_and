@@ -213,9 +213,28 @@ public final class MasroufRepository {
                         CurrencyFormatter.formatMilli(request.amountMilli))
                 : appContext.getString(R.string.money_request_rejected_body);
         int result = dao.resolveMoneyRequest(requestId, parentId, approve, responseNote, now, status, message);
-        if (result == 0)
+        if (result == 0) {
             BudgetNotificationManager.moneyRequestResolved(appContext, (int) (requestId & 0x7fffffff),
                     "money-request-response:" + requestId + ":" + (approve ? "accepted" : "rejected"), status, message);
+            if (approve) {
+                BudgetEntity parentBudget = currentOrActiveBudget(parentId);
+                CategoryEntity childrenCat = dao.childrenCategory(parentId);
+                ChildProfileEntity profile = dao.childProfileForUser(request.childUserId);
+                if (parentBudget != null) {
+                    BudgetNotificationManager.dispatchSpendingAlertsSync(
+                            appContext,
+                            dao,
+                            parentId,
+                            parentBudget.id,
+                            childrenCat == null ? 0L : childrenCat.id,
+                            request.amountMilli,
+                            profile == null ? "" : profile.nickname,
+                            false,
+                            0L,
+                            now);
+                }
+            }
+        }
         return result;
     }
 
@@ -326,9 +345,40 @@ public final class MasroufRepository {
         child.onboarded = false;
         child.categoriesSelected = false;
         try {
-            long id = dao.createChildAccount(child, profile, initialBudget, categories);
-            if (id > 0L && initialBudget != null && initialBudget.id > 0L) {
-                BudgetNotificationManager.dispatchBudgetChangeSync(appContext, dao, initialBudget, true);
+            String initialNote = appContext.getString(R.string.child_initial_allowance_note);
+            String title = appContext.getString(R.string.notification_gift_received);
+            String message = profile.allocatedTotalMilli > 0L
+                    ? appContext.getString(R.string.allowance_received,
+                            CurrencyFormatter.formatMilli(profile.allocatedTotalMilli))
+                    : "";
+            long id = dao.createChildAccount(child, profile, initialBudget, categories, initialNote, title, message);
+            if (id > 0L) {
+                if (initialBudget != null && initialBudget.id > 0L && initialBudget.monthlyLimitMilli > 0L) {
+                    BudgetNotificationManager.dispatchBudgetChangeSync(appContext, dao, initialBudget, true);
+                }
+                if (profile.allocatedTotalMilli > 0L) {
+                    TransactionRow receipt = dao.latestAllowanceReceived(id);
+                    if (receipt != null) {
+                        BudgetNotificationManager.allowanceReceived(appContext, (int) (receipt.id & 0x7fffffff),
+                                id, profile.allocatedTotalMilli, "allowance:" + receipt.id);
+                    }
+                    BudgetEntity parentBudget = currentOrActiveBudget(profile.parentUserId);
+                    CategoryEntity childrenCat = dao.childrenCategory(profile.parentUserId);
+                    if (parentBudget != null) {
+                        long now = profile.createdAt > 0L ? profile.createdAt : System.currentTimeMillis();
+                        BudgetNotificationManager.dispatchSpendingAlertsSync(
+                                appContext,
+                                dao,
+                                profile.parentUserId,
+                                parentBudget.id,
+                                childrenCat == null ? 0L : childrenCat.id,
+                                profile.allocatedTotalMilli,
+                                profile.nickname,
+                                false,
+                                0L,
+                                now);
+                    }
+                }
             }
             return id > 0 ? OperationResult.success(id) : OperationResult.failure("parent");
         } catch (RuntimeException failure) {
@@ -743,14 +793,20 @@ public final class MasroufRepository {
 
     public GiftEnvelopeData giftEnvelope(long parentId) {
         requireParent(parentId);
-        BudgetEntity budget = dao.activeBudgetForUser(parentId);
+        BudgetEntity budget = currentOrActiveBudget(parentId);
         if (budget == null)
             return new GiftEnvelopeData(null, 0, false);
         long categoryId = dao.ensureChildrenCategory(parentId);
         BudgetLineEntity line = dao.budgetLineForCategory(budget.id, categoryId);
-        long spent = dao.categoryExpenseBetween(parentId, categoryId, budget.periodStart, budget.periodEnd);
-        long remaining = line == null ? 0 : MoneyMath.subtract(line.limitMilli, spent);
-        return new GiftEnvelopeData(budget, remaining, true);
+        long periodEndExcl = safeExclusiveEnd(budget.periodEnd);
+        long txSpent = dao.categoryTotalSpendBetween(parentId, categoryId, budget.periodStart, periodEndExcl);
+        long catSpent = Math.max(txSpent, line == null ? 0L : line.spentMilli);
+        long catAllocated = line == null ? 0L : line.limitMilli;
+        boolean hasEnvelope = line != null && catAllocated > 0L;
+        long catRemaining = Math.max(0L, MoneyMath.subtract(catAllocated, catSpent));
+        long totalSpent = Math.max(budget.spentMilli, dao.totalSpendingBetween(parentId, budget.periodStart, periodEndExcl));
+        long monthlyRemaining = MoneyMath.subtract(budget.monthlyLimitMilli, totalSpent);
+        return new GiftEnvelopeData(budget, catRemaining, true, catAllocated, catSpent, monthlyRemaining, hasEnvelope);
     }
 
     public int giveMoney(long parentId, long profileId, long amountMilli, String note, long occurredAt) {
@@ -765,6 +821,21 @@ public final class MasroufRepository {
                 if (receipt != null)
                     BudgetNotificationManager.allowanceReceived(appContext, (int) (receipt.id & 0x7fffffff),
                             profile.childUserId, amountMilli, "allowance:" + receipt.id);
+            }
+            BudgetEntity parentBudget = currentOrActiveBudget(parentId);
+            CategoryEntity childrenCat = dao.childrenCategory(parentId);
+            if (parentBudget != null) {
+                BudgetNotificationManager.dispatchSpendingAlertsSync(
+                        appContext,
+                        dao,
+                        parentId,
+                        parentBudget.id,
+                        childrenCat == null ? 0L : childrenCat.id,
+                        amountMilli,
+                        profile == null ? "" : profile.nickname,
+                        false,
+                        0L,
+                        occurredAt);
             }
         }
         return result;
@@ -931,8 +1002,10 @@ public final class MasroufRepository {
         long percentBase = budget == null ? 0 : budget.monthlyLimitMilli;
         ArrayList<HomeCategoryProgress> progress = new ArrayList<>();
         List<CategoryPresentationRow> presentations = dao.selectedCategoryPresentations(userId);
+        java.util.HashSet<Long> includedCategoryIds = new java.util.HashSet<>();
         if (!presentations.isEmpty()) {
             for (CategoryPresentationRow row : presentations) {
+                includedCategoryIds.add(row.categoryId);
                 BudgetLineEntity line = envelopes.get(row.categoryId);
                 long envelope = line == null ? 0L : line.limitMilli;
                 long spent = spending.containsKey(row.categoryId) ? spending.get(row.categoryId) : 0L;
@@ -946,6 +1019,7 @@ public final class MasroufRepository {
             }
         } else {
             for (CategoryEntity cat : categories) {
+                includedCategoryIds.add(cat.id);
                 BudgetLineEntity line = envelopes.get(cat.id);
                 long envelope = line == null ? 0L : line.limitMilli;
                 long spent = spending.containsKey(cat.id) ? spending.get(cat.id) : 0L;
@@ -957,6 +1031,23 @@ public final class MasroufRepository {
                 progress.add(new HomeCategoryProgress(cat.id, cat.name, cat.colorHex, cat.type, null,
                         "ellipse-outline", envelope, spent, planned, plannedBps, consumed));
             }
+        }
+        // Include any category that has spending or allocated envelope in the period (e.g. Enfants) even if deselected.
+        for (CategoryEntity cat : dao.categoriesForUser(userId)) {
+            if (includedCategoryIds.contains(cat.id)) continue;
+            BudgetLineEntity line = envelopes.get(cat.id);
+            long envelope = line == null ? 0L : line.limitMilli;
+            long spent = spending.containsKey(cat.id) ? spending.get(cat.id) : 0L;
+            if (envelope <= 0L && spent <= 0L) continue;
+            int plannedBps = line != null && line.plannedPercentBps > 0
+                    ? line.plannedPercentBps
+                    : (percentBase <= 0 ? 0 : BudgetPeriodMath.percentBpsFromAmount(percentBase, envelope));
+            int planned = (plannedBps + 50) / 100;
+            int consumed = envelope <= 0 ? 100 : Math.max(0, MoneyMath.percentOf(spent, envelope));
+            String cKey = dao.childrenCategory(userId) != null && dao.childrenCategory(userId).id == cat.id ? "children" : null;
+            String icon = "children".equals(cKey) ? "people-outline" : "ellipse-outline";
+            progress.add(new HomeCategoryProgress(cat.id, cat.name, cat.colorHex, cat.type, cKey,
+                    icon, envelope, spent, planned, plannedBps, consumed));
         }
         SettingEntity settings = dao.systemSettings();
         return new HomeDashboardData(user, budget, categories, recent, profile, children, allocated, parentSpent,
@@ -973,8 +1064,15 @@ public final class MasroufRepository {
         boolean isChild = AppRole.CHILD.value().equalsIgnoreCase(owner.role);
         ChildProfileEntity childProfile = isChild ? dao.childProfileForUser(userId) : null;
         long totalAllowance = isChild ? dao.totalAllowanceReceived(userId) : 0L;
+        long childSpent = 0L;
+        if (isChild) {
+            long start = budget != null ? budget.periodStart : monthStartMillis();
+            long endExcl = safeExclusiveEnd(budget != null ? budget.periodEnd : nextMonthStartMillis(start));
+            childSpent = Math.max(budget != null ? budget.spentMilli : 0L,
+                    dao.totalSpendingBetween(userId, start, endExcl));
+        }
         String parentPhoneStr = isChild ? parentPhone(userId) : "";
-        return new SettingsData(owner, presentations, rawCats, budget, childProfile, totalAllowance, parentPhoneStr);
+        return new SettingsData(owner, presentations, rawCats, budget, childProfile, totalAllowance, childSpent, parentPhoneStr);
     }
 
     /**
@@ -1051,6 +1149,14 @@ public final class MasroufRepository {
         }
         long avgDailyMilli = daysElapsed > 0 ? Math.round(curSpent / (double) daysElapsed) : 0L;
         long projectedTotalMilli = MoneyMath.add(curSpent, Math.round(avgDailyMilli * (double) daysRemaining));
+        ChildProfileEntity selfChildProfile = role == AppRole.CHILD ? dao.childProfileForUser(userId) : null;
+        if (role == AppRole.CHILD && budget != null && selfChildProfile != null) {
+            long effectiveLimit = Math.max(budget.monthlyLimitMilli,
+                    Math.max(selfChildProfile.allocatedTotalMilli, dao.totalAllowanceReceived(userId)));
+            if (effectiveLimit > budget.monthlyLimitMilli) {
+                budget.monthlyLimitMilli = effectiveLimit;
+            }
+        }
         long limitMilli = budget == null ? 0L : budget.monthlyLimitMilli;
         boolean paceSustainable = limitMilli <= 0L || projectedTotalMilli <= limitMilli;
         long projectedDiffMilli = Math.abs(projectedTotalMilli - limitMilli);
@@ -1060,9 +1166,14 @@ public final class MasroufRepository {
         Map<Long, String> catKeyMap = new HashMap<>();
         Map<Long, String> catIconMap = new HashMap<>();
         Map<Long, String> catColorMap = new HashMap<>();
+        CategoryEntity childrenCatEntity = role == AppRole.PARENT ? dao.childrenCategory(userId) : null;
         for (CategoryEntity c : dao.categoriesForUser(userId)) {
             catNameMap.put(c.id, c.name);
             catColorMap.put(c.id, c.colorHex);
+            if (childrenCatEntity != null && childrenCatEntity.id == c.id) {
+                catKeyMap.put(c.id, "children");
+                catIconMap.put(c.id, "people-outline");
+            }
         }
         for (CategoryPresentationRow p : dao.selectedCategoryPresentations(userId)) {
             catNameMap.put(p.categoryId, p.name);
@@ -1140,6 +1251,14 @@ public final class MasroufRepository {
                         if (attentionCategory == null || stat.consumptionPct > attentionCategory.consumptionPct) {
                             attentionCategory = stat;
                         }
+                    }
+                }
+            }
+            if (attentionCategory == null) {
+                for (AnalyticsSummaryData.CategoryStat stat : categoryStats) {
+                    if (!stat.hasBudget && "children".equals(stat.catalogKey) && stat.spentMilli > 0L) {
+                        attentionCategory = stat;
+                        break;
                     }
                 }
             }
