@@ -13,8 +13,6 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.masrouf1.AppRole;
 import com.example.masrouf1.BudgetPeriodMath;
@@ -42,13 +40,14 @@ import java.util.Locale;
 
 /** Role-aware home: child history remains private; parents receive SQL aggregates only. */
 public final class HomeFragment extends Fragment {
+    private static final int DEFAULT_VISIBLE_CATEGORIES = 4;
     private long userId, childAllocation;
     private MasroufViewModel dashboardViewModel;
     private View root;
-    private HomeCategoryAdapter categoriesAdapter;
-    private RecentTransactionsAdapter transactionsAdapter;
     private BudgetEntity currentBudget;
     private boolean childMode, parentMode;
+    private boolean categoriesExpanded = false;
+    private List<HomeCategoryProgress> allCategoryProgress = java.util.Collections.emptyList();
 
     private final ActivityResultLauncher<Intent> manageCategoriesLauncher =
             registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
@@ -60,6 +59,7 @@ public final class HomeFragment extends Fragment {
                                     ? getString(R.string.categories_updated_success)
                                     : msg);
                 }
+                categoriesExpanded = true;
                 if (root != null) {
                     loadData();
                 }
@@ -79,18 +79,6 @@ public final class HomeFragment extends Fragment {
         AppRole role = SessionStore.role(requireContext());
         childMode = role == AppRole.CHILD;
         parentMode = role == AppRole.PARENT;
-
-        RecyclerView categories = view.findViewById(R.id.home_categories);
-        categories.setLayoutManager(new LinearLayoutManager(requireContext()));
-        categoriesAdapter = new HomeCategoryAdapter(this::onCategoryClicked);
-        categories.setAdapter(categoriesAdapter);
-
-        RecyclerView recent = view.findViewById(R.id.home_recent_transactions);
-        recent.setLayoutManager(new LinearLayoutManager(requireContext()));
-        transactionsAdapter = new RecentTransactionsAdapter(this::openTransaction);
-        recent.setAdapter(transactionsAdapter);
-        recent.setNestedScrollingEnabled(false);
-        categories.setNestedScrollingEnabled(false);
 
         ((TextView) view.findViewById(R.id.home_period)).setText(periodLabel(null));
         view.findViewById(R.id.home_period).setContentDescription(periodLabel(null));
@@ -117,8 +105,17 @@ public final class HomeFragment extends Fragment {
         view.findViewById(R.id.home_manage_children).setOnClickListener(
                 v -> startActivity(new Intent(requireContext(), ChildrenManagementActivity.class)));
         getParentFragmentManager().setFragmentResultListener("masrouf-categories-updated", this, (key, result) -> {
+            categoriesExpanded = true;
             showFeedbackBanner(getString(R.string.manage_categories_title), getString(R.string.categories_updated_success));
             loadData();
+        });
+        getParentFragmentManager().setFragmentResultListener("masrouf-voice-saved", this, (key, result) -> {
+            showFeedbackBanner(getString(R.string.voice_modal_title), getString(R.string.congrats_saved));
+            loadData();
+        });
+        view.findViewById(R.id.home_categories_toggle).setOnClickListener(v -> {
+            categoriesExpanded = !categoriesExpanded;
+            renderCategoriesList();
         });
         view.findViewById(R.id.home_children_tracking).setVisibility(parentMode ? View.VISIBLE : View.GONE);
         view.findViewById(R.id.home_manage_children).setVisibility(parentMode ? View.VISIBLE : View.GONE);
@@ -147,16 +144,16 @@ public final class HomeFragment extends Fragment {
             renderBudget(data.budget, data.childAllocations, data.parentSpent,
                     data.user == null ? 0L : data.user.balanceMilli, data.settings);
 
-            boolean noCategories = data.categoryProgress == null || data.categoryProgress.isEmpty();
-            categoriesAdapter.submitProgress(data.categoryProgress);
-            root.findViewById(R.id.home_categories).setVisibility(noCategories ? View.GONE : View.VISIBLE);
+            allCategoryProgress = data.categoryProgress == null ? java.util.Collections.emptyList() : data.categoryProgress;
+            boolean noCategories = allCategoryProgress.isEmpty();
+            renderCategoriesList();
             root.findViewById(R.id.home_categories_empty_card).setVisibility(noCategories ? View.VISIBLE : View.GONE);
 
             boolean showRepartitionBtn = data.budget != null && data.budget.monthlyLimitMilli > 0L && !noCategories
                     && (!childMode || childAllocation > 0L);
             root.findViewById(R.id.home_allocate_repartition).setVisibility(showRepartitionBtn ? View.VISIBLE : View.GONE);
 
-            transactionsAdapter.submit(data.recent);
+            renderRecentTransactions(data.recent);
             root.findViewById(R.id.home_transactions_empty).setVisibility(
                     data.recent == null || data.recent.isEmpty() ? View.VISIBLE : View.GONE);
 
@@ -199,11 +196,79 @@ public final class HomeFragment extends Fragment {
         }
     }
 
+    @Override
+    public void onHiddenChanged(boolean hidden) {
+        super.onHiddenChanged(hidden);
+        if (!hidden && root != null && isAdded()) {
+            consumeActivitySuccessFeedback();
+            loadData();
+        }
+    }
+
     public void showFeedbackBanner(@Nullable String message) {
         showFeedbackBanner(getString(R.string.manage_categories_title), message);
     }
 
-    public void showFeedbackBanner(@Nullable String title, @Nullable String message) {
+    private void renderCategoriesList() {
+        if (root == null) return;
+        LinearLayout list = root.findViewById(R.id.home_categories);
+        com.google.android.material.button.MaterialButton toggle = root.findViewById(R.id.home_categories_toggle);
+        list.removeAllViews();
+        if (allCategoryProgress == null || allCategoryProgress.isEmpty()) {
+            list.setVisibility(View.GONE);
+            toggle.setVisibility(View.GONE);
+            return;
+        }
+        list.setVisibility(View.VISIBLE);
+        int total = allCategoryProgress.size();
+        int visibleCount = (total > DEFAULT_VISIBLE_CATEGORIES && !categoriesExpanded)
+                ? DEFAULT_VISIBLE_CATEGORIES
+                : total;
+        for (int i = 0; i < visibleCount; i++) {
+            HomeCategoryProgress row = allCategoryProgress.get(i);
+            com.example.masrouf1.ui.CategoryProgressCardView card =
+                    new com.example.masrouf1.ui.CategoryProgressCardView(requireContext());
+            String name = row.catalogKey == null
+                    ? row.name
+                    : requireContext().getString(com.example.masrouf1.db.SystemCategoryCatalog.titleResource(row.catalogKey));
+            card.setProgressData(name, row.iconName, row.type, row.colorHex, row.allocatedMilli, row.spentMilli,
+                    row.plannedPercent, row.plannedPercentBps, row.consumedPercent);
+            card.setOnClickListener(v -> onCategoryClicked(row));
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(-1, -2);
+            params.bottomMargin = dp(8);
+            list.addView(card, params);
+        }
+        if (total <= DEFAULT_VISIBLE_CATEGORIES) {
+            toggle.setVisibility(View.GONE);
+        } else {
+            toggle.setVisibility(View.VISIBLE);
+            toggle.setText(categoriesExpanded
+                    ? getString(R.string.see_less)
+                    : getString(R.string.see_all_count, total));
+        }
+    }
+
+    private void renderRecentTransactions(List<TransactionRow> rows) {
+        if (root == null) return;
+        LinearLayout container = root.findViewById(R.id.home_recent_transactions);
+        container.removeAllViews();
+        if (rows == null || rows.isEmpty()) {
+            container.setVisibility(View.GONE);
+            return;
+        }
+        container.setVisibility(View.VISIBLE);
+        DateFormat df = DateFormat.getDateInstance(DateFormat.MEDIUM, Locale.getDefault());
+        for (TransactionRow row : rows) {
+            View item = getLayoutInflater().inflate(R.layout.item_transaction, container, false);
+            ((TextView) item.findViewById(R.id.transaction_title)).setText(row.title);
+            ((TextView) item.findViewById(R.id.transaction_date)).setText(df.format(new Date(row.occurredAt)));
+            ((TextView) item.findViewById(R.id.transaction_amount)).setText("− " + CurrencyFormatter.formatMilli(row.amountMilli));
+            item.setOnClickListener(v -> openTransaction(row));
+            container.addView(item);
+        }
+    }
+
+    private void showFeedbackBanner(@Nullable String title, @Nullable String message) {
         if (root == null || !isAdded()) return;
         AlertBannerView banner = root.findViewById(R.id.home_category_feedback);
         if (banner == null) return;

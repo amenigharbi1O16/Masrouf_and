@@ -397,6 +397,11 @@ public final class SettingsFragment extends Fragment {
                 getString(R.string.settings_manual_detail),
                 v -> startActivity(new Intent(requireContext(), UserManualActivity.class)));
 
+        addRow(inflater, prefRows, R.drawable.ic_more,
+                getString(R.string.share_budget_summary),
+                getString(R.string.share_summary_chooser),
+                v -> shareBudgetSummary());
+
         addRow(inflater, prefRows, R.drawable.ic_shield,
                 getString(R.string.create_local_backup),
                 getString(R.string.settings_backup_detail),
@@ -465,6 +470,28 @@ public final class SettingsFragment extends Fragment {
                         Toast.LENGTH_LONG).show();
             });
         });
+    }
+
+    private void shareBudgetSummary() {
+        String userName = currentData != null && currentData.user != null && currentData.user.name != null
+                ? currentData.user.name : getString(R.string.app_name);
+        int roleRes = role == AppRole.PARENT ? R.string.settings_identity_eyebrow_family
+                : (role == AppRole.CHILD ? R.string.settings_identity_eyebrow_child
+                : R.string.settings_identity_eyebrow_personal);
+        String roleText = getString(roleRes);
+        long allocMilli = currentData != null && currentData.activeBudget != null
+                ? currentData.activeBudget.monthlyLimitMilli : 0L;
+        long spentMilli = currentData != null && currentData.activeBudget != null
+                ? currentData.activeBudget.spentMilli : 0L;
+        long remMilli = Math.max(0L, MoneyMath.subtract(allocMilli, spentMilli));
+        String body = getString(
+                R.string.share_summary_body,
+                userName,
+                roleText,
+                CurrencyFormatter.formatMilli(allocMilli),
+                CurrencyFormatter.formatMilli(spentMilli),
+                CurrencyFormatter.formatMilli(remMilli));
+        SystemIntents.shareText(requireActivity(), getString(R.string.app_name), body);
     }
 
     private void renderLanguagePills() {

@@ -61,7 +61,20 @@
             <TextView android:id="@+id/home_manage_categories" android:layout_width="wrap_content" android:layout_height="44dp" android:gravity="center" android:text="@string/category_manage" android:textColor="@color/emerald" android:textStyle="bold" />
         </LinearLayout>
         <com.example.masrouf1.ui.AlertBannerView android:id="@+id/home_category_feedback" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:visibility="gone" />
-        <androidx.recyclerview.widget.RecyclerView android:id="@+id/home_categories" android:layout_width="match_parent" android:layout_height="wrap_content" android:clipToPadding="false" android:nestedScrollingEnabled="false" android:paddingTop="4dp" />
+        <LinearLayout android:id="@+id/home_categories" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingTop="4dp" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/home_categories_toggle"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="6dp"
+            android:text="@string/see_all_count"
+            android:textColor="@color/forest"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:visibility="gone"
+            app:backgroundTint="@color/mint_light"
+            app:cornerRadius="14dp" />
         <com.google.android.material.card.MaterialCardView android:id="@+id/home_categories_empty_card" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:visibility="gone" app:cardBackgroundColor="@color/alabaster" app:cardCornerRadius="16dp" app:strokeColor="@color/card_border" app:strokeWidth="1dp">
             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:orientation="vertical" android:padding="16dp">
                 <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:text="@string/no_followed_categories_title" android:textColor="@color/forest" android:textSize="14sp" android:textStyle="bold" />
@@ -83,6 +96,6 @@
         <!-- 9. Five most recent local operations -->
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="22dp" android:text="@string/recent_transactions" android:textColor="@color/forest" android:textSize="18sp" android:textStyle="bold" />
         <TextView android:id="@+id/home_transactions_empty" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingTop="6dp" android:text="@string/dashboard_transactions_empty" android:textColor="@color/muted_green" android:visibility="gone" />
-        <androidx.recyclerview.widget.RecyclerView android:id="@+id/home_recent_transactions" android:layout_width="match_parent" android:layout_height="wrap_content" android:nestedScrollingEnabled="false" android:paddingTop="6dp" />
+        <LinearLayout android:id="@+id/home_recent_transactions" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingTop="6dp" />
     </LinearLayout>
 </ScrollView>

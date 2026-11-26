@@ -1,7 +1,9 @@
 package com.masrouf.controller;
 
+import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.Typeface;
 import android.os.Bundle;
-import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,273 +13,634 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import com.google.android.material.textfield.TextInputLayout;
 
 import com.example.masrouf1.AppRole;
-import com.example.masrouf1.BudgetAllocationReceiver;
 import com.example.masrouf1.CurrencyFormatter;
 import com.example.masrouf1.GiftEnvelopeData;
+import com.example.masrouf1.MainActivity;
 import com.example.masrouf1.MasroufViewModel;
 import com.example.masrouf1.MasroufViewModelFactory;
 import com.example.masrouf1.MoneyMath;
+import com.example.masrouf1.NotificationsActivity;
 import com.example.masrouf1.OperationResult;
 import com.example.masrouf1.R;
+import com.example.masrouf1.SystemIntents;
 import com.example.masrouf1.db.BudgetHistoryRow;
 import com.example.masrouf1.db.ChildSpendingSummary;
 import com.example.masrouf1.db.MasroufEntities.BudgetEntity;
-import com.example.masrouf1.db.MasroufEntities.CategoryEntity;
 import com.example.masrouf1.db.MasroufEntities.ChildProfileEntity;
 import com.example.masrouf1.db.MasroufEntities.UserEntity;
 import com.example.masrouf1.db.MoneyRequestSummary;
+import com.example.masrouf1.ui.AlertBannerView;
+import com.google.android.material.button.MaterialButton;
 
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
+import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-/** Parent-only household ledger, child accounts, and aggregate budget history. */
+/**
+ * Parent household & children management screen ("Enfants") aligned with RN reference:
+ * - Header w/ back navigation, notification bell w/ unread badge, and profile icon
+ * - Eyebrow + "Mes Enfants (N)" + dark pill "Ajouter un enfant"
+ * - Styled empty-state card with emerald "+ Ajouter un enfant" CTA
+ * - Rich child cards w/ email, creation date, "Enfant" badge, allocated/spent/remaining progress,
+ *   Give Money, Reset Password, Call (ACTION_DIAL), SMS (ACTION_SENDTO), and 4-month comparison
+ * - Pending money request approval/rejection and voice-enabled warm-beige Add Child modal
+ */
 public final class ChildrenManagementActivity extends AppCompatActivity {
-    private RecyclerView recycler;
     private MasroufViewModel viewModel;
-    private ChildAdapter adapter;
+    private VoiceFieldHelper voiceFieldHelper;
     private long parentId;
-    private boolean authorizedParent;
+    private RecyclerView recycler;
+    private ChildAdapter adapter;
     private LinearLayout requestRows;
-    private View requestCard;
+    private View requestCard, emptyCard;
+    private TextView countTitle, bellBadge;
+    private MaterialButton createTopBtn, createEmptyBtn;
+    private boolean authorizedParent;
 
-    @Override protected void onCreate(Bundle state) {
-        super.onCreate(state);
-        if(SessionStore.role(this)!=AppRole.PARENT) { finish(); return; }
-        setContentView(R.layout.activity_children_management); parentId=SessionStore.userId(this);
-        requestRows=findViewById(R.id.parent_money_requests_rows);requestCard=findViewById(R.id.parent_money_requests_card);
-        viewModel=new androidx.lifecycle.ViewModelProvider(this,new MasroufViewModelFactory(this)).get(MasroufViewModel.class);
-        recycler=findViewById(R.id.children_management_list); recycler.setLayoutManager(new LinearLayoutManager(this));
-        adapter=new ChildAdapter(new ChildActions() {
-            @Override public void give(ChildSpendingSummary child) { showGiveMoneyDialog(child); }
-            @Override public void reset(ChildSpendingSummary child) { showResetPasswordDialog(child); }
-            @Override public void history(ChildSpendingSummary child,LinearLayout target) { loadHistory(child,target); }
-        }); recycler.setAdapter(adapter);
-        View create=findViewById(R.id.child_management_create);create.setEnabled(false);create.setOnClickListener(v->{if(authorizedParent)showAddChildDialog();});
-        viewModel.loadUser(parentId);
-        viewModel.user().observe(this,profileState->{
-            if(profileState==null||profileState.loading)return;
-            UserEntity parent=profileState.data;
-            if(parent==null||!(AppRole.PARENT.value().equalsIgnoreCase(parent.role)||"admin".equalsIgnoreCase(parent.role))){finish();return;}
-            authorizedParent=true;create.setEnabled(true);loadChildren();
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_children_management);
+        parentId = SessionStore.userId(this);
+        voiceFieldHelper = new VoiceFieldHelper(this, this, null);
+
+        findViewById(R.id.children_back_btn).setOnClickListener(v -> finish());
+        findViewById(R.id.children_bell_btn).setOnClickListener(
+                v -> startActivity(new Intent(this, NotificationsActivity.class)));
+        findViewById(R.id.children_profile_btn).setOnClickListener(v -> {
+            startActivity(new Intent(this, MainActivity.class)
+                    .putExtra(MainActivity.EXTRA_CENTRAL_TAB, "settings")
+                    .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP));
+            finish();
+        });
+
+        bellBadge = findViewById(R.id.children_bell_badge);
+        countTitle = findViewById(R.id.children_count_title);
+        if (countTitle != null) {
+            countTitle.setText(getString(R.string.children_my_children_count, 0));
+        }
+        emptyCard = findViewById(R.id.children_empty_card);
+        requestRows = findViewById(R.id.parent_money_requests_rows);
+        requestCard = findViewById(R.id.parent_money_requests_card);
+
+        recycler = findViewById(R.id.children_management_list);
+        recycler.setLayoutManager(new LinearLayoutManager(this));
+        adapter = new ChildAdapter();
+        recycler.setAdapter(adapter);
+
+        viewModel = new ViewModelProvider(this, new MasroufViewModelFactory(this)).get(MasroufViewModel.class);
+
+        createTopBtn = findViewById(R.id.child_management_create);
+        createEmptyBtn = findViewById(R.id.child_management_create_empty);
+        if (createTopBtn != null) createTopBtn.setEnabled(false);
+        if (createEmptyBtn != null) createEmptyBtn.setEnabled(false);
+
+        View.OnClickListener openAddChild = v -> {
+            if (authorizedParent) showAddChildDialog();
+        };
+        if (createTopBtn != null) createTopBtn.setOnClickListener(openAddChild);
+        if (createEmptyBtn != null) createEmptyBtn.setOnClickListener(openAddChild);
+
+        viewModel.<UserEntity>request(repository -> repository.user(parentId), state -> {
+            if (state.loading) return;
+            UserEntity account = state.data;
+            AppRole role = account == null ? AppRole.USER : AppRole.from(account.role);
+            authorizedParent = role == AppRole.PARENT;
+            if (!authorizedParent) {
+                Toast.makeText(this, R.string.parent_budget_required, Toast.LENGTH_SHORT).show();
+                finish();
+                return;
+            }
+            if (createTopBtn != null) createTopBtn.setEnabled(true);
+            if (createEmptyBtn != null) createEmptyBtn.setEnabled(true);
+            refresh();
         });
     }
 
-    @Override protected void onResume() { super.onResume(); if(adapter!=null&&authorizedParent) loadChildren(); }
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (authorizedParent) refresh();
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (voiceFieldHelper != null) voiceFieldHelper.destroy();
+        super.onDestroy();
+    }
+
+    private void refresh() {
+        viewModel.<Integer>request(repository -> repository.unreadNotificationCount(parentId), state -> {
+            if (bellBadge == null || state.data == null) return;
+            if (state.data > 0) {
+                bellBadge.setText(state.data > 99 ? "99+" : String.valueOf(state.data));
+                bellBadge.setVisibility(View.VISIBLE);
+            } else {
+                bellBadge.setVisibility(View.GONE);
+            }
+        });
+
+        viewModel.<List<ChildSpendingSummary>>request(repository -> repository.familyChildren(parentId), state -> {
+            if (state.loading) return;
+            if (state.failed) {
+                Toast.makeText(this, R.string.dashboard_read_error, Toast.LENGTH_SHORT).show();
+                return;
+            }
+            List<ChildSpendingSummary> rows = state.data == null ? Collections.emptyList() : state.data;
+            adapter.submit(rows);
+            if (countTitle != null) {
+                countTitle.setText(getString(R.string.children_my_children_count, rows.size()));
+            }
+            boolean isEmpty = rows.isEmpty();
+            if (emptyCard != null) emptyCard.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
+            recycler.setVisibility(isEmpty ? View.GONE : View.VISIBLE);
+        });
+        loadMoneyRequests();
+    }
 
     private void showAddChildDialog() {
-        View form=LayoutInflater.from(this).inflate(R.layout.dialog_add_child,null,false);
-        EditText name=form.findViewById(R.id.dialog_child_name),email=form.findViewById(R.id.dialog_child_email);
-        EditText password=form.findViewById(R.id.dialog_child_password),phone=form.findViewById(R.id.dialog_child_phone),allocation=form.findViewById(R.id.dialog_child_allocation);
-        TextView error=form.findViewById(R.id.dialog_child_error);
-        email.addTextChangedListener(new FormValidationTextWatcher(error));
-        AlertDialog dialog=new AlertDialog.Builder(this).setTitle(R.string.add_child).setView(form)
-                .setNegativeButton(android.R.string.cancel,null).setPositiveButton(R.string.save,null).create();
-        dialog.setOnShowListener(ignored->dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v->{
-            String childName=name.getText().toString().trim(),childEmail=InputValidation.normalizeGmail(email.getText().toString());
-            String secret=password.getText().toString(),parentPhone=phone.getText().toString().trim(); long initial;
-            try { String text=allocation.getText().toString().trim(); initial=text.isEmpty()?0:MoneyInput.toMilli(text); }
-            catch(NumberFormatException exception) { error.setText(R.string.money_invalid); return; }
-            if(childName.isEmpty()||parentPhone.isEmpty()||initial<0) { error.setText(R.string.child_creation_invalid); return; }
-            if(!InputValidation.isStrictGmail(childEmail)) { error.setText(R.string.email_error); return; }
-            if(!email.getText().toString().equals(childEmail))email.setText(childEmail);
-            if(!InputValidation.isValidPassword(secret)) { error.setText(InputValidation.passwordError(this,secret)); return; }
-            createChildAccount(dialog,error,childName,childEmail,secret,parentPhone,initial);
+        View form = LayoutInflater.from(this).inflate(R.layout.dialog_add_child, null, false);
+        EditText name = form.findViewById(R.id.dialog_child_name);
+        EditText email = form.findViewById(R.id.dialog_child_email);
+        EditText password = form.findViewById(R.id.dialog_child_password);
+        EditText phone = form.findViewById(R.id.dialog_child_phone);
+        EditText allocation = form.findViewById(R.id.dialog_child_allocation);
+        TextView error = form.findViewById(R.id.dialog_child_error);
+        AlertBannerView voiceBanner = form.findViewById(R.id.dialog_child_voice_banner);
+
+        voiceFieldHelper.setStatusBanner(voiceBanner);
+        voiceFieldHelper.bindField(form.findViewById(R.id.dialog_child_name_mic), name);
+        voiceFieldHelper.bindField(form.findViewById(R.id.dialog_child_allocation_mic), allocation);
+
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setTitle(R.string.add_child)
+                .setView(form)
+                .setNegativeButton(android.R.string.cancel, null)
+                .setPositiveButton(R.string.add_child, null)
+                .create();
+        dialog.setOnDismissListener(d -> voiceFieldHelper.setStatusBanner(null));
+        dialog.setOnShowListener(ignored -> dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+            error.setVisibility(View.GONE);
+            String childName = name.getText().toString().trim();
+            String childEmail = InputValidation.normalizeGmail(email.getText().toString());
+            String secret = password.getText().toString();
+            String parentPhone = phone.getText().toString().trim();
+            if (childName.isEmpty()) {
+                error.setText(R.string.child_name_hint);
+                error.setVisibility(View.VISIBLE);
+                return;
+            }
+            if (!InputValidation.isStrictGmail(childEmail)) {
+                error.setText(R.string.gmail_invalid);
+                error.setVisibility(View.VISIBLE);
+                return;
+            }
+            if (!InputValidation.isValidPassword(secret)) {
+                error.setText(R.string.password_rules);
+                error.setVisibility(View.VISIBLE);
+                return;
+            }
+            long initial = 0L;
+            String allocText = allocation.getText().toString().trim();
+            if (!allocText.isEmpty()) {
+                try {
+                    initial = MoneyInput.toMilli(allocText);
+                    if (initial < 0L) throw new NumberFormatException();
+                } catch (NumberFormatException invalid) {
+                    error.setText(R.string.money_invalid);
+                    error.setVisibility(View.VISIBLE);
+                    return;
+                }
+            }
+            createChildAccount(dialog, error, childName, childEmail, secret, parentPhone, initial);
         }));
         dialog.show();
     }
 
-    private void createChildAccount(AlertDialog dialog,TextView error,String childName,String childEmail,String secret,String parentPhone,long initial) {
+    private void createChildAccount(AlertDialog dialog, TextView error, String childName, String childEmail,
+                                    String secret, String parentPhone, long initial) {
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
-        UserEntity child=new UserEntity();child.name=childName;child.email=childEmail;child.role=AppRole.CHILD.value();child.accountType="family";child.onboarded=false;child.categoriesSelected=false;child.balanceMilli=0;child.createdAt=System.currentTimeMillis();
-        ChildProfileEntity profile=new ChildProfileEntity();profile.parentUserId=parentId;profile.nickname=childName;profile.parentPhone=parentPhone;profile.allocatedTotalMilli=initial;profile.createdAt=System.currentTimeMillis();
-        BudgetEntity initialBudget=null;
-        if(initial>0){initialBudget=new BudgetEntity();initialBudget.name="Dotation familiale";initialBudget.monthlyLimitMilli=initial;initialBudget.status="ACTIVE";setCurrentPeriod(initialBudget);}
-        List<CategoryEntity> categories=defaultChildCategories();BudgetEntity childBudget=initialBudget;
-        viewModel.<OperationResult<Long>>request(repository->repository.createChildAccount(child,profile,childBudget,categories,secret),state->{
-            if(isFinishing()||isDestroyed())return;OperationResult<Long> result=state.data;
-            if(result==null||!result.succeeded()||result.value==null||result.value<=0){
-                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);String failure=result==null?"save":result.error;
-                if("duplicate".equals(failure))error.setText(R.string.account_exists);
-                else if("password".equals(failure))error.setText(InputValidation.passwordError(this,secret));
-                else if("gmail".equals(failure))error.setText(R.string.email_error);
-                else if("parent".equals(failure))error.setText(R.string.transaction_saved_error);
-                else if(failure!=null&&failure.contains("child allocation exceeds"))error.setText(initial>0?R.string.parent_allocation_cap:R.string.transaction_saved_error);
-                else error.setText(initial>0?R.string.parent_budget_required:R.string.child_creation_invalid);
+        viewModel.<OperationResult<Long>>request(repository -> {
+            long now = System.currentTimeMillis();
+            BudgetEntity parentBudget = repository.activeBudget(parentId);
+            UserEntity child = new UserEntity();
+            child.name = childName;
+            child.email = childEmail;
+            child.role = AppRole.CHILD.value();
+            child.accountType = AppRole.CHILD.value();
+            child.balanceMilli = initial;
+            child.createdAt = now;
+            ChildProfileEntity profile = new ChildProfileEntity();
+            profile.parentUserId = parentId;
+            profile.nickname = childName;
+            profile.parentPhone = parentPhone;
+            profile.allocatedTotalMilli = initial;
+            profile.createdAt = now;
+            BudgetEntity initialBudget = new BudgetEntity();
+            initialBudget.name = getString(R.string.child_total_label);
+            initialBudget.monthlyLimitMilli = initial;
+            initialBudget.periodStart = parentBudget == null ? now : parentBudget.periodStart;
+            initialBudget.periodEnd = parentBudget == null ? now : parentBudget.periodEnd;
+            initialBudget.status = "ACTIVE";
+            return repository.createChildAccount(child, profile, initialBudget, Collections.emptyList(), secret);
+        }, state -> {
+            if (state.loading) return;
+            OperationResult<Long> result = state.data;
+            if (result == null || !result.succeeded()) {
+                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);
+                String failure = result == null ? "save" : result.error;
+                if ("gmail".equals(failure)) error.setText(R.string.gmail_invalid);
+                else if ("password".equals(failure)) error.setText(R.string.password_rules);
+                else if ("duplicate".equals(failure)) error.setText(R.string.email_error);
+                else if ("parent".equals(failure)) error.setText(R.string.parent_budget_required);
+                else if (failure != null && failure.contains("budget")) error.setText(R.string.parent_allocation_cap);
+                else error.setText(R.string.child_creation_invalid);
+                error.setVisibility(View.VISIBLE);
                 return;
             }
-            dialog.dismiss();showCredentials(childEmail,secret);loadChildren();
+            dialog.dismiss();
+            refresh();
+            showCredentialsDialog(childEmail, secret);
         });
     }
 
-    private void showCredentials(String email,String password) {
-        String message=getString(R.string.child_credentials_message,email,password);
-        new AlertDialog.Builder(this).setTitle(R.string.child_credentials_title).setMessage(message)
-                .setPositiveButton(android.R.string.ok,null).setCancelable(false).show();
-    }
-
-    private List<CategoryEntity> defaultChildCategories() {
-        ArrayList<CategoryEntity> items=new ArrayList<>();
-        String[] labels={"Jeux","Friandises","Fournitures"}; String[] colors={"#E9B66B","#DC7770","#2E7D43"};
-        for(int i=0;i<labels.length;i++) { CategoryEntity row=new CategoryEntity(); row.name=labels[i]; row.colorHex=colors[i]; row.type="expense"; row.isEssential=i==2; items.add(row); }
-        return items;
+    private void showCredentialsDialog(String childEmail, String secret) {
+        String message = getString(R.string.child_credentials_message, childEmail, secret);
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.child_credentials_title)
+                .setMessage(message)
+                .setNegativeButton(android.R.string.copy, (d, which) -> SystemIntents.copyToClipboard(this, message))
+                .setNeutralButton(R.string.share_receipt, (d, which) -> SystemIntents.sendSms(this, "", message))
+                .setPositiveButton(android.R.string.ok, null)
+                .show();
     }
 
     private void showGiveMoneyDialog(ChildSpendingSummary child) {
-        View form=LayoutInflater.from(this).inflate(R.layout.dialog_give_money,null,false);
-        EditText amountInput=form.findViewById(R.id.dialog_gift_amount),noteInput=form.findViewById(R.id.dialog_gift_note);
-        TextView error=form.findViewById(R.id.dialog_gift_error);
-        AlertDialog dialog=new AlertDialog.Builder(this).setTitle(getString(R.string.give_money_title,child.nickname)).setView(form)
-                .setNegativeButton(android.R.string.cancel,null).setPositiveButton(R.string.save,null).create();
-        dialog.setOnShowListener(ignored->dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v->{
-            long amount; try { amount=MoneyInput.toMilli(amountInput.getText().toString()); if(amount<=0) throw new NumberFormatException(); }
-            catch(NumberFormatException exception) { error.setText(R.string.money_invalid); return; }
-            String note=noteInput.getText().toString().trim(); dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
-            inspectChildEnvelope(dialog,error,child,amount,note);
+        View form = LayoutInflater.from(this).inflate(R.layout.dialog_give_money, null, false);
+        EditText amountInput = form.findViewById(R.id.dialog_gift_amount);
+        EditText noteInput = form.findViewById(R.id.dialog_gift_note);
+        TextView error = form.findViewById(R.id.dialog_gift_error);
+
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setTitle(getString(R.string.give_money_title, child.nickname))
+                .setView(form)
+                .setNegativeButton(android.R.string.cancel, null)
+                .setPositiveButton(R.string.donate_money, null)
+                .create();
+        dialog.setOnShowListener(ignored -> dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+            error.setVisibility(View.GONE);
+            long amount;
+            try {
+                amount = MoneyInput.toMilli(amountInput.getText().toString());
+                if (amount <= 0) throw new NumberFormatException();
+            } catch (NumberFormatException invalid) {
+                error.setText(R.string.money_invalid);
+                error.setVisibility(View.VISIBLE);
+                return;
+            }
+            String note = noteInput.getText().toString().trim();
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
+            inspectChildEnvelope(dialog, error, child, amount, note);
         }));
         dialog.show();
     }
 
-    private void inspectChildEnvelope(AlertDialog dialog,TextView error,ChildSpendingSummary child,long amount,String note) {
-        viewModel.<GiftEnvelopeData>request(repository->repository.giftEnvelope(parentId),state->{
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);GiftEnvelopeData envelope=state.data;
-            if(envelope==null||!envelope.ready||envelope.budget==null){error.setText(R.string.parent_budget_required);return;}
-            if(amount>envelope.remainingMilli){
-                new AlertDialog.Builder(this).setTitle(R.string.donate_money)
-                        .setMessage(getString(R.string.budget_envelope_warning,CurrencyFormatter.formatMilli(amount),CurrencyFormatter.formatMilli(envelope.remainingMilli)))
-                        .setNegativeButton(android.R.string.cancel,null)
-                        .setPositiveButton(android.R.string.yes,(d,w)->commitGift(dialog,error,child,amount,note)).show();
-            }else commitGift(dialog,error,child,amount,note);
+    private void inspectChildEnvelope(AlertDialog dialog, TextView error, ChildSpendingSummary child, long amount, String note) {
+        viewModel.<GiftEnvelopeData>request(repository -> repository.giftEnvelope(parentId), state -> {
+            if (state.loading) return;
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);
+            GiftEnvelopeData envelope = state.data;
+            if (envelope == null || envelope.budget == null) {
+                error.setText(R.string.parent_budget_required);
+                error.setVisibility(View.VISIBLE);
+                return;
+            }
+            if (envelope.ready && amount > envelope.remainingMilli) {
+                new AlertDialog.Builder(this)
+                        .setTitle(R.string.donate_money)
+                        .setMessage(getString(R.string.budget_envelope_warning,
+                                CurrencyFormatter.formatMilli(amount),
+                                CurrencyFormatter.formatMilli(Math.max(0L, envelope.remainingMilli))))
+                        .setNegativeButton(android.R.string.cancel, null)
+                        .setPositiveButton(R.string.donate_money, (w, which) -> commitGift(dialog, error, child, amount, note))
+                        .show();
+                return;
+            }
+            commitGift(dialog, error, child, amount, note);
         });
     }
 
-    private void commitGift(AlertDialog dialog,TextView error,ChildSpendingSummary child,long amount,String note) {
+    private void commitGift(AlertDialog dialog, TextView error, ChildSpendingSummary child, long amount, String note) {
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
-        long occurredAt=System.currentTimeMillis();
-        viewModel.<Integer>request(repository->repository.giveMoney(parentId,child.childProfileId,amount,note,occurredAt),state->{
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);Integer result=state.data;
-            if(result!=null&&result==0){dialog.dismiss();Toast.makeText(this,R.string.family_gift_saved,Toast.LENGTH_SHORT).show();loadChildren();return;}
-            if(result!=null&&result==-2)error.setText(R.string.parent_allocation_cap);else if(result!=null&&result==-3)error.setText(R.string.parent_budget_required);else error.setText(R.string.transaction_saved_error);
+        viewModel.<Integer>request(repository -> repository.giveMoney(parentId, child.childProfileId, amount, note, System.currentTimeMillis()), state -> {
+            if (state.loading) return;
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);
+            Integer result = state.data;
+            if (result != null && result == -2) {
+                error.setText(R.string.parent_allocation_cap);
+                error.setVisibility(View.VISIBLE);
+                return;
+            }
+            if (result == null || result != 0) {
+                error.setText(R.string.parent_budget_required);
+                error.setVisibility(View.VISIBLE);
+                return;
+            }
+            dialog.dismiss();
+            refresh();
         });
     }
 
     private void showResetPasswordDialog(ChildSpendingSummary child) {
-        EditText password=new EditText(this); password.setId(View.generateViewId());password.setSingleLine(true); password.setInputType(InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_VARIATION_PASSWORD); password.setHint(R.string.hint_temporary_password);
-        LinearLayout passwordField=new LinearLayout(this);passwordField.setOrientation(LinearLayout.VERTICAL);
-        TextView passwordLabel=new TextView(this);passwordLabel.setText(R.string.child_temporary_password);passwordLabel.setLabelFor(password.getId());passwordField.addView(passwordLabel);
-        TextInputLayout passwordInput=new TextInputLayout(this);passwordInput.setEndIconMode(TextInputLayout.END_ICON_PASSWORD_TOGGLE);passwordInput.addView(password);passwordField.addView(passwordInput);
-        AlertDialog dialog=new AlertDialog.Builder(this).setTitle(R.string.reset_child_password).setMessage(R.string.password_rules).setView(passwordField)
-                .setNegativeButton(android.R.string.cancel,null).setPositiveButton(R.string.save,null).create();
-        dialog.setOnShowListener(ignored->dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v->{
-            String secret=password.getText().toString(); if(!InputValidation.isValidPassword(secret)) { password.setError(InputValidation.passwordError(this,secret)); return; }
+        LinearLayout wrap = new LinearLayout(this);
+        wrap.setOrientation(LinearLayout.VERTICAL);
+        wrap.setBackgroundColor(getColor(R.color.form_beige));
+        int p = dp(20);
+        wrap.setPadding(p, dp(10), p, dp(12));
+
+        TextView label = new TextView(this);
+        label.setText(R.string.password);
+        label.setTextColor(getColor(R.color.black));
+        label.setTextSize(13f);
+        label.setTypeface(null, Typeface.BOLD);
+        wrap.addView(label);
+
+        EditText passwordField = new EditText(this);
+        passwordField.setBackgroundResource(R.drawable.bg_allocation_input);
+        passwordField.setHint(R.string.hint_password);
+        passwordField.setTextColor(getColor(R.color.black));
+        passwordField.setHintTextColor(getColor(R.color.ink_secondary));
+        passwordField.setMinHeight(dp(48));
+        passwordField.setPadding(dp(12), dp(10), dp(12), dp(10));
+        passwordField.setInputType(android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        LinearLayout.LayoutParams inputLp = new LinearLayout.LayoutParams(-1, -2);
+        inputLp.topMargin = dp(6);
+        wrap.addView(passwordField, inputLp);
+
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setTitle(R.string.reset_child_password)
+                .setMessage(R.string.password_rules)
+                .setView(wrap)
+                .setNegativeButton(android.R.string.cancel, null)
+                .setPositiveButton(R.string.reset_child_password, null)
+                .create();
+        dialog.setOnShowListener(ignored -> dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+            String next = passwordField.getText().toString();
+            if (!InputValidation.isValidPassword(next)) {
+                passwordField.setError(getString(R.string.password_rules));
+                return;
+            }
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
-            viewModel.<OperationResult<Boolean>>request(repository->repository.resetChildPassword(child.childProfileId,parentId,secret),result->{
-                if(result.data==null||!result.data.succeeded()){dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);Toast.makeText(this,R.string.transaction_saved_error,Toast.LENGTH_SHORT).show();return;}
-                long profileId=child.childProfileId;dialog.dismiss();
-                viewModel.<String>request(repository->repository.childEmail(parentId,profileId),emailResult->{if(emailResult.data!=null)showCredentials(emailResult.data,secret);Toast.makeText(this,R.string.password_reset_saved,Toast.LENGTH_SHORT).show();});
-            });
-        })); dialog.show();
-    }
-
-    private void loadHistory(ChildSpendingSummary child,LinearLayout target) {
-        viewModel.<List<BudgetHistoryRow>>request(repository->repository.childHistory(parentId,child.childUserId),state->{
-                List<BudgetHistoryRow> result=state.data==null?new ArrayList<>():state.data;
-                target.removeAllViews();
-                if(result.isEmpty()) { TextView empty=new TextView(this); empty.setText(R.string.history_none); empty.setTextColor(getColor(R.color.muted_green)); target.addView(empty); return; }
-                SimpleDateFormat month=new SimpleDateFormat("MMM yyyy",Locale.getDefault());
-                for(BudgetHistoryRow row:result) {
-                    int used=row.allocatedMilli<=0?0:MoneyMath.percentOf(row.spentMilli,row.allocatedMilli);
-                    TextView line=new TextView(this); line.setText(getString(R.string.history_month_row,month.format(row.periodStart),CurrencyFormatter.formatMilli(row.allocatedMilli),CurrencyFormatter.formatMilli(row.spentMilli),CurrencyFormatter.formatMilli(MoneyMath.subtract(row.allocatedMilli,row.spentMilli)),used));
-                    line.setTextColor(getColor(R.color.ink)); line.setTextSize(12); line.setPadding(0,dp(5),0,dp(5)); target.addView(line);
+            viewModel.<OperationResult<Boolean>>request(repository -> repository.resetChildPassword(child.childProfileId, parentId, next), result -> {
+                if (result.loading) return;
+                if (result.data == null || !result.data.succeeded()) {
+                    dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);
+                    Toast.makeText(this, R.string.transaction_saved_error, Toast.LENGTH_SHORT).show();
+                    return;
                 }
+                dialog.dismiss();
+                viewModel.<String>request(repo -> repo.childEmail(parentId, child.childProfileId), email -> {
+                    if (!email.loading) showCredentialsDialog(email.data == null ? "" : email.data, next);
+                });
+            });
+        }));
+        dialog.show();
+    }
+
+    private void loadMoneyRequests() {
+        viewModel.<List<MoneyRequestSummary>>request(repository -> repository.moneyRequestSummariesForParent(parentId), state -> {
+            if (state.loading) return;
+            requestRows.removeAllViews();
+            List<MoneyRequestSummary> requests = state.data;
+            if (state.failed || requests == null || requests.isEmpty()) {
+                requestCard.setVisibility(View.GONE);
+                return;
+            }
+            requestCard.setVisibility(View.VISIBLE);
+            for (MoneyRequestSummary req : requests) {
+                LinearLayout row = new LinearLayout(this);
+                row.setOrientation(LinearLayout.VERTICAL);
+                row.setBackgroundResource(R.drawable.bg_card_form_beige);
+                int pad = dp(12);
+                row.setPadding(pad, pad, pad, pad);
+
+                String reqHeadline = getString(R.string.money_request_from_child, req.childName,
+                        CurrencyFormatter.formatMilli(req.amountMilli));
+                if (req.reason != null && !req.reason.trim().isEmpty()) {
+                    reqHeadline += " · " + req.reason.trim();
+                }
+                TextView title = new TextView(this);
+                title.setText(reqHeadline);
+                title.setTextColor(getColor(R.color.black));
+                title.setTextSize(14f);
+                title.setTypeface(null, Typeface.BOLD);
+                row.addView(title);
+
+                LinearLayout actions = new LinearLayout(this);
+                actions.setOrientation(LinearLayout.HORIZONTAL);
+                LinearLayout.LayoutParams actLp = new LinearLayout.LayoutParams(-1, -2);
+                actLp.topMargin = dp(8);
+
+                MaterialButton approve = new MaterialButton(this);
+                approve.setText(R.string.money_request_approve);
+                approve.setAllCaps(false);
+                approve.setTextColor(Color.WHITE);
+                approve.setBackgroundTintList(android.content.res.ColorStateList.valueOf(getColor(R.color.emerald)));
+                approve.setCornerRadius(dp(12));
+                approve.setOnClickListener(v -> resolveMoneyRequest(req.id, true));
+
+                MaterialButton reject = new MaterialButton(this);
+                reject.setText(R.string.money_request_reject);
+                reject.setAllCaps(false);
+                reject.setTextColor(Color.WHITE);
+                reject.setBackgroundTintList(android.content.res.ColorStateList.valueOf(getColor(R.color.coral)));
+                reject.setCornerRadius(dp(12));
+                reject.setOnClickListener(v -> resolveMoneyRequest(req.id, false));
+
+                LinearLayout.LayoutParams btnLp = new LinearLayout.LayoutParams(0, -2, 1f);
+                btnLp.setMarginEnd(dp(8));
+                actions.addView(approve, btnLp);
+                actions.addView(reject, new LinearLayout.LayoutParams(0, -2, 1f));
+                row.addView(actions, actLp);
+
+                LinearLayout.LayoutParams rowLp = new LinearLayout.LayoutParams(-1, -2);
+                rowLp.bottomMargin = dp(8);
+                requestRows.addView(row, rowLp);
+            }
         });
     }
 
-    private void loadChildren() {
-        if(!authorizedParent)return;
-        viewModel.<List<ChildSpendingSummary>>request(repository->repository.familyChildren(parentId),state->{if(state.data!=null&&adapter!=null)adapter.submit(state.data);});
-        loadMoneyRequests();
-    }
-
-    private void loadMoneyRequests(){
-        viewModel.<List<MoneyRequestSummary>>request(repository->repository.moneyRequestSummariesForParent(parentId),state->{
-            if(requestRows==null||state.loading)return;requestRows.removeAllViews();
-            List<MoneyRequestSummary> rows=state.data;if(state.failed||rows==null)rows=new ArrayList<>();
-            int pending=0;for(MoneyRequestSummary request:rows)if("pending".equalsIgnoreCase(request.status))pending++;
-            requestCard.setVisibility(pending>0?View.VISIBLE:View.GONE);
-            for(MoneyRequestSummary request:rows){if(!"pending".equalsIgnoreCase(request.status))continue;requestRows.addView(createRequestCard(request));}
+    private void resolveMoneyRequest(long requestId, boolean approve) {
+        viewModel.<Integer>request(repository -> repository.resolveMoneyRequest(parentId, requestId, approve, ""), result -> {
+            if (result.loading) return;
+            Integer code = result.data;
+            if (code != null && code == -2) {
+                Toast.makeText(this, R.string.parent_allocation_cap, Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if (code == null || code != 0) {
+                Toast.makeText(this, R.string.transaction_saved_error, Toast.LENGTH_SHORT).show();
+                return;
+            }
+            Toast.makeText(this, approve ? R.string.money_request_accepted : R.string.money_request_rejected, Toast.LENGTH_SHORT).show();
+            refresh();
         });
     }
 
-    private View createRequestCard(MoneyRequestSummary request){
-        LinearLayout card=new LinearLayout(this);card.setOrientation(LinearLayout.VERTICAL);card.setPadding(dp(8),dp(10),dp(8),dp(10));
-        TextView title=new TextView(this);title.setText(getString(R.string.money_request_from_child,request.childName==null?"":request.childName,CurrencyFormatter.formatMilli(request.amountMilli)));title.setTextColor(getColor(R.color.forest));title.setTypeface(null,android.graphics.Typeface.BOLD);card.addView(title);
-        if(request.reason!=null&&!request.reason.trim().isEmpty()){TextView reason=new TextView(this);reason.setText(request.reason);reason.setTextColor(getColor(R.color.ink));reason.setPadding(0,dp(4),0,dp(4));card.addView(reason);}
-        LinearLayout actions=new LinearLayout(this);actions.setOrientation(LinearLayout.HORIZONTAL);actions.setLayoutDirection(View.LAYOUT_DIRECTION_LOCALE);
-        com.google.android.material.button.MaterialButton accept=new com.google.android.material.button.MaterialButton(this);accept.setText(R.string.money_request_approve);accept.setAllCaps(false);
-        com.google.android.material.button.MaterialButton reject=new com.google.android.material.button.MaterialButton(this);reject.setText(R.string.money_request_reject);reject.setAllCaps(false);reject.setBackgroundTintList(android.content.res.ColorStateList.valueOf(getColor(R.color.coral)));
-        actions.addView(accept,new LinearLayout.LayoutParams(0,dp(44),1));LinearLayout.LayoutParams rejectParams=new LinearLayout.LayoutParams(0,dp(44),1);rejectParams.setMarginStart(dp(8));actions.addView(reject,rejectParams);card.addView(actions);
-        accept.setOnClickListener(v->resolveMoneyRequest(request,true,accept,reject));reject.setOnClickListener(v->resolveMoneyRequest(request,false,accept,reject));
-        return card;
+    private int dp(int value) {
+        return (int) (value * getResources().getDisplayMetrics().density + .5f);
     }
 
-    private void resolveMoneyRequest(MoneyRequestSummary request,boolean approve,View accept,View reject){
-        accept.setEnabled(false);reject.setEnabled(false);
-        viewModel.<Integer>request(repository->repository.resolveMoneyRequest(parentId,request.id,approve,""),state->{
-            accept.setEnabled(true);reject.setEnabled(true);Integer result=state.data;
-            if(result!=null&&result==0){Toast.makeText(this,approve?R.string.money_request_accepted:R.string.money_request_rejected,Toast.LENGTH_SHORT).show();loadMoneyRequests();loadChildren();}
-            else if(result!=null&&(result==-2||result==-3))Toast.makeText(this,R.string.money_request_insufficient_funds,Toast.LENGTH_LONG).show();
-            else Toast.makeText(this,R.string.transaction_saved_error,Toast.LENGTH_SHORT).show();
-        });
-    }
+    private final class ChildAdapter extends RecyclerView.Adapter<ChildHolder> {
+        private final List<ChildSpendingSummary> rows = new ArrayList<>();
+        private final SimpleDateFormat monthFormat = new SimpleDateFormat("MMM yyyy", Locale.getDefault());
+        private final DateFormat createdFormat = DateFormat.getDateInstance(DateFormat.MEDIUM, Locale.getDefault());
 
-    private static void setCurrentPeriod(BudgetEntity budget) {
-        Calendar start=Calendar.getInstance(); start.set(Calendar.DAY_OF_MONTH,1); start.set(Calendar.HOUR_OF_DAY,0); start.set(Calendar.MINUTE,0); start.set(Calendar.SECOND,0); start.set(Calendar.MILLISECOND,0);
-        Calendar end=(Calendar)start.clone(); end.add(Calendar.MONTH,1); end.add(Calendar.MILLISECOND,-1);
-        budget.periodStart=start.getTimeInMillis(); budget.periodEnd=end.getTimeInMillis();
-    }
-    private int dp(int value) { return (int)(value*getResources().getDisplayMetrics().density+.5f); }
+        void submit(List<ChildSpendingSummary> children) {
+            rows.clear();
+            if (children != null) rows.addAll(children);
+            notifyDataSetChanged();
+        }
 
-    private interface ChildActions {
-        void give(ChildSpendingSummary child);
-        void reset(ChildSpendingSummary child);
-        void history(ChildSpendingSummary child,LinearLayout target);
-    }
+        @NonNull
+        @Override
+        public ChildHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            return new ChildHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.item_child_management, parent, false));
+        }
 
-    private static final class ChildAdapter extends RecyclerView.Adapter<ChildHolder> {
-        private final List<ChildSpendingSummary> data=new ArrayList<>(); private final ChildActions actions;
-        ChildAdapter(ChildActions actions) { this.actions=actions; }
-        void submit(List<ChildSpendingSummary> rows) { data.clear(); data.addAll(rows); notifyDataSetChanged(); }
-        @Override public ChildHolder onCreateViewHolder(ViewGroup parent,int viewType) { return new ChildHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.item_child_management,parent,false)); }
-        @Override public void onBindViewHolder(ChildHolder holder,int position) {
-            ChildSpendingSummary child=data.get(position); holder.name.setText(child.nickname);
-            holder.ratio.setText(holder.itemView.getContext().getString(R.string.child_budget_ratio,CurrencyFormatter.formatMilli(child.spentMilli),CurrencyFormatter.formatMilli(child.allocatedTotalMilli)));
-            holder.available.setText(holder.itemView.getContext().getString(R.string.child_available_summary,CurrencyFormatter.formatMilli(child.availableMilli())));
-            holder.balance.setText(holder.itemView.getContext().getString(R.string.child_balance_summary,CurrencyFormatter.formatMilli(child.balanceMilli)));
-            int percent=child.allocatedTotalMilli<=0?0:Math.min(999,Math.max(0,MoneyMath.percentOf(child.spentMilli,child.allocatedTotalMilli)));
-            holder.percent.setText(holder.itemView.getContext().getString(R.string.consumed_percent,percent)); holder.progress.setProgress(Math.min(100,percent));
-            int tint=percent>100?R.color.coral:percent>=80?R.color.amber:R.color.emerald;
-            holder.progress.setProgressTintList(android.content.res.ColorStateList.valueOf(holder.itemView.getContext().getColor(tint)));
-            holder.give.setOnClickListener(v->actions.give(child)); holder.reset.setOnClickListener(v->actions.reset(child));
-            holder.history.setVisibility(View.GONE); holder.history.removeAllViews(); holder.toggle.setOnClickListener(v->{
-                boolean show=holder.history.getVisibility()!=View.VISIBLE; holder.history.setVisibility(show?View.VISIBLE:View.GONE);
-                if(show) actions.history(child,holder.history);
+        @Override
+        public void onBindViewHolder(@NonNull ChildHolder holder, int position) {
+            ChildSpendingSummary child = rows.get(position);
+            holder.name.setText(child.nickname);
+
+            if (holder.email != null) {
+                String mail = child.email == null ? "" : child.email.trim();
+                holder.email.setText(mail);
+                holder.email.setVisibility(mail.isEmpty() ? View.GONE : View.VISIBLE);
+            }
+            if (holder.created != null) {
+                if (child.createdAt > 0L) {
+                    holder.created.setText(getString(R.string.children_created_on, createdFormat.format(new Date(child.createdAt))));
+                    holder.created.setVisibility(View.VISIBLE);
+                } else {
+                    holder.created.setVisibility(View.GONE);
+                }
+            }
+
+            long remaining = Math.max(0L, child.availableMilli());
+            holder.ratio.setText(getString(R.string.child_budget_ratio,
+                    CurrencyFormatter.formatMilli(child.spentMilli),
+                    CurrencyFormatter.formatMilli(child.allocatedTotalMilli)));
+            holder.available.setText(getString(R.string.child_available_summary,
+                    CurrencyFormatter.formatMilli(remaining)));
+            int percent = MoneyMath.percentOf(child.spentMilli, child.allocatedTotalMilli);
+            holder.percent.setText(percent + "%");
+            holder.progress.setProgress(Math.min(100, Math.max(0, percent)));
+            holder.balance.setText(getString(R.string.child_balance_summary,
+                    CurrencyFormatter.formatMilli(child.balanceMilli)));
+
+            holder.give.setOnClickListener(v -> showGiveMoneyDialog(child));
+            holder.reset.setOnClickListener(v -> showResetPasswordDialog(child));
+
+            if (holder.call != null) {
+                holder.call.setOnClickListener(v -> {
+                    String phone = child.parentPhone == null ? "" : child.parentPhone.trim();
+                    if (phone.isEmpty()) {
+                        Toast.makeText(ChildrenManagementActivity.this, R.string.children_no_phone, Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    SystemIntents.dial(ChildrenManagementActivity.this, phone);
+                });
+            }
+            if (holder.sms != null) {
+                holder.sms.setOnClickListener(v -> {
+                    String phone = child.parentPhone == null ? "" : child.parentPhone.trim();
+                    String msg = getString(R.string.children_sms_greeting, child.nickname);
+                    SystemIntents.sendSms(ChildrenManagementActivity.this, phone, msg);
+                });
+            }
+
+            holder.history.setVisibility(View.GONE);
+            holder.toggle.setOnClickListener(v -> toggleHistory(holder, child));
+        }
+
+        private void toggleHistory(ChildHolder holder, ChildSpendingSummary child) {
+            if (holder.history.getVisibility() == View.VISIBLE) {
+                holder.history.setVisibility(View.GONE);
+                return;
+            }
+            viewModel.<List<BudgetHistoryRow>>request(repository -> repository.childHistory(child.childUserId, parentId), state -> {
+                if (state.loading) return;
+                List<BudgetHistoryRow> history = state.data;
+                holder.history.removeAllViews();
+                holder.history.setVisibility(View.VISIBLE);
+                if (history == null || history.isEmpty()) {
+                    TextView empty = new TextView(ChildrenManagementActivity.this);
+                    empty.setText(R.string.history_none);
+                    empty.setTextColor(getColor(R.color.black));
+                    empty.setTextSize(13f);
+                    holder.history.addView(empty);
+                    return;
+                }
+                int limit = Math.min(4, history.size());
+                for (int i = 0; i < limit; i++) {
+                    BudgetHistoryRow row = history.get(i);
+                    long rem = Math.max(0L, MoneyMath.subtract(row.allocatedMilli, row.spentMilli));
+                    int pct = MoneyMath.percentOf(row.spentMilli, row.allocatedMilli);
+                    TextView line = new TextView(ChildrenManagementActivity.this);
+                    line.setText(getString(R.string.history_month_row,
+                            monthFormat.format(new Date(row.periodStart)),
+                            CurrencyFormatter.formatMilli(row.allocatedMilli),
+                            CurrencyFormatter.formatMilli(row.spentMilli),
+                            CurrencyFormatter.formatMilli(rem),
+                            pct));
+                    line.setTextColor(getColor(R.color.black));
+                    line.setTextSize(13f);
+                    holder.history.addView(line);
+                }
             });
         }
-        @Override public int getItemCount() { return data.size(); }
+
+        @Override
+        public int getItemCount() {
+            return rows.size();
+        }
     }
 
     private static final class ChildHolder extends RecyclerView.ViewHolder {
-        final TextView name,ratio,available,percent,balance; final ProgressBar progress; final View give,reset,toggle; final LinearLayout history;
-        ChildHolder(View view) { super(view); name=view.findViewById(R.id.child_row_name); ratio=view.findViewById(R.id.child_row_ratio); available=view.findViewById(R.id.child_row_available); percent=view.findViewById(R.id.child_row_percent); balance=view.findViewById(R.id.child_row_balance); progress=view.findViewById(R.id.child_row_progress); give=view.findViewById(R.id.child_row_give); reset=view.findViewById(R.id.child_row_reset); toggle=view.findViewById(R.id.child_row_history_toggle); history=view.findViewById(R.id.child_row_history); }
+        final TextView name, email, created, ratio, available, percent, balance;
+        final ProgressBar progress;
+        final MaterialButton give, reset, call, sms, toggle;
+        final LinearLayout history;
+
+        ChildHolder(View view) {
+            super(view);
+            name = view.findViewById(R.id.child_row_name);
+            email = view.findViewById(R.id.child_row_email);
+            created = view.findViewById(R.id.child_row_created);
+            ratio = view.findViewById(R.id.child_row_ratio);
+            available = view.findViewById(R.id.child_row_available);
+            percent = view.findViewById(R.id.child_row_percent);
+            balance = view.findViewById(R.id.child_row_balance);
+            progress = view.findViewById(R.id.child_row_progress);
+            give = view.findViewById(R.id.child_row_give);
+            reset = view.findViewById(R.id.child_row_reset);
+            call = view.findViewById(R.id.child_row_call);
+            sms = view.findViewById(R.id.child_row_sms);
+            toggle = view.findViewById(R.id.child_row_history_toggle);
+            history = view.findViewById(R.id.child_row_history);
+        }
     }
 }

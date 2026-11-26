@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CheckedTextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@android:id/text1"
+    style="?android:attr/spinnerDropDownItemStyle"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/form_beige"
+    android:checkMark="?android:attr/listChoiceIndicatorSingle"
+    android:checkMarkTint="@color/emerald"
+    android:ellipsize="marquee"
+    android:gravity="center_vertical|start"
+    android:minHeight="48dp"
+    android:paddingHorizontal="14dp"
+    android:paddingVertical="10dp"
+    android:singleLine="true"
+    android:textAlignment="viewStart"
+    android:textColor="@color/black"
+    android:textSize="15sp" />

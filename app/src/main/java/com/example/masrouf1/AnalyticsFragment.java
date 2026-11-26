@@ -1,52 +1,110 @@
 package com.example.masrouf1;
 
+import android.content.Intent;
+import android.view.View;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
-import com.example.masrouf1.db.CategorySpendRow;
-import com.example.masrouf1.db.MasroufEntities.CategoryEntity;
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.Map;
 
-/** Monthly statistics based on the signed-in account's Room ledger. */
+import com.example.masrouf1.db.MasroufEntities.BudgetEntity;
+import com.example.masrouf1.db.TransactionRow;
+import com.masrouf.controller.BudgetPeriodActivity;
+import com.masrouf.controller.SessionStore;
+import com.masrouf.controller.TransactionDetailsActivity;
+
+/**
+ * Role-aware Analytics central tab backed strictly by persisted Room data across all three user roles:
+ * Normal User, Child (own ledger only), and Parent (household, categories, 6m trend & privacy-safe child stats).
+ */
 public final class AnalyticsFragment extends DashboardSectionFragment {
-    private PillBarChart chart;private LinearLayout rows;private TextView comparison;
-    @Override protected int pageTitle(){return R.string.nav_analytics;}
-    @Override protected void createContent(LinearLayout content){
-        content.addView(text(getString(R.string.monthly_spending_analysis)),new LinearLayout.LayoutParams(-1,dp(48)));
-        comparison=text(getString(R.string.analytics_comparison_loading));content.addView(comparison,new LinearLayout.LayoutParams(-1,dp(52)));
-        chart=new PillBarChart(requireContext());content.addView(chart,new LinearLayout.LayoutParams(-1,dp(160)));
-        rows=new LinearLayout(requireContext());rows.setOrientation(LinearLayout.VERTICAL);content.addView(rows);
+    private LinearLayout container;
+    private ProgressBar loadingView;
+    private TextView errorView;
+
+    @Override
+    protected int pageTitle() {
+        return SessionStore.role(requireContext()) == AppRole.PARENT
+                ? R.string.nav_budget_analytics
+                : R.string.nav_analytics;
     }
-    @Override protected void observeContent(){
-        Calendar current=Calendar.getInstance();current.set(Calendar.DAY_OF_MONTH,1);current.set(Calendar.HOUR_OF_DAY,0);current.set(Calendar.MINUTE,0);current.set(Calendar.SECOND,0);current.set(Calendar.MILLISECOND,0);
-        long currentFrom=current.getTimeInMillis();current.add(Calendar.MONTH,1);long currentTo=current.getTimeInMillis();current.add(Calendar.MONTH,-2);long previousFrom=current.getTimeInMillis();current.add(Calendar.MONTH,1);long previousTo=current.getTimeInMillis();
-        long owner=signedInUserId();viewModel.loadMonthlySpending(owner,currentFrom,currentTo);
-        viewModel.<MonthlyComparison>request(repository->repository.monthlyComparison(owner,currentFrom,currentTo,previousFrom,previousTo),state->{
-            if(!isAdded())return;if(state.failed||state.data==null){comparison.setText(R.string.analytics_comparison_unavailable);return;}
-            MonthlyComparison value=state.data;comparison.setText(value.percentChange==null
-                    ?getString(R.string.analytics_comparison_no_previous,CurrencyFormatter.formatMilli(value.currentMilli),CurrencyFormatter.formatMilli(value.previousMilli))
-                    :getString(R.string.analytics_comparison,CurrencyFormatter.formatMilli(value.currentMilli),CurrencyFormatter.formatMilli(value.previousMilli),value.percentChange));
-        });
-        viewModel.monthlySpending().observe(getViewLifecycleOwner(),state->{
-            if(state.loading)return;rows.removeAllViews();
-            if(state.failed||state.data==null){chart.setMilliValues(new ArrayList<>());rows.addView(text(getString(R.string.history_none)));return;}
-            Map<Long,CategoryEntity> categories=new HashMap<>();for(CategoryEntity item:state.data.categories)categories.put(item.id,item);
-            ArrayList<Long> values=new ArrayList<>();long essentials=0,leisure=0;
-            for(CategorySpendRow item:state.data.amounts){
-                values.add(item.amountMilli);CategoryEntity category=categories.get(item.categoryId);
-                String name=category==null?getString(R.string.category_name):category.name;
-                rows.addView(text(name+" · "+CurrencyFormatter.formatMilli(item.amountMilli)),new LinearLayout.LayoutParams(-1,dp(42)));
-                if(category!=null){if(category.isEssential)essentials=safeAdd(essentials,item.amountMilli);else leisure=safeAdd(leisure,item.amountMilli);}
-            }
-            chart.setMilliValues(values);
-            if(!state.data.amounts.isEmpty()){
-                boolean classificationAvailable=!state.data.categories.isEmpty();
-                if(classificationAvailable){rows.addView(text(getString(R.string.analytics_essentials,CurrencyFormatter.formatMilli(essentials))),new LinearLayout.LayoutParams(-1,dp(42)));rows.addView(text(getString(R.string.analytics_leisure,CurrencyFormatter.formatMilli(leisure))),new LinearLayout.LayoutParams(-1,dp(42)));}
-            }else rows.addView(text(getString(R.string.history_none)),new LinearLayout.LayoutParams(-1,dp(50)));
-        });
+
+    @Override
+    protected void createContent(LinearLayout content) {
+        loadingView = new ProgressBar(requireContext());
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(dp(28), dp(28));
+        lp.topMargin = dp(12);
+        lp.bottomMargin = dp(12);
+        content.addView(loadingView, lp);
+
+        errorView = text(getString(R.string.dashboard_read_error));
+        errorView.setTextColor(requireContext().getColor(R.color.coral));
+        errorView.setVisibility(View.GONE);
+        content.addView(errorView);
+
+        container = new LinearLayout(requireContext());
+        container.setOrientation(LinearLayout.VERTICAL);
+        LinearLayout.LayoutParams cp = new LinearLayout.LayoutParams(-1, -2);
+        cp.topMargin = dp(10);
+        content.addView(container, cp);
     }
-    private long safeAdd(long left,long right){try{return Math.addExact(left,right);}catch(ArithmeticException overflow){return Long.MAX_VALUE;}}
+
+    @Override
+    protected void observeContent() {
+        loadAnalytics();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (isAdded() && container != null) loadAnalytics();
+    }
+
+    @Override
+    public void onHiddenChanged(boolean hidden) {
+        super.onHiddenChanged(hidden);
+        if (!hidden && isAdded() && container != null) loadAnalytics();
+    }
+
+    private void loadAnalytics() {
+        long ownerId = signedInUserId();
+        if (ownerId <= 0L) return;
+        long preferredBudgetId = SessionStore.selectedBudgetId(requireContext(), ownerId);
+        if (loadingView != null) loadingView.setVisibility(View.VISIBLE);
+        if (errorView != null) errorView.setVisibility(View.GONE);
+
+        viewModel.<AnalyticsSummaryData>request(
+                repository -> repository.loadAnalytics(ownerId, preferredBudgetId),
+                state -> {
+                    if (!isAdded() || getView() == null) return;
+                    if (loadingView != null) loadingView.setVisibility(View.GONE);
+                    if (state.failed || state.data == null) {
+                        if (errorView != null) errorView.setVisibility(View.VISIBLE);
+                        return;
+                    }
+                    AnalyticsRenderer.render(requireContext(), container, state.data, new AnalyticsRenderer.Actions() {
+                        @Override
+                        public void onOpenCalendar() {
+                            if (requireActivity() instanceof MainActivity) {
+                                ((MainActivity) requireActivity()).openCentralTab("calendar");
+                            }
+                        }
+
+                        @Override
+                        public void onCreateOrEditBudget(BudgetEntity currentBudget) {
+                            Intent intent = new Intent(requireContext(), BudgetPeriodActivity.class);
+                            if (currentBudget != null && currentBudget.id > 0L) {
+                                intent.putExtra("MODE", "edit").putExtra("BUDGET_ID", currentBudget.id);
+                            }
+                            startActivity(intent);
+                        }
+
+                        @Override
+                        public void onOpenTransaction(TransactionRow row) {
+                            if (row == null) return;
+                            startActivity(new Intent(requireContext(), TransactionDetailsActivity.class)
+                                    .putExtra("TRANSACTION_ID", row.id));
+                        }
+                    });
+                });
+    }
 }

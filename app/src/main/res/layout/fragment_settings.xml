@@ -78,7 +78,7 @@
                     android:layout_height="wrap_content"
                     android:labelFor="@id/settings_name_input"
                     android:text="@string/full_name"
-                    android:textColor="@color/muted_green"
+                    android:textColor="@color/black"
                     android:textSize="12sp"
                     android:textStyle="bold" />
 
@@ -92,8 +92,8 @@
                     android:inputType="textPersonName|textCapWords"
                     android:maxLines="1"
                     android:paddingHorizontal="14dp"
-                    android:textColor="@color/ink"
-                    android:textColorHint="@color/muted_green"
+                    android:textColor="@color/black"
+                    android:textColorHint="@color/black"
                     android:textSize="15sp"
                     android:textStyle="bold" />
 
@@ -104,10 +104,10 @@
                     android:layout_marginTop="10dp"
                     android:text="@string/settings_save_name"
                     android:textAllCaps="false"
-                    android:textColor="@color/forest"
+                    android:textColor="@color/alabaster"
                     android:textSize="14sp"
                     android:textStyle="bold"
-                    app:backgroundTint="@color/mint_light"
+                    app:backgroundTint="@color/forest"
                     app:cornerRadius="14dp" />
 
                 <View
@@ -121,7 +121,7 @@
                     android:layout_height="wrap_content"
                     android:labelFor="@id/settings_email_input"
                     android:text="@string/email_address"
-                    android:textColor="@color/muted_green"
+                    android:textColor="@color/black"
                     android:textSize="12sp"
                     android:textStyle="bold" />
 
@@ -135,8 +135,8 @@
                     android:inputType="textEmailAddress"
                     android:maxLines="1"
                     android:paddingHorizontal="14dp"
-                    android:textColor="@color/ink"
-                    android:textColorHint="@color/muted_green"
+                    android:textColor="@color/black"
+                    android:textColorHint="@color/black"
                     android:textSize="15sp" />
 
                 <TextView

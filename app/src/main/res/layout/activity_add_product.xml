@@ -1,40 +1,341 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent" android:layout_height="match_parent"
-    android:fillViewport="true" android:background="@color/cream">
-    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
-        <com.google.android.material.card.MaterialCardView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="10dp" app:cardBackgroundColor="@color/alabaster" app:cardCornerRadius="16dp" app:strokeColor="@color/card_border" app:strokeWidth="1dp">
-            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="12dp">
-                <TextView style="@style/FormFieldLabel" android:labelFor="@id/product_name" android:text="@string/product_name" />
-                <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="4dp">
-                    <com.google.android.material.textfield.TextInputEditText android:id="@+id/product_name" android:layout_width="match_parent" android:layout_height="58dp" android:hint="@string/hint_product_name" android:inputType="text" android:singleLine="true" android:textColor="@color/ink" />
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/cream"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <com.example.masrouf1.ui.AlertBannerView
+            android:id="@+id/product_budget_banner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:visibility="gone" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/product_define_budget_btn"
+            style="@style/Widget.Masrouf.Button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:text="@string/define_budget"
+            android:textColor="@color/alabaster"
+            android:visibility="gone"
+            app:backgroundTint="@color/emerald" />
+
+        <com.example.masrouf1.ui.AlertBannerView
+            android:id="@+id/product_validation_banner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:visibility="gone" />
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardBackgroundColor="@color/form_surface"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="0dp"
+            app:strokeColor="@color/card_border"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="18dp">
+
+                <TextView
+                    style="@style/TextAppearance.Masrouf.FormFieldLabel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/product_name" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/Widget.Masrouf.TextInputLayout"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        app:hintEnabled="false">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/product_name"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="@string/hint_product_name"
+                            android:inputType="textCapSentences"
+                            android:minHeight="48dp"
+                            android:singleLine="true"
+                            android:textColor="@color/black"
+                            android:textColorHint="@color/black" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <ImageButton
+                        android:id="@+id/product_name_mic"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:layout_marginStart="8dp"
+                        android:background="@drawable/bg_card_form_beige"
+                        android:contentDescription="@string/voice_field_mic_cd"
+                        android:padding="12dp"
+                        android:scaleType="centerInside"
+                        android:src="@drawable/ic_mic_dark" />
+                </LinearLayout>
+
+                <TextView
+                    style="@style/TextAppearance.Masrouf.FormFieldLabel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/product_brand" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/Widget.Masrouf.TextInputLayout"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        app:hintEnabled="false">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/product_brand"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="@string/hint_product_brand"
+                            android:inputType="textCapWords"
+                            android:minHeight="48dp"
+                            android:singleLine="true"
+                            android:textColor="@color/black"
+                            android:textColorHint="@color/black" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <ImageButton
+                        android:id="@+id/product_brand_mic"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:layout_marginStart="8dp"
+                        android:background="@drawable/bg_card_form_beige"
+                        android:contentDescription="@string/voice_field_mic_cd"
+                        android:padding="12dp"
+                        android:scaleType="centerInside"
+                        android:src="@drawable/ic_mic_dark" />
+                </LinearLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/product_photo"
+                    style="@style/Widget.Masrouf.Button"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="14dp"
+                    android:text="@string/product_photo_optional"
+                    android:textColor="@color/alabaster"
+                    app:backgroundTint="@color/emerald" />
+
+                <TextView
+                    style="@style/TextAppearance.Masrouf.FormFieldLabel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:text="@string/category_name" />
+
+                <Spinner
+                    android:id="@+id/product_category"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:layout_marginTop="4dp"
+                    android:background="@drawable/bg_dropdown_beige"
+                    android:minHeight="48dp"
+                    android:paddingHorizontal="12dp" />
+
+                <TextView
+                    style="@style/TextAppearance.Masrouf.FormFieldLabel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/amount_dinars" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/Widget.Masrouf.TextInputLayout"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        app:hintEnabled="false">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/product_price"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="@string/hint_amount"
+                            android:inputType="numberDecimal"
+                            android:minHeight="48dp"
+                            android:singleLine="true"
+                            android:textColor="@color/black"
+                            android:textColorHint="@color/black" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <ImageButton
+                        android:id="@+id/product_price_mic"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:layout_marginStart="8dp"
+                        android:background="@drawable/bg_card_form_beige"
+                        android:contentDescription="@string/voice_field_mic_cd"
+                        android:padding="12dp"
+                        android:scaleType="centerInside"
+                        android:src="@drawable/ic_mic_dark" />
+                </LinearLayout>
+
+                <TextView
+                    style="@style/TextAppearance.Masrouf.FormFieldLabel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/quantity" />
+
+                <com.google.android.material.textfield.TextInputLayout
+                    style="@style/Widget.Masrouf.TextInputLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:hintEnabled="false">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/product_quantity"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/hint_quantity"
+                        android:inputType="numberDecimal"
+                        android:minHeight="48dp"
+                        android:singleLine="true"
+                        android:textColor="@color/black"
+                        android:textColorHint="@color/black" />
                 </com.google.android.material.textfield.TextInputLayout>
-                <TextView style="@style/FormFieldLabel" android:labelFor="@id/product_brand" android:text="@string/product_brand" />
-                <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="4dp">
-                    <com.google.android.material.textfield.TextInputEditText android:id="@+id/product_brand" android:layout_width="match_parent" android:layout_height="58dp" android:hint="@string/hint_product_brand" android:inputType="text" android:singleLine="true" android:textColor="@color/ink" />
-                </com.google.android.material.textfield.TextInputLayout>
-                <com.google.android.material.button.MaterialButton android:id="@+id/product_photo" android:layout_width="match_parent" android:layout_height="48dp" android:text="@string/product_photo_optional" android:textColor="@color/alabaster" app:backgroundTint="@color/emerald" app:cornerRadius="16dp" />
-                <TextView style="@style/FormFieldLabel" android:labelFor="@id/product_category" android:text="@string/field_category" />
-                <Spinner android:id="@+id/product_category" android:layout_width="match_parent" android:layout_height="52dp" android:contentDescription="@string/field_category" />
-                <TextView style="@style/FormFieldLabel" android:labelFor="@id/product_price" android:text="@string/total_price_dt" />
-                <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="4dp">
-                    <com.google.android.material.textfield.TextInputEditText android:id="@+id/product_price" android:layout_width="match_parent" android:layout_height="58dp" android:hint="@string/hint_amount" android:inputType="numberDecimal" android:singleLine="true" android:textColor="@color/ink" />
-                </com.google.android.material.textfield.TextInputLayout>
-                <TextView style="@style/FormFieldLabel" android:labelFor="@id/product_quantity" android:text="@string/quantity" />
-                <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="4dp">
-                    <com.google.android.material.textfield.TextInputEditText android:id="@+id/product_quantity" android:layout_width="match_parent" android:layout_height="58dp" android:hint="@string/hint_quantity" android:inputType="numberDecimal" android:singleLine="true" android:textColor="@color/ink" />
-                </com.google.android.material.textfield.TextInputLayout>
-                <TextView style="@style/FormFieldLabel" android:labelFor="@id/product_unit" android:text="@string/field_unit" />
-                <Spinner android:id="@+id/product_unit" android:layout_width="match_parent" android:layout_height="52dp" android:contentDescription="@string/field_unit" />
-                <TextView android:id="@+id/product_unit_price" android:layout_width="match_parent" android:layout_height="wrap_content" android:padding="8dp" android:textColor="@color/forest" android:textStyle="bold" />
-                <TextView style="@style/FormFieldLabel" android:labelFor="@id/product_store" android:text="@string/store_name" />
-                <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="4dp">
-                    <com.google.android.material.textfield.TextInputEditText android:id="@+id/product_store" android:layout_width="match_parent" android:layout_height="58dp" android:hint="@string/hint_store" android:inputType="text" android:singleLine="true" android:textColor="@color/ink" />
-                </com.google.android.material.textfield.TextInputLayout>
-                <TextView style="@style/FormFieldLabel" android:labelFor="@id/product_date" android:text="@string/purchase_date" />
-                <TextView android:id="@+id/product_date" android:layout_width="match_parent" android:layout_height="52dp" android:gravity="center_vertical" android:hint="@string/hint_date" android:paddingHorizontal="10dp" android:textColor="@color/ink" />
-                <com.google.android.material.button.MaterialButton android:id="@+id/save_product" android:layout_width="match_parent" android:layout_height="54dp" android:layout_marginTop="8dp" android:text="@string/save_product_purchase" android:textColor="@color/alabaster" app:backgroundTint="@color/forest" app:cornerRadius="16dp" />
+
+                <TextView
+                    style="@style/TextAppearance.Masrouf.FormFieldLabel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/field_unit" />
+
+                <Spinner
+                    android:id="@+id/product_unit"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:layout_marginTop="4dp"
+                    android:background="@drawable/bg_dropdown_beige"
+                    android:minHeight="48dp"
+                    android:paddingHorizontal="12dp" />
+
+                <TextView
+                    android:id="@+id/product_unit_price"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:textColor="@color/forest"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    style="@style/TextAppearance.Masrouf.FormFieldLabel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/store_name" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/Widget.Masrouf.TextInputLayout"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        app:hintEnabled="false">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/product_store"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="@string/hint_store"
+                            android:inputType="textCapWords"
+                            android:minHeight="48dp"
+                            android:singleLine="true"
+                            android:textColor="@color/black"
+                            android:textColorHint="@color/black" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <ImageButton
+                        android:id="@+id/product_store_mic"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:layout_marginStart="8dp"
+                        android:background="@drawable/bg_card_form_beige"
+                        android:contentDescription="@string/voice_field_mic_cd"
+                        android:padding="12dp"
+                        android:scaleType="centerInside"
+                        android:src="@drawable/ic_mic_dark" />
+                </LinearLayout>
+
+                <TextView
+                    style="@style/TextAppearance.Masrouf.FormFieldLabel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/expense_date" />
+
+                <TextView
+                    android:id="@+id/product_date"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:layout_marginTop="4dp"
+                    android:background="@drawable/bg_allocation_input"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:hint="@string/hint_date"
+                    android:paddingHorizontal="14dp"
+                    android:textColor="@color/black"
+                    android:textColorHint="@color/black"
+                    android:textSize="15sp"
+                    app:drawableEndCompat="@drawable/ic_calendar"
+                    app:drawableTint="@color/emerald" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/save_product"
+                    style="@style/Widget.Masrouf.Button"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:layout_marginTop="20dp"
+                    android:text="@string/save"
+                    android:textColor="@color/alabaster"
+                    app:backgroundTint="@color/forest" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
     </LinearLayout>

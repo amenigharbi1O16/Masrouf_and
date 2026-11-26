@@ -109,4 +109,21 @@ public final class BudgetPeriodMathTest {
             fail("Expected negative budget to be rejected");
         } catch (NumberFormatException expected) { }
     }
+
+    @Test
+    public void computesEqualPreviousComparisonWindowAndCompactAmounts() {
+        long novStart = BudgetPeriodMath.parseIsoDateStartMillis("2026-11-01");
+        long novEnd = BudgetPeriodMath.parseIsoDateEndMillis("2026-11-30");
+        long prevStart = BudgetPeriodMath.previousWindowStartMillis(novStart, novEnd);
+        long prevEnd = BudgetPeriodMath.previousWindowEndMillis(novStart);
+
+        assertEquals("2026-10-02", BudgetPeriodMath.formatIsoDate(prevStart));
+        assertEquals("2026-10-31", BudgetPeriodMath.formatIsoDate(prevEnd));
+        assertEquals(30, BudgetPeriodMath.daysBetweenInclusive(prevStart, prevEnd));
+
+        assertEquals("0", BudgetPeriodMath.compactDinars(0L));
+        assertEquals("28", BudgetPeriodMath.compactDinars(28_000L));
+        assertEquals("12.5", BudgetPeriodMath.compactDinars(12_500L));
+        assertEquals("Nov", BudgetPeriodMath.shortMonthLabel(Calendar.NOVEMBER, java.util.Locale.ENGLISH));
+    }
 }

@@ -78,7 +78,7 @@
                             android:gravity="center"
                             android:paddingHorizontal="12dp"
                             android:text="العربية"
-                            android:textColor="@color/muted_green"
+                            android:textColor="@color/black"
                             android:textSize="12sp" />
 
                         <TextView
@@ -88,7 +88,7 @@
                             android:gravity="center"
                             android:paddingHorizontal="12dp"
                             android:text="English"
-                            android:textColor="@color/muted_green"
+                            android:textColor="@color/black"
                             android:textSize="12sp" />
 
                     </LinearLayout>
@@ -147,7 +147,7 @@
                             android:layout_weight="1"
                             android:gravity="center"
                             android:text="@string/personal_account"
-                            android:textColor="@color/muted_green"
+                            android:textColor="@color/black"
                             android:textSize="13sp" />
 
                         <TextView
@@ -158,7 +158,7 @@
                             android:background="@drawable/bg_tab_selected"
                             android:gravity="center"
                             android:text="@string/family_account"
-                            android:textColor="@color/forest"
+                            android:textColor="@color/black"
                             android:textSize="13sp"
                             android:textStyle="bold" />
 
@@ -173,10 +173,10 @@
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="12dp"
                     android:visibility="gone"
-                    app:cardBackgroundColor="#E3F2FD"
+                    app:cardBackgroundColor="@color/success_surface"
                     app:cardCornerRadius="12dp"
                     app:cardElevation="0dp"
-                    app:strokeColor="#90CAF9"
+                    app:strokeColor="@color/emerald"
                     app:strokeWidth="1dp">
 
                     <LinearLayout
@@ -191,7 +191,7 @@
                             android:layout_height="20dp"
                             android:contentDescription=""
                             android:src="@drawable/ic_notifications"
-                            android:tint="#1E88E5" />
+                            app:tint="@color/emerald" />
 
                         <TextView
                             android:layout_width="0dp"
@@ -199,7 +199,7 @@
                             android:layout_marginStart="10dp"
                             android:layout_weight="1"
                             android:text="@string/family_account_info_banner"
-                            android:textColor="#1E88E5"
+                            android:textColor="@color/black"
                             android:textSize="12sp"
                             android:textStyle="bold" />
 
@@ -213,7 +213,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="16dp"
                     android:text="@string/local_storage_note"
-                    android:textColor="@color/muted_green"
+                    android:textColor="@color/black"
                     android:textSize="12sp" />
 
                 <!-- Full name label -->
@@ -227,13 +227,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="16dp"
-                    app:boxBackgroundColor="@color/alabaster"
-                    app:boxCornerRadiusBottomEnd="12dp"
-                    app:boxCornerRadiusBottomStart="12dp"
-                    app:boxCornerRadiusTopEnd="12dp"
-                    app:boxCornerRadiusTopStart="12dp"
-                    app:boxStrokeColor="@color/card_border"
-                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+                    app:boxBackgroundColor="@color/form_beige">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/register_name"
@@ -241,8 +235,8 @@
                         android:layout_height="58dp"
                         android:hint="@string/hint_full_name"
                         android:inputType="textPersonName|textCapWords"
-                        android:textColor="@color/ink"
-                        android:textColorHint="@color/muted_green" />
+                        android:textColor="@color/black"
+                        android:textColorHint="@color/black" />
 
                 </com.google.android.material.textfield.TextInputLayout>
 
@@ -257,13 +251,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="4dp"
-                    app:boxBackgroundColor="@color/alabaster"
-                    app:boxCornerRadiusBottomEnd="12dp"
-                    app:boxCornerRadiusBottomStart="12dp"
-                    app:boxCornerRadiusTopEnd="12dp"
-                    app:boxCornerRadiusTopStart="12dp"
-                    app:boxStrokeColor="@color/card_border"
-                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+                    app:boxBackgroundColor="@color/form_beige">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/register_email"
@@ -271,15 +259,16 @@
                         android:layout_height="58dp"
                         android:hint="@string/hint_email"
                         android:inputType="textEmailAddress"
-                        android:textColor="@color/ink"
-                        android:textColorHint="@color/muted_green" />
+                        android:textColor="@color/black"
+                        android:textColorHint="@color/black" />
 
                 </com.google.android.material.textfield.TextInputLayout>
 
                 <TextView
                     android:id="@+id/register_email_feedback"
                     android:layout_width="match_parent"
-                    android:layout_height="20dp"
+                    android:layout_height="wrap_content"
+                    android:minHeight="20dp"
                     android:layout_marginBottom="8dp"
                     android:textColor="@color/coral"
                     android:textSize="12sp" />
@@ -295,14 +284,9 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="4dp"
-                    app:boxBackgroundColor="@color/alabaster"
-                    app:boxCornerRadiusBottomEnd="12dp"
-                    app:boxCornerRadiusBottomStart="12dp"
-                    app:boxCornerRadiusTopEnd="12dp"
-                    app:boxCornerRadiusTopStart="12dp"
-                    app:boxStrokeColor="@color/card_border"
+                    app:boxBackgroundColor="@color/form_beige"
                     app:endIconMode="password_toggle"
-                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+                    app:endIconTint="@color/black">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/register_password"
@@ -310,8 +294,8 @@
                         android:layout_height="58dp"
                         android:hint="@string/hint_password"
                         android:inputType="textPassword"
-                        android:textColor="@color/ink"
-                        android:textColorHint="@color/muted_green" />
+                        android:textColor="@color/black"
+                        android:textColorHint="@color/black" />
 
                 </com.google.android.material.textfield.TextInputLayout>
 
@@ -324,11 +308,11 @@
                     android:orientation="vertical"
                     android:visibility="gone">
 
-                    <TextView android:id="@+id/rule_length" android:layout_width="match_parent" android:layout_height="22dp" android:textSize="12sp" android:textColor="@color/muted_green" />
-                    <TextView android:id="@+id/rule_uppercase" android:layout_width="match_parent" android:layout_height="22dp" android:textSize="12sp" android:textColor="@color/muted_green" />
-                    <TextView android:id="@+id/rule_lowercase" android:layout_width="match_parent" android:layout_height="22dp" android:textSize="12sp" android:textColor="@color/muted_green" />
-                    <TextView android:id="@+id/rule_number" android:layout_width="match_parent" android:layout_height="22dp" android:textSize="12sp" android:textColor="@color/muted_green" />
-                    <TextView android:id="@+id/rule_symbol" android:layout_width="match_parent" android:layout_height="22dp" android:textSize="12sp" android:textColor="@color/muted_green" />
+                    <TextView android:id="@+id/rule_length" android:layout_width="match_parent" android:layout_height="22dp" android:textSize="12sp" android:textColor="@color/black" />
+                    <TextView android:id="@+id/rule_uppercase" android:layout_width="match_parent" android:layout_height="22dp" android:textSize="12sp" android:textColor="@color/black" />
+                    <TextView android:id="@+id/rule_lowercase" android:layout_width="match_parent" android:layout_height="22dp" android:textSize="12sp" android:textColor="@color/black" />
+                    <TextView android:id="@+id/rule_number" android:layout_width="match_parent" android:layout_height="22dp" android:textSize="12sp" android:textColor="@color/black" />
+                    <TextView android:id="@+id/rule_symbol" android:layout_width="match_parent" android:layout_height="22dp" android:textSize="12sp" android:textColor="@color/black" />
 
                 </LinearLayout>
 
@@ -343,14 +327,9 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="12dp"
-                    app:boxBackgroundColor="@color/alabaster"
-                    app:boxCornerRadiusBottomEnd="12dp"
-                    app:boxCornerRadiusBottomStart="12dp"
-                    app:boxCornerRadiusTopEnd="12dp"
-                    app:boxCornerRadiusTopStart="12dp"
-                    app:boxStrokeColor="@color/card_border"
+                    app:boxBackgroundColor="@color/form_beige"
                     app:endIconMode="password_toggle"
-                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+                    app:endIconTint="@color/black">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/register_confirm"
@@ -358,8 +337,8 @@
                         android:layout_height="58dp"
                         android:hint="@string/hint_confirm_password"
                         android:inputType="textPassword"
-                        android:textColor="@color/ink"
-                        android:textColorHint="@color/muted_green" />
+                        android:textColor="@color/black"
+                        android:textColorHint="@color/black" />
 
                 </com.google.android.material.textfield.TextInputLayout>
 

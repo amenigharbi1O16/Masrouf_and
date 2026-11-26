@@ -89,7 +89,12 @@ public final class AppDrawer {
         updateSelection(menu, activeDestination);
 
         // Chargement asynchrone du compteur de notifications non lues (badge)
-        final TextView noticeBadgeView = notificationsBadge;
+        refreshBadges(activity, menu);
+    }
+
+    public static void refreshBadges(MainActivity activity, LinearLayout menu) {
+        if (activity == null || menu == null) return;
+        TextView noticeBadgeView = findBadgeForDestination(menu, "notifications");
         long userId = SessionStore.userId(activity);
         if (noticeBadgeView != null && userId > 0L) {
             MasroufViewModel viewModel = new androidx.lifecycle.ViewModelProvider(
@@ -104,6 +109,18 @@ public final class AppDrawer {
                 }
             });
         }
+    }
+
+    private static TextView findBadgeForDestination(LinearLayout menu, String destination) {
+        for (int i = 0; i < menu.getChildCount(); i++) {
+            View child = menu.getChildAt(i);
+            if (!(child instanceof LinearLayout) || !destination.equals(child.getTag())) continue;
+            LinearLayout row = (LinearLayout) child;
+            if (row.getChildCount() >= 3 && row.getChildAt(2) instanceof TextView) {
+                return (TextView) row.getChildAt(2);
+            }
+        }
+        return null;
     }
 
     /** Met à jour visuellement la ligne correspondant à l'onglet actif. */

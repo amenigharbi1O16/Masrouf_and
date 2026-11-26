@@ -185,7 +185,20 @@ public final class MainActivity extends AppCompatActivity {
     }
 
     public void openMenu() {
+        refreshDrawerBadges();
         drawer.openDrawer(drawerPanel);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        refreshDrawerBadges();
+    }
+
+    private void refreshDrawerBadges() {
+        if (activeDrawerMenu == null || SessionStore.userId(this) <= 0L) return;
+        if (activeRole == AppRole.PARENT) AdminDrawer.refreshBadges(this, activeDrawerMenu);
+        else AppDrawer.refreshBadges(this, activeDrawerMenu);
     }
 
     public void openCentralTab(String destination) {

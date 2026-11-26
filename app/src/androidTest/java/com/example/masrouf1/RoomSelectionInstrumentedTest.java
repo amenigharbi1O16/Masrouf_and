@@ -12,6 +12,7 @@ import com.example.masrouf1.db.MasroufEntities.BudgetEntity;
 import com.example.masrouf1.db.MasroufEntities.BudgetLineEntity;
 import com.example.masrouf1.db.MasroufEntities.CategoryEntity;
 import com.example.masrouf1.db.MasroufEntities.ChildProfileEntity;
+import com.example.masrouf1.db.MasroufEntities.NotificationEntity;
 import com.example.masrouf1.db.MasroufEntities.PriceHistoryEntity;
 import com.example.masrouf1.db.MasroufEntities.ProductEntity;
 import com.example.masrouf1.db.MasroufEntities.PurchaseEntity;
@@ -19,6 +20,7 @@ import com.example.masrouf1.db.MasroufEntities.PurchaseItemEntity;
 import com.example.masrouf1.db.MasroufEntities.SystemCategoryEntity;
 import com.example.masrouf1.db.MasroufEntities.TransactionEntity;
 import com.example.masrouf1.db.MasroufEntities.UserEntity;
+import com.example.masrouf1.db.ProductCatalogRow;
 import com.example.masrouf1.db.SystemCategoryCatalog;
 
 import org.junit.After;
@@ -317,6 +319,176 @@ public final class RoomSelectionInstrumentedTest {
         assertEquals(500_000_000L,dao.findBudget(childBudgetId).monthlyLimitMilli);
         assertTrue(repo.loadBudgetAllocation(child.id,false,true,childBudgetId,start).authorized);
         assertNotNull(repo.loadSettingsData(parent.id).activeBudget);
+    }
+
+    @Test public void repeatedPurchaseReusesProductAndBuildsPriceHistory() {
+        MasroufRepository repo=new MasroufRepository(context,database);
+        assertTrue(dao.finishOnboarding(user.id,Arrays.asList(dao.systemCategoryByKey("food"),dao.systemCategoryByKey("other"))));
+        CategoryEntity food=dao.selectedCategoryForCatalog(user.id,dao.systemCategoryByKey("food").id);
+
+        BudgetEntity budget=new BudgetEntity();budget.userId=user.id;budget.name="Nov";budget.monthlyLimitMilli=500_000L;
+        budget.periodStart=1L;budget.periodEnd=Long.MAX_VALUE;budget.status="ACTIVE";
+        long budgetId=repo.createBudget(budget,Collections.emptyList());
+
+        ProductEntity p1=new ProductEntity();p1.categoryId=food.id;p1.name="Huile";p1.brand="Safi";p1.unit="L";p1.currentPriceMilli=18_000L;p1.currency="TND";p1.updatedAt=100L;
+        PurchaseEntity pu1=new PurchaseEntity();pu1.userId=user.id;pu1.occurredAt=100L;pu1.totalMilli=18_000L;pu1.storeName="Carrefour";
+        PurchaseItemEntity pi1=new PurchaseItemEntity();pi1.description="Huile";pi1.quantityMilli=1_000;pi1.unit="L";pi1.unitPriceMilli=18_000L;
+        assertTrue(repo.savePurchase(p1,pu1,pi1,user.id,budgetId)>0L);
+
+        ProductEntity p2=new ProductEntity();p2.categoryId=food.id;p2.name="Huile";p2.brand="Safi";p2.unit="L";p2.currentPriceMilli=16_500L;p2.currency="TND";p2.updatedAt=200L;
+        PurchaseEntity pu2=new PurchaseEntity();pu2.userId=user.id;pu2.occurredAt=200L;pu2.totalMilli=16_500L;pu2.storeName="Monoprix";
+        PurchaseItemEntity pi2=new PurchaseItemEntity();pi2.description="Huile";pi2.quantityMilli=1_000;pi2.unit="L";pi2.unitPriceMilli=16_500L;
+        assertTrue(repo.savePurchase(p2,pu2,pi2,user.id,budgetId)>0L);
+
+        List<ProductCatalogRow> catalog=repo.productCatalog(user.id);
+        assertEquals(1,catalog.size());
+        assertEquals(16_500L,catalog.get(0).currentPriceMilli);
+        assertEquals(Long.valueOf(18_000L),catalog.get(0).priorPriceMilli);
+        assertEquals(2,repo.purchaseHistoryForProduct(catalog.get(0).id,user.id).size());
+    }
+
+    @Test public void analyticsComputesRealDataAcrossNormalUserChildAndParentWithoutCrossAccountLeakage() {
+        MasroufRepository repo=new MasroufRepository(context,database);
+        SystemCategoryEntity sysFood=dao.systemCategoryByKey("food");
+        SystemCategoryEntity sysBills=dao.systemCategoryByKey("bills");
+        assertTrue(dao.finishOnboarding(parent.id,Arrays.asList(sysFood,sysBills)));
+        assertTrue(dao.finishOnboarding(user.id,Arrays.asList(sysFood,sysBills)));
+        assertTrue(dao.finishOnboarding(child.id,Arrays.asList(sysFood)));
+
+        long start=BudgetPeriodMath.startOfMonthMillis(2026,java.util.Calendar.NOVEMBER);
+        long end=BudgetPeriodMath.endOfMonthMillis(2026,java.util.Calendar.NOVEMBER);
+
+        // Personal user with purchases and direct expenses
+        CategoryEntity uFood=dao.selectedCategoryForCatalog(user.id,sysFood.id);
+        CategoryEntity uBills=dao.selectedCategoryForCatalog(user.id,sysBills.id);
+        BudgetEntity uBudget=new BudgetEntity();uBudget.userId=user.id;uBudget.name="Nov";uBudget.monthlyLimitMilli=1_000_000L;
+        uBudget.periodStart=start;uBudget.periodEnd=end;uBudget.status="ACTIVE";
+        BudgetLineEntity uFoodLine=new BudgetLineEntity();uFoodLine.categoryId=uFood.id;uFoodLine.limitMilli=200_000L;uFoodLine.plannedPercentBps=2000;
+        BudgetLineEntity uBillsLine=new BudgetLineEntity();uBillsLine.categoryId=uBills.id;uBillsLine.limitMilli=100_000L;uBillsLine.plannedPercentBps=1000;
+        long uBudgetId=repo.createBudget(uBudget,Arrays.asList(uFoodLine,uBillsLine));
+
+        ProductEntity milk=new ProductEntity();milk.categoryId=uFood.id;milk.name="Lait";milk.unit="L";milk.currentPriceMilli=12_000L;milk.currency="TND";milk.updatedAt=start+1_000L;
+        PurchaseEntity mPur=new PurchaseEntity();mPur.userId=user.id;mPur.occurredAt=start+1_000L;mPur.totalMilli=12_000L;mPur.storeName="Magasin";
+        PurchaseItemEntity mItem=new PurchaseItemEntity();mItem.description="Lait";mItem.quantityMilli=1_000;mItem.unit="L";mItem.unitPriceMilli=12_000L;
+        assertTrue(repo.savePurchase(milk,mPur,mItem,user.id,uBudgetId)>0L);
+
+        TransactionEntity elec=new TransactionEntity();elec.userId=user.id;elec.budgetId=uBudgetId;elec.categoryId=uBills.id;
+        elec.kind="expense";elec.label="STEG";elec.amountMilli=90_000L;elec.occurredAt=start+2_000L;
+        assertTrue(repo.saveExpense(elec,user.id)>0L);
+
+        AnalyticsSummaryData userAnalytics=repo.loadAnalytics(user.id,uBudgetId);
+        assertEquals(AppRole.USER,userAnalytics.role);
+        assertEquals(102_000L,userAnalytics.currentSpentMilli);
+        assertEquals(12_000L,userAnalytics.purchasesTotalMilli);
+        assertEquals(90_000L,userAnalytics.expensesTotalMilli);
+        assertEquals(6,userAnalytics.sixMonthHistory.size());
+        // Sorted ascending by % consumed: Food (6%) before Bills (90%)
+        assertEquals(2,userAnalytics.categoryStats.size());
+        assertEquals(uFood.id,userAnalytics.categoryStats.get(0).categoryId);
+        assertEquals(uBills.id,userAnalytics.categoryStats.get(1).categoryId);
+        assertNotNull(userAnalytics.attentionCategory);
+        assertEquals(uBills.id,userAnalytics.attentionCategory.categoryId);
+
+        // Child has strict own data only
+        CategoryEntity cFood=dao.selectedCategoryForCatalog(child.id,sysFood.id);
+        BudgetEntity cBudget=new BudgetEntity();cBudget.userId=child.id;cBudget.name="ChildNov";cBudget.monthlyLimitMilli=50_000L;
+        cBudget.periodStart=start;cBudget.periodEnd=end;cBudget.status="ACTIVE";
+        long cBudgetId=repo.createBudget(cBudget,Collections.emptyList());
+        TransactionEntity snack=new TransactionEntity();snack.userId=child.id;snack.budgetId=cBudgetId;snack.categoryId=cFood.id;
+        snack.kind="expense";snack.label="Gouter";snack.amountMilli=15_000L;snack.occurredAt=start+5_000L;
+        assertTrue(repo.saveExpense(snack,child.id)>0L);
+
+        AnalyticsSummaryData childAnalytics=repo.loadAnalytics(child.id,cBudgetId);
+        assertEquals(AppRole.CHILD,childAnalytics.role);
+        assertEquals(15_000L,childAnalytics.currentSpentMilli);
+        assertTrue(childAnalytics.childrenProgress.isEmpty());
+
+        // Parent sees household analytics + aggregate child progress (never child item details)
+        BudgetEntity pBudget=new BudgetEntity();pBudget.userId=parent.id;pBudget.name="FamilyNov";pBudget.monthlyLimitMilli=2_000_000L;
+        pBudget.periodStart=start;pBudget.periodEnd=end;pBudget.status="ACTIVE";
+        long pBudgetId=repo.createBudget(pBudget,Collections.emptyList());
+        AnalyticsSummaryData parentAnalytics=repo.loadAnalytics(parent.id,pBudgetId);
+        assertEquals(AppRole.PARENT,parentAnalytics.role);
+        assertEquals(1,parentAnalytics.childrenProgress.size());
+        assertEquals(15_000L,parentAnalytics.childrenProgress.get(0).spentMilli);
+    }
+
+    @Test public void notificationsFireOnThresholdsOverrunBudgetUpdatesAndChildToParentWithoutDuplicates() {
+        MasroufRepository repo=new MasroufRepository(context,database);
+        SystemCategoryEntity sysFood=dao.systemCategoryByKey("food");
+        assertTrue(dao.finishOnboarding(parent.id,Arrays.asList(sysFood)));
+        assertTrue(dao.finishOnboarding(user.id,Arrays.asList(sysFood)));
+        assertTrue(dao.finishOnboarding(child.id,Arrays.asList(sysFood)));
+
+        long start=BudgetPeriodMath.startOfMonthMillis(2026,java.util.Calendar.NOVEMBER);
+        long end=BudgetPeriodMath.endOfMonthMillis(2026,java.util.Calendar.NOVEMBER);
+
+        // User 100 DT budget + 80 DT category envelope -> 80%, 100%, overrun + deduplication
+        CategoryEntity uFood=dao.selectedCategoryForCatalog(user.id,sysFood.id);
+        BudgetEntity uBudget=new BudgetEntity();uBudget.userId=user.id;uBudget.name="UserNov";uBudget.monthlyLimitMilli=100_000L;
+        uBudget.periodStart=start;uBudget.periodEnd=end;uBudget.status="ACTIVE";
+        BudgetLineEntity uLine=new BudgetLineEntity();uLine.categoryId=uFood.id;uLine.limitMilli=80_000L;uLine.plannedPercentBps=8000;
+        long uBudgetId=repo.createBudget(uBudget,Collections.singletonList(uLine));
+
+        // Expense 1: 80 DT (triggers 80% budget + category 80% caution + budget_created already present)
+        TransactionEntity t1=new TransactionEntity();t1.userId=user.id;t1.budgetId=uBudgetId;t1.categoryId=uFood.id;
+        t1.kind="expense";t1.label="Course1";t1.amountMilli=80_000L;t1.occurredAt=start+1_000L;
+        assertTrue(repo.saveExpense(t1,user.id)>0L);
+
+        // Expense 2: 20 DT -> reaches exact 100 DT (100% milestone!) and category > 100%
+        TransactionEntity t2=new TransactionEntity();t2.userId=user.id;t2.budgetId=uBudgetId;t2.categoryId=uFood.id;
+        t2.kind="expense";t2.label="Course2";t2.amountMilli=20_000L;t2.occurredAt=start+2_000L;
+        assertTrue(repo.saveExpense(t2,user.id)>0L);
+
+        // Expense 3: 15 DT -> exceeds 100% (115 DT / 100 DT red overrun!)
+        TransactionEntity t3=new TransactionEntity();t3.userId=user.id;t3.budgetId=uBudgetId;t3.categoryId=uFood.id;
+        t3.kind="expense";t3.label="Course3";t3.amountMilli=15_000L;t3.occurredAt=start+3_000L;
+        assertTrue(repo.saveExpense(t3,user.id)>0L);
+
+        // Expense 4: 5 DT -> repeat while already over: MUST NOT duplicate budget_over notification
+        TransactionEntity t4=new TransactionEntity();t4.userId=user.id;t4.budgetId=uBudgetId;t4.categoryId=uFood.id;
+        t4.kind="expense";t4.label="Course4";t4.amountMilli=5_000L;t4.occurredAt=start+4_000L;
+        assertTrue(repo.saveExpense(t4,user.id)>0L);
+
+        List<NotificationEntity> uNotifs=dao.notificationsForUser(user.id);
+        int createdCnt=0,cautionCnt=0,limit100Cnt=0,overCnt=0,importantCnt=0;
+        for(NotificationEntity n:uNotifs) {
+            if("budget_created".equals(n.kind)) createdCnt++;
+            if("budget_caution".equals(n.kind)) cautionCnt++;
+            if("budget_100".equals(n.kind)) limit100Cnt++;
+            if("budget_over".equals(n.kind)) overCnt++;
+            if("important_expense".equals(n.kind)) importantCnt++;
+        }
+        assertEquals(1,createdCnt);
+        assertEquals(1,cautionCnt);
+        assertEquals(1,limit100Cnt);
+        assertEquals(1,overCnt);
+        assertEquals(1,importantCnt);
+
+        // Child spends 55 DT against 50 DT budget (single important overrun purchase): Parent MUST receive alerts, Personal User MUST NOT!
+        CategoryEntity cFood=dao.selectedCategoryForCatalog(child.id,sysFood.id);
+        BudgetEntity cBudget=new BudgetEntity();cBudget.userId=child.id;cBudget.name="ChildNov";cBudget.monthlyLimitMilli=50_000L;
+        cBudget.periodStart=start;cBudget.periodEnd=end;cBudget.status="ACTIVE";
+        long cBudgetId=repo.createBudget(cBudget,Collections.emptyList());
+
+        ProductEntity p=new ProductEntity();p.categoryId=cFood.id;p.name="Chaussures";p.unit="pièce";p.currentPriceMilli=55_000L;p.currency="TND";p.updatedAt=start+5_000L;
+        PurchaseEntity pu=new PurchaseEntity();pu.userId=child.id;pu.occurredAt=start+5_000L;pu.totalMilli=55_000L;pu.storeName="Mall";
+        PurchaseItemEntity pi=new PurchaseItemEntity();pi.description="Chaussures";pi.quantityMilli=1_000;pi.unit="pièce";pi.unitPriceMilli=55_000L;
+        assertTrue(repo.savePurchase(p,pu,pi,child.id,cBudgetId)>0L);
+
+        List<NotificationEntity> pNotifs=dao.notificationsForUser(parent.id);
+        boolean parentGotChildOver=false, parentGotChildImportant=false;
+        for(NotificationEntity n:pNotifs) {
+            if("child_budget_over".equals(n.kind)) parentGotChildOver=true;
+            if("child_important_tx".equals(n.kind)) parentGotChildImportant=true;
+        }
+        assertTrue(parentGotChildOver);
+        assertTrue(parentGotChildImportant);
+
+        // Personal user must NEVER receive parent/child family notifications
+        for(NotificationEntity n:dao.notificationsForUser(user.id)) {
+            assertFalse(n.kind!=null&&n.kind.startsWith("child_"));
+        }
     }
 
     private UserEntity createUser(String email,String role,long balance,long householdId) {

@@ -58,6 +58,8 @@ public interface MasroufDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE) long[] insertBudgetLines(List<BudgetLineEntity> rows);
     @Update int update(BudgetEntity row);
     @Update int update(ChildProfileEntity row);
+    @Update int update(ProductEntity row);
+    @Update int update(CategoryEntity row);
 
     @Query("SELECT * FROM users WHERE id = :id LIMIT 1") UserEntity findUser(long id);
     @Query("SELECT * FROM users WHERE id = :id LIMIT 1") LiveData<UserEntity> observeUser(long id);
@@ -116,7 +118,8 @@ public interface MasroufDao {
     @Query("SELECT * FROM rewards WHERE id = :rewardId LIMIT 1") RewardEntity findReward(long rewardId);
     @Query("UPDATE rewards SET redeemed = 1 WHERE id = :rewardId AND childProfileId = :profileId AND redeemed = 0") int markRewardRedeemed(long rewardId,long profileId);
     @Query("UPDATE users SET points = points - :cost WHERE id = :userId AND points >= :cost") int subtractPoints(long userId,int cost);
-    @Query("SELECT * FROM notifications WHERE userId = :userId ORDER BY createdAt DESC") LiveData<List<NotificationEntity>> observeNotificationsForUser(long userId);
+    @Query("SELECT * FROM notifications WHERE userId = :userId ORDER BY createdAt DESC, id DESC") LiveData<List<NotificationEntity>> observeNotificationsForUser(long userId);
+    @Query("SELECT * FROM notifications WHERE userId = :userId ORDER BY createdAt DESC, id DESC") List<NotificationEntity> notificationsForUser(long userId);
     @Query("UPDATE notifications SET read = 1 WHERE id = :notificationId AND userId = :userId") int markNotificationRead(long notificationId,long userId);
     @Query("UPDATE notifications SET read = 1 WHERE userId = :userId") int markAllNotificationsRead(long userId);
     @Query("SELECT * FROM categories WHERE userId = :userId AND name = 'Enfants' COLLATE NOCASE LIMIT 1") CategoryEntity childrenCategory(long userId);
@@ -128,9 +131,12 @@ public interface MasroufDao {
     @Query("UPDATE users SET passwordHash = :passwordHash WHERE id = (SELECT childUserId FROM child_profiles WHERE id = :profileId AND parentUserId = :parentId)") int resetChildPassword(long profileId,long parentId,String passwordHash);
     @Query("UPDATE child_profiles SET allocatedTotalMilli = CASE WHEN allocationPeriodStart = :periodStart THEN allocatedTotalMilli + :amountMilli ELSE :amountMilli END, allocationPeriodStart = :periodStart WHERE id = :profileId") int addChildAllocation(long profileId,long amountMilli,long periodStart);
     @Query("UPDATE users SET balanceMilli = balanceMilli + :amountMilli WHERE id = :childUserId") int addChildBalance(long childUserId,long amountMilli);
-    @Query("UPDATE users SET balanceMilli = balanceMilli - :amountMilli WHERE id = :childUserId AND balanceMilli >= :amountMilli") int subtractChildBalance(long childUserId,long amountMilli);
+    @Query("UPDATE users SET balanceMilli = MAX(0, balanceMilli - :amountMilli) WHERE id = :childUserId") int subtractChildBalance(long childUserId,long amountMilli);
+    @Query("SELECT * FROM child_profiles WHERE parentUserId = :parentUserId ORDER BY nickname COLLATE NOCASE") List<ChildProfileEntity> childProfilesForParent(long parentUserId);
+    @Query("SELECT COALESCE(SUM(amountMilli),0) FROM money_transactions WHERE userId = :parentUserId AND kind = 'family_allocation' AND occurredAt >= :from AND occurredAt < :to") long childAllocationsBetween(long parentUserId,long from,long to);
+    @Query("SELECT * FROM money_transactions WHERE userId = :userId AND kind IN ('expense','donation','purchase') AND occurredAt >= :from AND occurredAt < :to ORDER BY occurredAt DESC, id DESC") List<TransactionEntity> spendingTransactionsBetween(long userId,long from,long to);
     @Query("SELECT child_profiles.parentPhone FROM child_profiles WHERE child_profiles.childUserId = :childUserId LIMIT 1") String parentPhoneForChild(long childUserId);
-    @Query("SELECT child_profiles.id AS childProfileId, users.id AS childUserId, child_profiles.nickname AS nickname, CASE WHEN child_profiles.allocationPeriodStart = (SELECT periodStart FROM budgets WHERE userId = :parentUserId AND status = 'ACTIVE' ORDER BY periodStart DESC LIMIT 1) THEN child_profiles.allocatedTotalMilli ELSE 0 END AS allocatedTotalMilli, COALESCE(SUM(money_transactions.amountMilli),0) AS spentMilli, users.balanceMilli AS balanceMilli FROM child_profiles INNER JOIN users ON users.id = child_profiles.childUserId LEFT JOIN budgets ON budgets.userId = users.id AND budgets.status = 'ACTIVE' LEFT JOIN money_transactions ON money_transactions.userId = users.id AND money_transactions.kind IN ('expense','donation','purchase') AND money_transactions.occurredAt >= budgets.periodStart AND money_transactions.occurredAt <= budgets.periodEnd WHERE child_profiles.parentUserId = :parentUserId AND EXISTS (SELECT 1 FROM users parent WHERE parent.id = :parentUserId AND lower(parent.role) IN ('parent','admin')) GROUP BY child_profiles.id, users.id, budgets.id ORDER BY child_profiles.nickname COLLATE NOCASE")
+    @Query("SELECT child_profiles.id AS childProfileId, users.id AS childUserId, child_profiles.nickname AS nickname, users.email AS email, child_profiles.parentPhone AS parentPhone, child_profiles.createdAt AS createdAt, CASE WHEN child_profiles.allocationPeriodStart = (SELECT periodStart FROM budgets WHERE userId = :parentUserId AND status = 'ACTIVE' ORDER BY periodStart DESC LIMIT 1) THEN child_profiles.allocatedTotalMilli ELSE 0 END AS allocatedTotalMilli, COALESCE(SUM(money_transactions.amountMilli),0) AS spentMilli, users.balanceMilli AS balanceMilli FROM child_profiles INNER JOIN users ON users.id = child_profiles.childUserId LEFT JOIN budgets ON budgets.userId = users.id AND budgets.status = 'ACTIVE' LEFT JOIN money_transactions ON money_transactions.userId = users.id AND money_transactions.kind IN ('expense','donation','purchase') AND money_transactions.occurredAt >= budgets.periodStart AND money_transactions.occurredAt <= budgets.periodEnd WHERE child_profiles.parentUserId = :parentUserId AND EXISTS (SELECT 1 FROM users parent WHERE parent.id = :parentUserId AND lower(parent.role) IN ('parent','admin')) GROUP BY child_profiles.id, users.id, budgets.id ORDER BY child_profiles.nickname COLLATE NOCASE")
     List<ChildSpendingSummary> childSpendingSummaries(long parentUserId);
     @Query("SELECT categoryId, COALESCE(SUM(amountMilli),0) AS amountMilli FROM money_transactions WHERE userId = :userId AND occurredAt >= :from AND occurredAt < :to AND kind IN ('expense','donation','purchase') AND categoryId > 0 GROUP BY categoryId")
     List<CategorySpendRow> categorySpendingBetween(long userId,long from,long to);
@@ -155,6 +161,8 @@ public interface MasroufDao {
     @Query("SELECT products.* FROM products INNER JOIN categories ON categories.id = products.categoryId WHERE products.id = :id AND categories.userId = :userId LIMIT 1") ProductEntity findProductForUser(long id,long userId);
     @Query("SELECT products.* FROM products INNER JOIN categories ON categories.id = products.categoryId WHERE categories.userId = :userId ORDER BY products.updatedAt DESC, products.id DESC") LiveData<List<ProductEntity>> observeProductsForUser(long userId);
     @Query("SELECT products.* FROM products INNER JOIN categories ON categories.id = products.categoryId WHERE categories.userId = :userId ORDER BY products.updatedAt DESC, products.id DESC") List<ProductEntity> productsForUser(long userId);
+    @Query("SELECT p.* FROM products p INNER JOIN categories c ON c.id = p.categoryId WHERE c.userId = :userId AND p.categoryId = :categoryId AND lower(trim(p.name)) = lower(trim(:name)) AND lower(trim(coalesce(p.brand,''))) = lower(trim(coalesce(:brand,''))) AND lower(trim(p.unit)) = lower(trim(:unit)) ORDER BY p.updatedAt DESC, p.id DESC LIMIT 1")
+    ProductEntity findMatchingProductForUser(long userId,long categoryId,String name,String brand,String unit);
     @Query("SELECT p.id, p.categoryId, p.name, p.brand, p.unit, p.photoPath, c.name AS categoryName, p.currentPriceMilli, (SELECT h.storeName FROM price_history h WHERE h.productId = p.id ORDER BY h.observedAt DESC, h.id DESC LIMIT 1) AS storeName, (SELECT h.priceMilli FROM price_history h WHERE h.productId = p.id ORDER BY h.observedAt DESC, h.id DESC LIMIT 1 OFFSET 1) AS priorPriceMilli FROM products p INNER JOIN categories c ON c.id = p.categoryId WHERE c.userId = :userId ORDER BY p.updatedAt DESC, p.id DESC")
     List<ProductCatalogRow> productCatalog(long userId);
     @Query("SELECT price_history.* FROM price_history INNER JOIN products ON products.id = price_history.productId INNER JOIN categories ON categories.id = products.categoryId WHERE price_history.productId = :productId AND categories.userId = :userId ORDER BY price_history.observedAt") List<PriceHistoryEntity> priceHistory(long userId,long productId);
@@ -269,6 +277,7 @@ public interface MasroufDao {
             initialBudget.periodStart=parentBudget.periodStart; initialBudget.periodEnd=parentBudget.periodEnd;
         }
         child.onboarded=false;child.categoriesSelected=false;
+        if(profile.allocatedTotalMilli>0 && child.balanceMilli<profile.allocatedTotalMilli) child.balanceMilli=profile.allocatedTotalMilli;
         long childId=insertChildUser(child); profile.childUserId=childId; insert(profile);
         // Parent-created default suggestions are not a child's confirmed selections; only the onboarding transaction may select them.
         if(initialBudget!=null) { initialBudget.userId=childId; insert(initialBudget); }
@@ -428,11 +437,11 @@ public interface MasroufDao {
         if(envelope!=null)MoneyMath.add(envelope.spentMilli,transaction.amountMilli);
         boolean child=childProfileForUser(transaction.userId)!=null;
         UserEntity childUser=child?findUser(transaction.userId):null;
-        if(child&&(childUser==null||childUser.balanceMilli<transaction.amountMilli))throw new SecurityException("Child balance is insufficient");
+        if(child&&childUser==null)throw new SecurityException("Child account is invalid");
         long transactionId = insert(transaction);
         if(transactionId<=0||addBudgetSpend(transaction.budgetId,transaction.amountMilli)==0)throw new IllegalStateException("Budget spend was not recorded");
         if(envelope!=null&&addEnvelopeSpend(transaction.budgetId,transaction.categoryId,transaction.amountMilli)==0)throw new IllegalStateException("Envelope spend was not recorded");
-        if(child&&subtractChildBalance(transaction.userId,transaction.amountMilli)==0)throw new IllegalStateException("Child balance changed during transaction");
+        if(child&&subtractChildBalance(transaction.userId,transaction.amountMilli)==0)throw new IllegalStateException("Child balance update failed");
         return transactionId;
     }
 
@@ -467,8 +476,19 @@ public interface MasroufDao {
         if(envelope!=null)MoneyMath.add(envelope.spentMilli,purchase.totalMilli);
         boolean child=childProfileForUser(purchase.userId)!=null;
         UserEntity childUser=child?findUser(purchase.userId):null;
-        if(child&&(childUser==null||childUser.balanceMilli<purchase.totalMilli))throw new SecurityException("Child balance is insufficient");
-        long productId = insert(product);
+        if(child&&childUser==null)throw new SecurityException("Child account is invalid");
+        ProductEntity existingProduct = findMatchingProductForUser(
+                purchase.userId, product.categoryId, product.name, product.brand, product.unit);
+        long productId;
+        if(existingProduct!=null) {
+            existingProduct.currentPriceMilli=item.unitPriceMilli>0?item.unitPriceMilli:product.currentPriceMilli;
+            existingProduct.updatedAt=Math.max(existingProduct.updatedAt, product.updatedAt);
+            if(product.photoPath!=null&&!product.photoPath.trim().isEmpty()) existingProduct.photoPath=product.photoPath;
+            update(existingProduct);
+            productId=existingProduct.id;
+        } else {
+            productId = insert(product);
+        }
         product.id=productId;
         if(purchase.totalMilli<=0) purchase.totalMilli = MoneyMath.totalForQuantity(item.unitPriceMilli,item.quantityMilli);
         long purchaseId = insert(purchase);
@@ -485,7 +505,7 @@ public interface MasroufDao {
         transaction.amountMilli = purchase.totalMilli; transaction.occurredAt = purchase.occurredAt;
         insert(transaction);
         if(envelope!=null&&addEnvelopeSpend(budgetId,product.categoryId,purchase.totalMilli)==0)throw new IllegalStateException("Envelope spend was not recorded");
-        if(child&&subtractChildBalance(purchase.userId,purchase.totalMilli)==0)throw new IllegalStateException("Child balance changed during purchase");
+        if(child&&subtractChildBalance(purchase.userId,purchase.totalMilli)==0)throw new IllegalStateException("Child balance update failed");
         return purchaseId;
     }
 

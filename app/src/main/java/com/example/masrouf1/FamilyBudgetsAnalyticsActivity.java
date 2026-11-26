@@ -2,20 +2,28 @@ package com.example.masrouf1;
 
 import android.content.Intent;
 import android.os.Bundle;
-import androidx.appcompat.app.AlertDialog;
+import android.view.View;
+import android.widget.LinearLayout;
+import android.widget.ProgressBar;
+import android.widget.TextView;
+
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.masrouf1.db.ChildSpendingSummary;
+import com.example.masrouf1.db.MasroufEntities.BudgetEntity;
+import com.example.masrouf1.db.TransactionRow;
 import com.masrouf.controller.BudgetPeriodActivity;
 import com.masrouf.controller.SessionStore;
 
-import java.util.ArrayList;
-
-/** Parent-only aggregate charts for children and the latest budget periods, with direct budget & calendar access. */
+/**
+ * Parent-only Budgets & Analyses screen mirroring React Native `(admin)/budget-analyses.tsx`:
+ * Household monthly hero gauge + Adjust CTA, Category Breakdown with overrun pills,
+ * 6-month Parent+Household Pill Chart, Individual Child Progress cards, and Child Historical Pill Chart.
+ */
 public final class FamilyBudgetsAnalyticsActivity extends AppCompatActivity {
-    private PillBarChartView pills;
-    private ChildrenBudgetAnalyticsView trend;
     private MasroufViewModel viewModel;
+    private LinearLayout container;
+    private ProgressBar loadingView;
+    private TextView errorView;
 
     @Override
     protected void onCreate(Bundle state) {
@@ -25,28 +33,15 @@ public final class FamilyBudgetsAnalyticsActivity extends AppCompatActivity {
             return;
         }
         setContentView(R.layout.activity_family_budgets_analytics);
-        pills = findViewById(R.id.family_child_pills);
-        trend = findViewById(R.id.family_monthly_trend);
         com.google.android.material.appbar.MaterialToolbar toolbar = findViewById(R.id.family_analytics_toolbar);
         toolbar.setNavigationIcon(R.drawable.ic_back);
         toolbar.setNavigationOnClickListener(v -> finish());
+
+        loadingView = findViewById(R.id.family_analytics_loading);
+        errorView = findViewById(R.id.family_analytics_error);
+        container = findViewById(R.id.family_analytics_container);
         viewModel = new androidx.lifecycle.ViewModelProvider(this, new MasroufViewModelFactory(this))
                 .get(MasroufViewModel.class);
-        pills.setOnChildTapListener(this::showChildDetails);
-
-        findViewById(R.id.family_manage_budget_btn).setOnClickListener(v -> {
-            long parentId = SessionStore.userId(this);
-            long selectedId = SessionStore.selectedBudgetId(this, parentId);
-            Intent intent = new Intent(this, BudgetPeriodActivity.class);
-            if (selectedId > 0L) {
-                intent.putExtra("MODE", "edit").putExtra("BUDGET_ID", selectedId);
-            }
-            startActivity(intent);
-        });
-        findViewById(R.id.family_open_calendar_btn).setOnClickListener(v ->
-                startActivity(new Intent(this, MainActivity.class)
-                        .putExtra(MainActivity.EXTRA_CENTRAL_TAB, "calendar")
-                        .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP)));
     }
 
     @Override
@@ -57,35 +52,39 @@ public final class FamilyBudgetsAnalyticsActivity extends AppCompatActivity {
 
     private void loadAggregates() {
         long parentId = SessionStore.userId(this);
-        viewModel.<FamilyAnalyticsData>request(repository -> repository.familyAnalytics(parentId), state -> {
-            if (isFinishing() || isDestroyed()) return;
-            if (state.data == null) {
-                finish();
-                return;
-            }
-            FamilyAnalyticsData data = state.data;
-            ArrayList<ChildrenBudgetAnalyticsView.Point> points = new ArrayList<>();
-            for (FamilyMonthSpending month : data.months) {
-                points.add(new ChildrenBudgetAnalyticsView.Point(month.periodStart, month.spentMilli, month.allocatedMilli));
-            }
-            pills.setChildren(data.children);
-            trend.setPoints(points);
-            long personal = Math.max(0L, MoneyMath.subtract(data.globalBudgetMilli, data.childAllocationsMilli));
-            ((android.widget.TextView) findViewById(R.id.family_global_summary)).setText(
-                    getString(R.string.family_budget_summary,
-                            CurrencyFormatter.formatMilli(data.globalBudgetMilli),
-                            CurrencyFormatter.formatMilli(data.childAllocationsMilli),
-                            CurrencyFormatter.formatMilli(MoneyMath.subtract(personal, data.parentSpendingMilli))));
-        });
-    }
+        long preferredId = SessionStore.selectedBudgetId(this, parentId);
+        if (loadingView != null) loadingView.setVisibility(View.VISIBLE);
+        if (errorView != null) errorView.setVisibility(View.GONE);
 
-    private void showChildDetails(ChildSpendingSummary child) {
-        String message = getString(R.string.child_chart_details,
-                child.nickname,
-                CurrencyFormatter.formatMilli(child.allocatedTotalMilli),
-                CurrencyFormatter.formatMilli(child.spentMilli),
-                CurrencyFormatter.formatMilli(child.availableMilli()));
-        new AlertDialog.Builder(this).setTitle(child.nickname).setMessage(message)
-                .setPositiveButton(android.R.string.ok, null).show();
+        viewModel.<AnalyticsSummaryData>request(
+                repository -> repository.loadAnalytics(parentId, preferredId),
+                state -> {
+                    if (isFinishing() || isDestroyed()) return;
+                    if (loadingView != null) loadingView.setVisibility(View.GONE);
+                    if (state.failed || state.data == null) {
+                        if (errorView != null) errorView.setVisibility(View.VISIBLE);
+                        return;
+                    }
+                    AnalyticsRenderer.render(this, container, state.data, new AnalyticsRenderer.Actions() {
+                        @Override
+                        public void onOpenCalendar() {
+                            startActivity(new Intent(FamilyBudgetsAnalyticsActivity.this, MainActivity.class)
+                                    .putExtra(MainActivity.EXTRA_CENTRAL_TAB, "calendar")
+                                    .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP));
+                        }
+
+                        @Override
+                        public void onCreateOrEditBudget(BudgetEntity currentBudget) {
+                            Intent intent = new Intent(FamilyBudgetsAnalyticsActivity.this, BudgetPeriodActivity.class);
+                            if (currentBudget != null && currentBudget.id > 0L) {
+                                intent.putExtra("MODE", "edit").putExtra("BUDGET_ID", currentBudget.id);
+                            }
+                            startActivity(intent);
+                        }
+
+                        @Override
+                        public void onOpenTransaction(TransactionRow row) { }
+                    });
+                });
     }
 }

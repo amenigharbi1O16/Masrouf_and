@@ -281,7 +281,7 @@
                     app:cardBackgroundColor="@color/alabaster"
                     app:cardCornerRadius="16dp"
                     app:cardElevation="2dp"
-                    app:strokeColor="#1E88E5"
+                    app:strokeColor="@color/emerald"
                     app:strokeWidth="2dp">
 
                     <!-- "EXPÉRIENCE COMPLÈTE" banner at top -->
@@ -293,7 +293,7 @@
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:background="#1E88E5"
+                            android:background="@color/emerald"
                             android:gravity="center"
                             android:paddingVertical="6dp"
                             android:text="@string/badge_experience_complete"
@@ -315,7 +315,7 @@
                                 android:gravity="center_vertical"
                                 android:orientation="horizontal">
 
-                                <!-- Icon circle (blue-tinted background) -->
+                                <!-- Icon circle (mint background) -->
                                 <FrameLayout
                                     android:layout_width="48dp"
                                     android:layout_height="48dp"
@@ -323,14 +323,14 @@
                                     <View
                                         android:layout_width="48dp"
                                         android:layout_height="48dp"
-                                        android:background="@drawable/bg_circle_blue_light" />
+                                        android:background="@drawable/bg_circle_mint" />
                                     <ImageView
                                         android:layout_width="26dp"
                                         android:layout_height="26dp"
                                         android:layout_gravity="center"
                                         android:contentDescription=""
                                         android:src="@drawable/ic_people"
-                                        android:tint="#1E88E5" />
+                                        app:tint="@color/forest" />
                                 </FrameLayout>
 
                                 <LinearLayout
@@ -343,7 +343,7 @@
                                         android:layout_width="wrap_content"
                                         android:layout_height="wrap_content"
                                         android:text="@string/family_account"
-                                        android:textColor="@color/forest"
+                                        android:textColor="@color/black"
                                         android:textSize="17sp"
                                         android:textStyle="bold" />
 
@@ -352,7 +352,7 @@
                                         android:layout_height="wrap_content"
                                         android:layout_marginTop="2dp"
                                         android:text="@string/family_account_desc"
-                                        android:textColor="@color/muted_green"
+                                        android:textColor="@color/black"
                                         android:textSize="12sp" />
 
                                 </LinearLayout>
@@ -361,11 +361,11 @@
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:background="@drawable/bg_badge_blue"
+                                    android:background="@drawable/badge_background"
                                     android:paddingHorizontal="10dp"
                                     android:paddingVertical="4dp"
                                     android:text="@string/badge_parent_tuteur"
-                                    android:textColor="#1E88E5"
+                                    android:textColor="@color/black"
                                     android:textSize="11sp" />
 
                             </LinearLayout>
@@ -428,7 +428,7 @@
                             <LinearLayout
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:background="@drawable/bg_btn_blue"
+                                android:background="@drawable/bg_lang_selected"
                                 android:gravity="center_vertical"
                                 android:orientation="horizontal"
                                 android:paddingHorizontal="16dp"

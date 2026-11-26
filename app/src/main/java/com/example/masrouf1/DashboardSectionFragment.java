@@ -1,9 +1,14 @@
 package com.example.masrouf1;
 
+import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -14,27 +19,161 @@ import androidx.fragment.app.Fragment;
 
 import com.masrouf.controller.SessionStore;
 
-/** Shared programmatic shell for the four non-home central tabs. */
+/** Shared programmatic shell for the non-home central tabs with bell badge & profile navigation. */
 public abstract class DashboardSectionFragment extends Fragment {
     protected LinearLayout page;
     protected MasroufViewModel viewModel;
-    protected int dp(int value){return (int)(value*getResources().getDisplayMetrics().density+.5f);}
+    private TextView notificationBadge;
+
+    protected int dp(int value) {
+        return (int) (value * getResources().getDisplayMetrics().density + .5f);
+    }
+
     protected abstract int pageTitle();
+
     protected abstract void createContent(LinearLayout content);
+
     protected void observeContent() { }
 
-    @Override public void onCreate(@Nullable Bundle state){super.onCreate(state);viewModel=new androidx.lifecycle.ViewModelProvider(this,new MasroufViewModelFactory(requireContext())).get(MasroufViewModel.class);}
-    @Override public void onViewCreated(@NonNull View view,@Nullable Bundle state){super.onViewCreated(view,state);observeContent();}
-
-    @Nullable @Override public View onCreateView(@NonNull android.view.LayoutInflater inflater,@Nullable ViewGroup parent,@Nullable Bundle state){
-        ScrollView scroll=new ScrollView(requireContext());scroll.setFillViewport(true);scroll.setBackgroundColor(requireContext().getColor(R.color.cream));
-        page=new LinearLayout(requireContext());page.setOrientation(LinearLayout.VERTICAL);page.setPadding(dp(20),dp(20),dp(20),dp(30));scroll.addView(page,new ScrollView.LayoutParams(-1,-2));
-        LinearLayout header=new LinearLayout(requireContext());header.setGravity(Gravity.CENTER_VERTICAL);header.setOrientation(LinearLayout.HORIZONTAL);
-        TextView menu=new TextView(requireContext());menu.setText("☰");menu.setTextSize(21);menu.setTextColor(requireContext().getColor(R.color.forest));menu.setGravity(Gravity.CENTER);menu.setContentDescription(getString(R.string.open_menu));header.addView(menu,new LinearLayout.LayoutParams(dp(44),dp(48)));menu.setOnClickListener(v->{if(requireActivity() instanceof MainActivity)((MainActivity)requireActivity()).openMenu();});
-        TextView title=new TextView(requireContext());title.setText(pageTitle());title.setTextColor(requireContext().getColor(R.color.forest));title.setTextSize(23);title.setTypeface(null,android.graphics.Typeface.BOLD);header.addView(title,new LinearLayout.LayoutParams(0,-2,1));page.addView(header);
-        createContent(page);return scroll;
+    @Override
+    public void onCreate(@Nullable Bundle state) {
+        super.onCreate(state);
+        viewModel = new androidx.lifecycle.ViewModelProvider(
+                this, new MasroufViewModelFactory(requireContext())).get(MasroufViewModel.class);
     }
-    protected TextView text(String value){TextView view=new TextView(requireContext());view.setText(value);view.setTextColor(requireContext().getColor(R.color.muted_green));view.setTextSize(15);view.setGravity(Gravity.CENTER_VERTICAL);return view;}
-    protected long signedInUserId(){return SessionStore.userId(requireContext());}
-    protected void ui(Runnable action){if(getActivity()!=null)getActivity().runOnUiThread(()->{if(isAdded()&&getView()!=null)action.run();});}
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle state) {
+        super.onViewCreated(view, state);
+        observeContent();
+        refreshHeaderBadge();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        refreshHeaderBadge();
+    }
+
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull android.view.LayoutInflater inflater, @Nullable ViewGroup parent, @Nullable Bundle state) {
+        ScrollView scroll = new ScrollView(requireContext());
+        scroll.setFillViewport(true);
+        scroll.setBackgroundColor(requireContext().getColor(R.color.cream));
+
+        page = new LinearLayout(requireContext());
+        page.setOrientation(LinearLayout.VERTICAL);
+        page.setPadding(dp(20), dp(18), dp(20), dp(96));
+        scroll.addView(page, new ScrollView.LayoutParams(-1, -2));
+
+        LinearLayout header = new LinearLayout(requireContext());
+        header.setGravity(Gravity.CENTER_VERTICAL);
+        header.setOrientation(LinearLayout.HORIZONTAL);
+        LinearLayout.LayoutParams headerParams = new LinearLayout.LayoutParams(-1, -2);
+        headerParams.bottomMargin = dp(8);
+
+        TextView menu = new TextView(requireContext());
+        menu.setText("☰");
+        menu.setTextSize(22);
+        menu.setTextColor(requireContext().getColor(R.color.forest));
+        menu.setGravity(Gravity.CENTER);
+        menu.setContentDescription(getString(R.string.open_menu));
+        header.addView(menu, new LinearLayout.LayoutParams(dp(44), dp(48)));
+        menu.setOnClickListener(v -> {
+            if (requireActivity() instanceof MainActivity) {
+                ((MainActivity) requireActivity()).openMenu();
+            }
+        });
+
+        TextView title = new TextView(requireContext());
+        title.setText(pageTitle());
+        title.setTextColor(requireContext().getColor(R.color.forest));
+        title.setTextSize(22);
+        title.setTypeface(null, Typeface.BOLD);
+        LinearLayout.LayoutParams titleParams = new LinearLayout.LayoutParams(0, -2, 1f);
+        titleParams.setMarginStart(dp(6));
+        header.addView(title, titleParams);
+
+        // Notification bell + live unread badge
+        FrameLayout bellWrap = new FrameLayout(requireContext());
+        bellWrap.setContentDescription(getString(R.string.nav_notifications));
+        bellWrap.setClickable(true);
+        bellWrap.setFocusable(true);
+        ImageView bellIcon = new ImageView(requireContext());
+        bellIcon.setImageResource(R.drawable.ic_notifications);
+        bellIcon.setColorFilter(requireContext().getColor(R.color.forest));
+        FrameLayout.LayoutParams bellIconLp = new FrameLayout.LayoutParams(dp(23), dp(23));
+        bellIconLp.gravity = Gravity.CENTER;
+        bellWrap.addView(bellIcon, bellIconLp);
+
+        notificationBadge = new TextView(requireContext());
+        notificationBadge.setBackgroundResource(R.drawable.bg_badge_red);
+        notificationBadge.setTextColor(Color.WHITE);
+        notificationBadge.setTextSize(10f);
+        notificationBadge.setTypeface(null, Typeface.BOLD);
+        notificationBadge.setGravity(Gravity.CENTER);
+        notificationBadge.setVisibility(View.GONE);
+        FrameLayout.LayoutParams badgeLp = new FrameLayout.LayoutParams(dp(18), dp(18));
+        badgeLp.gravity = Gravity.TOP | Gravity.END;
+        badgeLp.topMargin = dp(5);
+        badgeLp.setMarginEnd(dp(4));
+        bellWrap.addView(notificationBadge, badgeLp);
+        bellWrap.setOnClickListener(v -> startActivity(new Intent(requireContext(), NotificationsActivity.class)));
+        header.addView(bellWrap, new LinearLayout.LayoutParams(dp(44), dp(48)));
+
+        // Profile icon -> Settings
+        ImageView profileBtn = new ImageView(requireContext());
+        profileBtn.setImageResource(R.drawable.ic_person_outline);
+        profileBtn.setContentDescription(getString(R.string.nav_settings));
+        profileBtn.setPadding(dp(10), dp(12), dp(10), dp(12));
+        profileBtn.setClickable(true);
+        profileBtn.setFocusable(true);
+        profileBtn.setOnClickListener(v -> {
+            if (requireActivity() instanceof MainActivity) {
+                ((MainActivity) requireActivity()).onDrawerDestination("settings");
+            }
+        });
+        header.addView(profileBtn, new LinearLayout.LayoutParams(dp(44), dp(48)));
+
+        page.addView(header, headerParams);
+        createContent(page);
+        return scroll;
+    }
+
+    protected void refreshHeaderBadge() {
+        if (notificationBadge == null || viewModel == null || !isAdded()) return;
+        long uid = signedInUserId();
+        if (uid <= 0L) return;
+        viewModel.<Integer>request(repo -> repo.unreadNotificationCount(uid), state -> {
+            if (!isAdded() || notificationBadge == null || state.data == null) return;
+            if (state.data > 0) {
+                notificationBadge.setText(state.data > 99 ? "99+" : String.valueOf(state.data));
+                notificationBadge.setVisibility(View.VISIBLE);
+            } else {
+                notificationBadge.setVisibility(View.GONE);
+            }
+        });
+    }
+
+    protected TextView text(String value) {
+        TextView view = new TextView(requireContext());
+        view.setText(value);
+        view.setTextColor(requireContext().getColor(R.color.ink_secondary));
+        view.setTextSize(15);
+        view.setGravity(Gravity.CENTER_VERTICAL);
+        return view;
+    }
+
+    protected long signedInUserId() {
+        return SessionStore.userId(requireContext());
+    }
+
+    protected void ui(Runnable action) {
+        if (getActivity() != null) {
+            getActivity().runOnUiThread(() -> {
+                if (isAdded() && getView() != null) action.run();
+            });
+        }
+    }
 }

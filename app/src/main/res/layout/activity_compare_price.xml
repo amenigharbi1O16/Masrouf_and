@@ -1,35 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent" android:layout_height="match_parent" android:fillViewport="true" android:background="@color/cream">
-    <com.google.android.material.card.MaterialCardView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_margin="16dp" app:cardBackgroundColor="@color/alabaster" app:cardCornerRadius="16dp" app:strokeColor="@color/card_border" app:strokeWidth="1dp">
+    <com.google.android.material.card.MaterialCardView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_margin="16dp" app:cardBackgroundColor="@color/form_surface" app:cardCornerRadius="16dp" app:strokeColor="@color/card_border" app:strokeWidth="1dp">
         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
             <TextView style="@style/FormFieldLabel" android:labelFor="@id/compare_name" android:text="@string/product_name" />
-            <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="4dp">
-                <com.google.android.material.textfield.TextInputEditText android:id="@+id/compare_name" android:layout_width="match_parent" android:layout_height="58dp" android:hint="@string/hint_product_name" android:inputType="text" android:singleLine="true" android:textColor="@color/ink" />
+            <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="4dp" app:boxBackgroundColor="@color/form_beige">
+                <com.google.android.material.textfield.TextInputEditText android:id="@+id/compare_name" android:layout_width="match_parent" android:layout_height="58dp" android:hint="@string/hint_product_name" android:inputType="text" android:singleLine="true" android:textColor="@color/black" android:textColorHint="@color/black" />
             </com.google.android.material.textfield.TextInputLayout>
             <TextView style="@style/FormFieldLabel" android:labelFor="@id/compare_brand" android:text="@string/product_brand" />
-            <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="4dp">
-                <com.google.android.material.textfield.TextInputEditText android:id="@+id/compare_brand" android:layout_width="match_parent" android:layout_height="58dp" android:hint="@string/hint_product_brand" android:inputType="text" android:singleLine="true" android:textColor="@color/ink" />
+            <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="4dp" app:boxBackgroundColor="@color/form_beige">
+                <com.google.android.material.textfield.TextInputEditText android:id="@+id/compare_brand" android:layout_width="match_parent" android:layout_height="58dp" android:hint="@string/hint_product_brand" android:inputType="text" android:singleLine="true" android:textColor="@color/black" android:textColorHint="@color/black" />
             </com.google.android.material.textfield.TextInputLayout>
             <TextView style="@style/FormFieldLabel" android:labelFor="@id/compare_price" android:text="@string/total_price_dt" />
-            <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="4dp">
-                <com.google.android.material.textfield.TextInputEditText android:id="@+id/compare_price" android:layout_width="match_parent" android:layout_height="58dp" android:hint="@string/hint_amount" android:inputType="numberDecimal" android:singleLine="true" android:textColor="@color/ink" />
+            <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="4dp" app:boxBackgroundColor="@color/form_beige">
+                <com.google.android.material.textfield.TextInputEditText android:id="@+id/compare_price" android:layout_width="match_parent" android:layout_height="58dp" android:hint="@string/hint_amount" android:inputType="numberDecimal" android:singleLine="true" android:textColor="@color/black" android:textColorHint="@color/black" />
             </com.google.android.material.textfield.TextInputLayout>
             <TextView style="@style/FormFieldLabel" android:labelFor="@id/compare_quantity" android:text="@string/quantity" />
-            <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="4dp">
-                <com.google.android.material.textfield.TextInputEditText android:id="@+id/compare_quantity" android:layout_width="match_parent" android:layout_height="58dp" android:hint="@string/hint_quantity" android:inputType="numberDecimal" android:singleLine="true" android:textColor="@color/ink" />
+            <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="4dp" app:boxBackgroundColor="@color/form_beige">
+                <com.google.android.material.textfield.TextInputEditText android:id="@+id/compare_quantity" android:layout_width="match_parent" android:layout_height="58dp" android:hint="@string/hint_quantity" android:inputType="numberDecimal" android:singleLine="true" android:textColor="@color/black" android:textColorHint="@color/black" />
             </com.google.android.material.textfield.TextInputLayout>
             <TextView style="@style/FormFieldLabel" android:labelFor="@id/compare_unit" android:text="@string/field_unit" />
-            <Spinner android:id="@+id/compare_unit" android:layout_width="match_parent" android:layout_height="52dp" android:contentDescription="@string/field_unit" />
+            <Spinner android:id="@+id/compare_unit" android:layout_width="match_parent" android:layout_height="52dp" android:background="@drawable/bg_allocation_input" android:popupBackground="@drawable/bg_dropdown_beige" android:contentDescription="@string/field_unit" />
             <TextView style="@style/FormFieldLabel" android:labelFor="@id/compare_category" android:text="@string/field_category" />
-            <Spinner android:id="@+id/compare_category" android:layout_width="match_parent" android:layout_height="52dp" android:contentDescription="@string/field_category" />
+            <Spinner android:id="@+id/compare_category" android:layout_width="match_parent" android:layout_height="52dp" android:background="@drawable/bg_allocation_input" android:popupBackground="@drawable/bg_dropdown_beige" android:contentDescription="@string/field_category" />
             <TextView style="@style/FormFieldLabel" android:labelFor="@id/compare_store" android:text="@string/store_name" />
-            <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="4dp">
-                <com.google.android.material.textfield.TextInputEditText android:id="@+id/compare_store" android:layout_width="match_parent" android:layout_height="58dp" android:hint="@string/hint_store" android:inputType="text" android:singleLine="true" android:textColor="@color/ink" />
+            <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="4dp" app:boxBackgroundColor="@color/form_beige">
+                <com.google.android.material.textfield.TextInputEditText android:id="@+id/compare_store" android:layout_width="match_parent" android:layout_height="58dp" android:hint="@string/hint_store" android:inputType="text" android:singleLine="true" android:textColor="@color/black" android:textColorHint="@color/black" />
             </com.google.android.material.textfield.TextInputLayout>
-            <TextView android:id="@+id/compare_unit_price" android:layout_width="match_parent" android:layout_height="wrap_content" android:padding="8dp" android:textColor="@color/forest" android:textStyle="bold" />
-            <TextView android:id="@+id/price_indicator" android:layout_width="match_parent" android:layout_height="wrap_content" android:padding="12dp" android:textColor="@color/forest" android:textStyle="bold" />
-            <TextView android:id="@+id/envelope_impact" android:layout_width="match_parent" android:layout_height="wrap_content" android:padding="8dp" android:textColor="@color/muted_green" />
+            <TextView android:id="@+id/compare_unit_price" android:layout_width="match_parent" android:layout_height="wrap_content" android:padding="8dp" android:textColor="@color/black" android:textStyle="bold" />
+            <TextView android:id="@+id/price_indicator" android:layout_width="match_parent" android:layout_height="wrap_content" android:padding="12dp" android:textColor="@color/black" android:textStyle="bold" />
+            <TextView android:id="@+id/envelope_impact" android:layout_width="match_parent" android:layout_height="wrap_content" android:padding="8dp" android:textColor="@color/black" />
             <com.google.android.material.button.MaterialButton android:id="@+id/compare_save" android:layout_width="match_parent" android:layout_height="54dp" android:text="@string/confirm_save_purchase" android:textColor="@color/alabaster" app:backgroundTint="@color/forest" app:cornerRadius="16dp" />
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>

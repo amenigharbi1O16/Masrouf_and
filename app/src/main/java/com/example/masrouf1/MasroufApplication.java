@@ -14,6 +14,7 @@ public final class MasroufApplication extends Application {
         super.onCreate();
         DevelopmentSeedManager.seedIfDebug(this);
         BudgetNotificationManager.createChannel(this);
+        com.masrouf.service.BudgetEvaluationService.scheduleNextMonth(this);
         PeriodicWorkRequest rollover = new PeriodicWorkRequest.Builder(BudgetRolloverWorker.class, 1, TimeUnit.DAYS).build();
         WorkManager.getInstance(this).enqueueUniquePeriodicWork("masrouf-budget-rollover", ExistingPeriodicWorkPolicy.KEEP, rollover);
     }

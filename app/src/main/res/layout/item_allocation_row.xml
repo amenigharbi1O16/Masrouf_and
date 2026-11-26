@@ -80,7 +80,7 @@
                     android:layout_height="wrap_content"
                     android:labelFor="@id/alloc_cat_percent_input"
                     android:text="@string/allocate_pct_label"
-                    android:textColor="@color/muted_green"
+                    android:textColor="@color/black"
                     android:textSize="11sp"
                     android:textStyle="bold" />
 
@@ -95,8 +95,8 @@
                     android:inputType="numberDecimal"
                     android:maxLines="1"
                     android:paddingHorizontal="12dp"
-                    android:textColor="@color/ink"
-                    android:textColorHint="@color/muted_green"
+                    android:textColor="@color/black"
+                    android:textColorHint="@color/black"
                     android:textSize="15sp"
                     android:textStyle="bold" />
             </LinearLayout>
@@ -112,7 +112,7 @@
                     android:layout_height="wrap_content"
                     android:labelFor="@id/alloc_cat_amount_input"
                     android:text="@string/allocate_amount_label"
-                    android:textColor="@color/muted_green"
+                    android:textColor="@color/black"
                     android:textSize="11sp"
                     android:textStyle="bold" />
 
@@ -127,8 +127,8 @@
                     android:inputType="numberDecimal"
                     android:maxLines="1"
                     android:paddingHorizontal="12dp"
-                    android:textColor="@color/ink"
-                    android:textColorHint="@color/muted_green"
+                    android:textColor="@color/black"
+                    android:textColorHint="@color/black"
                     android:textSize="15sp"
                     android:textStyle="bold" />
             </LinearLayout>

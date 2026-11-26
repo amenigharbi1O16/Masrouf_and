@@ -67,21 +67,47 @@ public final class AdminDrawer {
         }
 
         updateSelection(menu, activeDestination);
+        refreshBadges(activity, menu);
+    }
 
-        TextView childCount = childrenBadge, noticeCount = notificationsBadge;
+    public static void refreshBadges(MainActivity activity, LinearLayout menu) {
+        if (activity == null || menu == null) return;
+        TextView childCount = findBadgeForDestination(menu, "children");
+        TextView noticeCount = findBadgeForDestination(menu, "notifications");
         long userId = SessionStore.userId(activity);
+        if (userId <= 0L) return;
         MasroufViewModel viewModel = new androidx.lifecycle.ViewModelProvider(activity, new MasroufViewModelFactory(activity)).get(MasroufViewModel.class);
         viewModel.<DrawerBadgeData>request(repository -> repository.parentDrawerBadges(userId), state -> {
             if (activity.isFinishing() || activity.isDestroyed() || state.data == null) return;
-            if (childCount != null && state.data.children > 0) {
-                childCount.setText(String.valueOf(state.data.children));
-                childCount.setVisibility(View.VISIBLE);
+            if (childCount != null) {
+                if (state.data.children > 0) {
+                    childCount.setText(String.valueOf(state.data.children));
+                    childCount.setVisibility(View.VISIBLE);
+                } else {
+                    childCount.setVisibility(View.GONE);
+                }
             }
-            if (noticeCount != null && state.data.unreadNotifications > 0) {
-                noticeCount.setText(String.valueOf(state.data.unreadNotifications));
-                noticeCount.setVisibility(View.VISIBLE);
+            if (noticeCount != null) {
+                if (state.data.unreadNotifications > 0) {
+                    noticeCount.setText(String.valueOf(state.data.unreadNotifications));
+                    noticeCount.setVisibility(View.VISIBLE);
+                } else {
+                    noticeCount.setVisibility(View.GONE);
+                }
             }
         });
+    }
+
+    private static TextView findBadgeForDestination(LinearLayout menu, String destination) {
+        for (int i = 0; i < menu.getChildCount(); i++) {
+            View child = menu.getChildAt(i);
+            if (!(child instanceof LinearLayout) || !destination.equals(child.getTag())) continue;
+            LinearLayout row = (LinearLayout) child;
+            if (row.getChildCount() >= 3 && row.getChildAt(2) instanceof TextView) {
+                return (TextView) row.getChildAt(2);
+            }
+        }
+        return null;
     }
 
     /** Met à jour visuellement la ligne correspondant à l'onglet actif dans le tiroir parent. */

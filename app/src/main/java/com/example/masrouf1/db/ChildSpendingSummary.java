@@ -6,8 +6,14 @@ public final class ChildSpendingSummary {
     public long childProfileId;
     public long childUserId;
     public String nickname;
+    public String email;
+    public String parentPhone;
+    public long createdAt;
     public long allocatedTotalMilli;
     public long spentMilli;
     public long balanceMilli;
-    public long availableMilli() { return MoneyMath.subtract(allocatedTotalMilli,spentMilli); }
+
+    public long availableMilli() {
+        return MoneyMath.subtract(allocatedTotalMilli, spentMilli);
+    }
 }

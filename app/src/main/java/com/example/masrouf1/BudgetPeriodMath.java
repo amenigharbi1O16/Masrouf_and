@@ -218,4 +218,49 @@ public final class BudgetPeriodMath {
         if (milli < 0L) throw new NumberFormatException("negative");
         return milli;
     }
+
+    /** Inclusive start (00:00:00.000) of the equal-duration window immediately preceding [startMillis..endMillis]. */
+    public static long previousWindowStartMillis(long startMillis, long endMillis) {
+        int days = daysBetweenInclusive(startMillis, endMillis);
+        Calendar cal = Calendar.getInstance();
+        cal.setTimeInMillis(startMillis);
+        Calendar prevStart = Calendar.getInstance();
+        prevStart.clear();
+        prevStart.set(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH), 0, 0, 0);
+        prevStart.set(Calendar.MILLISECOND, 0);
+        prevStart.add(Calendar.DAY_OF_MONTH, -days);
+        return prevStart.getTimeInMillis();
+    }
+
+    /** Inclusive end (23:59:59.999) of the day immediately preceding startMillis. */
+    public static long previousWindowEndMillis(long startMillis) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTimeInMillis(startMillis);
+        Calendar prevEnd = Calendar.getInstance();
+        prevEnd.clear();
+        prevEnd.set(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH), 23, 59, 59);
+        prevEnd.set(Calendar.MILLISECOND, 999);
+        prevEnd.add(Calendar.DAY_OF_MONTH, -1);
+        return prevEnd.getTimeInMillis();
+    }
+
+    /** Short localized capitalized month label without trailing period (e.g. "Juin", "Juil", "Nov"). */
+    public static String shortMonthLabel(int monthZeroBased, Locale locale) {
+        Locale safe = locale == null ? Locale.getDefault() : locale;
+        String[] shorts = new DateFormatSymbols(safe).getShortMonths();
+        if (monthZeroBased < 0 || monthZeroBased >= shorts.length) return "";
+        String raw = shorts[monthZeroBased].replace(".", "").trim();
+        if (raw.isEmpty()) return "";
+        return raw.substring(0, 1).toUpperCase(safe) + raw.substring(1);
+    }
+
+    /** Compact numeric display (e.g. "0", "28", "50", or "12.5") matching RN pill chart legend rows. */
+    public static String compactDinars(long milli) {
+        if (milli <= 0L) return "0";
+        long whole = milli / 1_000L;
+        long rem = Math.abs(milli % 1_000L);
+        if (rem == 0L) return String.valueOf(whole);
+        BigDecimal bd = BigDecimal.valueOf(milli, 3).stripTrailingZeros();
+        return bd.toPlainString();
+    }
 }

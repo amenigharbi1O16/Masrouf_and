@@ -45,6 +45,36 @@ public final class SystemIntents {
             Intent chooser=Intent.createChooser(view,activity.getString(R.string.open_manual)); launch(activity,chooser);
         } catch(Exception ignored) { Toast.makeText(activity,R.string.open_manual,Toast.LENGTH_SHORT).show(); }
     }
+    public static void dial(Activity activity, String phone) {
+        dialHousehold(activity, phone);
+    }
+
+    public static void sendSms(Activity activity, String phone, String message) {
+        String normalized = phone == null ? "" : phone.trim();
+        String uriStr = normalized.isEmpty() ? "smsto:" : "smsto:" + Uri.encode(normalized);
+        Intent intent = new Intent(Intent.ACTION_SENDTO, Uri.parse(uriStr));
+        intent.putExtra("sms_body", message == null ? "" : message);
+        launch(activity, intent);
+    }
+
+    public static void copyToClipboard(Activity activity, String text) {
+        android.content.ClipboardManager cm = (android.content.ClipboardManager)
+                activity.getSystemService(android.content.Context.CLIPBOARD_SERVICE);
+        if (cm != null) {
+            cm.setPrimaryClip(android.content.ClipData.newPlainText(
+                    activity.getString(R.string.app_name), text == null ? "" : text));
+            Toast.makeText(activity, android.R.string.copy, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    public static void shareText(Activity activity, String subject, String body) {
+        Intent sendIntent = new Intent(Intent.ACTION_SEND);
+        sendIntent.setType("text/plain");
+        sendIntent.putExtra(Intent.EXTRA_SUBJECT, subject == null ? "" : subject);
+        sendIntent.putExtra(Intent.EXTRA_TEXT, body == null ? "" : body);
+        launch(activity, Intent.createChooser(sendIntent, activity.getString(R.string.share_summary_chooser)));
+    }
+
     private static void launch(Activity activity,Intent intent) {
         if(intent.resolveActivity(activity.getPackageManager())!=null) activity.startActivity(intent);
         else Toast.makeText(activity,R.string.app_name,Toast.LENGTH_SHORT).show();
