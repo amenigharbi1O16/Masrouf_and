@@ -1,3 +1,26 @@
+/*
+ * ============================================================================
+ * FICHIER : BudgetNotificationManager.java
+ * MISSION : Gestionnaire central des notifications système Android (canal
+ *           "budget_channel", NotificationCompat, NotificationManagerCompat) et
+ *           des notifications persistées dans SQLite Room. Évalue les seuils
+ *           de budget (80 %, 100 %, dépassement), dépassements d'enveloppes,
+ *           grosses dépenses (≥ 100 DT ou ≥ 25 % du budget), alertes parent-enfant,
+ *           dotations, demandes d'argent et attributions de points.
+ * IMPLÉMENTE : Déduplication double niveau via clé unique eventKey dans la table
+ *              notifications et drapeaux SharedPreferences "masrouf_notification_delivery",
+ *              masquage confidentiel sur écran verrouillé (VISIBILITY_PRIVATE +
+ *              setPublicVersion) et PendingIntent vers NotificationsActivity / RewardsActivity.
+ * EFFET À L'ÉCRAN : Émet des notifications heads-up Android et alimente la liste
+ *                   de NotificationsActivity ainsi que les badges de cloche/tiroir.
+ * COMMUNICATIONS :
+ *   ← MasroufApplication.onCreate (création du NotificationChannel au démarrage)
+ *   ← MasroufRepository (alertes synchrones lors des achats, dépenses, budgets, demandes)
+ *   ← BudgetRolloverWorker, BudgetEvaluationService (clôture et attribution de points)
+ *   → NotificationsActivity, RewardsActivity (PendingIntent au clic sur la notification)
+ *   → MasroufDao / MasroufDatabase (persistance NotificationEntity)
+ * ============================================================================
+ */
 package com.example.masrouf1;
 
 import android.app.Activity;
@@ -32,6 +55,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
+ * Gestionnaire central des notifications locales (NotificationChannel + NotificationCompat + NotificationManagerCompat)
+ * et des notifications in-app persistées dans Room. Utilise des clés eventKey déterministes pour éviter tout doublon.
+ */
+/**
  * Local and in-app Room notification dispatcher backed by unique deterministic event keys per recipient.
  */
 public final class BudgetNotificationManager {
@@ -42,6 +69,7 @@ public final class BudgetNotificationManager {
 
     private BudgetNotificationManager() { }
 
+    /** Crée le canal haute importance "budget_channel" avec vibration personnalisée (API 26+). */
     public static void createChannel(Context context) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return;
         NotificationChannel channel = new NotificationChannel(
@@ -362,6 +390,7 @@ public final class BudgetNotificationManager {
         return key == null ? 1 : (key.hashCode() & 0x7fffffff);
     }
 
+    /** Émet la notification système Android avec aperçu masqué sur écran verrouillé (VISIBILITY_PRIVATE) et déduplication SharedPreferences. */
     private static void postKnownEvent(Context context, int notificationId, String eventKey, String title,
                                        String message, Class<? extends Activity> destination) {
         if (eventKey == null || eventKey.isEmpty()) return;

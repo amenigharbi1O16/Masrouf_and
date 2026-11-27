@@ -1,3 +1,4 @@
+<!-- Thème principal Material 3 clair/beige chaud sans violet ni gris, avec overlays Dialog, DatePicker et BottomSheet -->
 <resources>
     <!-- Base light & warm-beige Masrouf theme: zero purple, zero grey forms, crisp black form text -->
     <style name="Base.Theme.Masrouf1" parent="Theme.Material3.DayNight.NoActionBar">

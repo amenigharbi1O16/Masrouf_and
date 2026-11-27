@@ -1,3 +1,25 @@
+/*
+ * ============================================================================
+ * FICHIER : AddExpenseActivity.java
+ * MISSION : Écran formulaire permettant à tous les profils (USER, PARENT, CHILD)
+ *           d'enregistrer une dépense directe (loyer, transport, facture, etc.) :
+ *           libellé, montant en dinars, catégorie de dépense, date (DatePickerDialog),
+ *           note facultative et dictée vocale par champ.
+ * IMPLÉMENTE : Sous-classe de BaseFeatureActivity chargeant activity_add_expense.xml,
+ *              résolvant le budget correspondant à la date saisie, validant les
+ *              entrées via MoneyInput et redirigeant vers ConfirmationActivity.
+ * EFFET À L'ÉCRAN : Carte formulaire beige chaud avec icônes micro inline,
+ *                   bannière d'alerte si aucun budget n'est défini, liste
+ *                   déroulante des catégories et bouton d'enregistrement.
+ * COMMUNICATIONS :
+ *   ← HomeFragment (bouton « Ajouter une dépense » ou saisie vocale)
+ *   → MasroufViewModel / MasroufRepository (productForm, resolveBudgetForDateOrPreferred,
+ *     saveExpense)
+ *   → VoiceFieldHelper (dictée vocale libellé / montant / note)
+ *   → BudgetPeriodActivity (bouton « Définir un budget » si absent)
+ *   → ConfirmationActivity (écran récapitulatif après succès)
+ * ============================================================================
+ */
 package com.masrouf.controller;
 
 import android.app.DatePickerDialog;
@@ -31,6 +53,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+/**
+ * Formulaire d'ajout d'une dépense directe (hérite de BaseFeatureActivity / activity_section.xml).
+ * Charge le budget actif et les catégories de type dépense, intègre la dictée vocale par champ
+ * (VoiceFieldHelper) et un sélecteur de date (DatePickerDialog), puis exécute saveExpense dans Room.
+ */
 public final class AddExpenseActivity extends BaseFeatureActivity {
     private static final String STATE_CATEGORY_ID = "ae_cat_id";
     private static final String STATE_DATE_MILLIS = "ae_date";

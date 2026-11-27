@@ -1,3 +1,22 @@
+/*
+ * ============================================================================
+ * FICHIER : SystemCategoryCatalog.java
+ * MISSION : Données de référence canoniques pour le catalogue système de
+ *           16 catégories budgétaires (6 "product", 10 "expense"). Fournit
+ *           les identifiants stables, clés, noms français, couleurs, icônes
+ *           Ionicons et pourcentages recommandés totalisant 100 %.
+ * IMPLÉMENTE : Méthode statique defaults() construisant la liste des 16
+ *              SystemCategoryEntity et titleResource(key) renvoyant le
+ *              R.string.* localisé (FR/EN/AR) pour chaque clé.
+ * EFFET À L'ÉCRAN : Peuple la grille de sélection lors de l'onboarding et
+ *                   la gestion des catégories (ManageCategoriesActivity).
+ * COMMUNICATIONS :
+ *   ← MasroufDatabase.REFERENCE_DATA_CALLBACK (insertion en base à chaque ouverture)
+ *   ← MasroufDatabase.MIGRATION_10_11 (mise à jour des recommendedPercent)
+ *   ← OnboardingActivity, ManageCategoriesActivity (affichage du catalogue)
+ *   ← CategoryIconResources (résolution de l'icône drawable par iconName)
+ * ============================================================================
+ */
 package com.example.masrouf1.db;
 
 import com.example.masrouf1.R;
@@ -6,10 +25,12 @@ import com.example.masrouf1.db.MasroufEntities.SystemCategoryEntity;
 import java.util.ArrayList;
 import java.util.List;
 
+/** Données de référence canoniques pour le catalogue système de 16 catégories (6 produit, 10 dépense). */
 /** Canonical seed data for the app-wide category catalog. */
 public final class SystemCategoryCatalog {
     private SystemCategoryCatalog() { }
 
+    /** Construit les 16 catégories par défaut dont les pourcentages recommandés totalisent 100 %. */
     public static List<SystemCategoryEntity> defaults() {
         ArrayList<SystemCategoryEntity> rows = new ArrayList<>();
         // ── Keep original IDs 1–10 for backward compatibility (sum = 100%) ──
@@ -34,6 +55,7 @@ public final class SystemCategoryCatalog {
         return rows;
     }
 
+    /** Retourne l'identifiant R.string.* localisé (FR/EN/AR) correspondant à une clé de catégorie système. */
     public static int titleResource(String key) {
         switch (key == null ? "" : key) {
             case "food":        return R.string.category_food;

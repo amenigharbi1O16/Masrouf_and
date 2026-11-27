@@ -1,3 +1,19 @@
+/*
+ * ============================================================================
+ * FICHIER : NotificationAdapter.java
+ * MISSION : Adaptateur RecyclerView affichant le fil des notifications locales
+ *           dans NotificationsActivity. Adapte dynamiquement la couleur de fond,
+ *           la bordure et le badge de gravité selon le type d'alerte (dépassement
+ *           rouge corail, alerte seuil 80 %/100 % ambre, information menthe/blanc).
+ * IMPLÉMENTE : RecyclerView.Adapter<Holder> liant item_notification.xml avec
+ *              formatage date/heure locale et listener de clic vers l'Activity.
+ * EFFET À L'ÉCRAN : Cartes empilées indiquant titre, message détaillé, date,
+ *                   pastille « Non lu » et pilule de gravité « Dépassement » / « Alerte ».
+ * COMMUNICATIONS :
+ *   ← NotificationsActivity (submit() et interface Listener.onSelected)
+ *   ← NotificationEntity (données Room)
+ * ============================================================================
+ */
 package com.example.masrouf1;
 
 import android.content.Context;
@@ -18,7 +34,12 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-/** Renders Room notifications with crisp visual severity badges (red overrun, amber alert, mint info). */
+/**
+ * Adaptateur RecyclerView utilisé par NotificationsActivity (layout item_notification.xml).
+ * Mission : lier chaque NotificationEntity à une carte stylée dynamiquement selon sa gravité :
+ * rouge corail (budget_over / category_over / child_budget_over), ambre (seuils 80%/100% / grosses dépenses),
+ * ou menthe/blanc (budget_closed, dotations, demandes). Remonte le clic vers NotificationAdapter.Listener.
+ */
 final class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapter.Holder> {
     interface Listener { void onSelected(NotificationEntity row); }
 

@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Parcours d'accueil post-connexion (OnboardingActivity) en 3 étapes : Aperçu, Sélection des catégories et Résumé -->
 <!-- OnboardingActivity: post-login 3-step flow matching screenshots -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"

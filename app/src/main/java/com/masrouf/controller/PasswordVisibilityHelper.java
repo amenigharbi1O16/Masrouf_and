@@ -1,3 +1,22 @@
+/*
+ * ============================================================================
+ * FICHIER : PasswordVisibilityHelper.java
+ * MISSION : Utilitaire d'interface unifiant le basculement afficher/masquer sur
+ *           tous les champs mot de passe de l'application (connexion,
+ *           inscription, changement de mot de passe, création enfant).
+ * IMPLÉMENTE : Parcours récursif d'une hiérarchie de vues (attachAll),
+ *              configuration END_ICON_CUSTOM sur TextInputLayout, permutation
+ *              PasswordTransformationMethod / SingleLineTransformationMethod en
+ *              préservant texte, position du curseur, sélection et police.
+ * EFFET À L'ÉCRAN : Affiche l'icône œil fermé (ic_eye_closed) quand le texte
+ *                   est masqué et œil ouvert (ic_eye_open) en clair, avec
+ *                   description d'accessibilité dynamique.
+ * COMMUNICATIONS :
+ *   ← LoginActivity, RegisterActivity, ChangePasswordActivity,
+ *     ChildrenManagementActivity (dialogs enfant et reset MDP)
+ *   ← PasswordVisibilityInstrumentedTest (tests UI Espresso associés)
+ * ============================================================================
+ */
 package com.masrouf.controller;
 
 import android.content.res.ColorStateList;
@@ -15,6 +34,7 @@ import androidx.core.content.ContextCompat;
 import com.example.masrouf1.R;
 import com.google.android.material.textfield.TextInputLayout;
 
+/** Utilitaire unifiant l'affichage/masquage des champs mot de passe (icônes œil fermé/ouvert, conservation du texte et du curseur). */
 /**
  * Enforces consistent password visibility behavior across every password field:
  * - Hidden (`textPassword`) displays a closed eye icon (`ic_eye_closed`).

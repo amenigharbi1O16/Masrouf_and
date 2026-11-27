@@ -1,3 +1,20 @@
+/*
+ * ============================================================================
+ * FICHIER : PillBarChart.java
+ * MISSION : Composant graphique personnalisé dessiné en Canvas Android natif
+ *           affichant l'historique des 6 derniers mois sous forme de pilules
+ *           verticales arrondies, sans aucune bibliothèque graphique externe.
+ * IMPLÉMENTE : Sous-classe de android.view.View avec Paint anti-aliasé, mesure
+ *              hauteur fixe 182 dp (onMeasure) et dessin onDraw() colorant les
+ *              barres en vert forêt normal, en corail si dépensé > budget
+ *              alloué, ou en petite pilule grise si dépense = 0.
+ * EFFET À L'ÉCRAN : Histogramme en pilules sur 6 mois avec étiquettes de mois
+ *                   centrées en bas et mise en gras du mois courant.
+ * COMMUNICATIONS :
+ *   ← AnalyticsRenderer.renderPillChartSection (alimentation via setBarItems)
+ *   ← AnalyticsSummaryData.BarItem (données mensuelles spentMilli / allocatedMilli)
+ * ============================================================================
+ */
 package com.example.masrouf1;
 
 import android.content.Context;
@@ -12,6 +29,7 @@ import android.view.View;
 import java.util.ArrayList;
 import java.util.List;
 
+// Graphique personnalisé en Canvas natif (android.view.View) : trace 6 barres en forme de pilules arrondies (vert forêt ou corail si dépassement) sans bibliothèque graphique tierce.
 /**
  * 6-month rounded pill bar chart matching the React Native PillBarChart specification:
  * subtle rounded resting pills when 0, dark forest pill fill proportional to maximum spend
@@ -52,6 +70,7 @@ public final class PillBarChart extends View {
         emptyPillColor = Color.rgb(203, 212, 207);
     }
 
+    /** Met à jour la série des 6 mois (BarItem) et redessine immédiatement le graphique Canvas. */
     public void setBarItems(List<BarItem> barItems) {
         items.clear();
         if (barItems != null) items.addAll(barItems);
@@ -59,7 +78,7 @@ public final class PillBarChart extends View {
         invalidate();
     }
 
-    /** Backwards-compatible numeric series setter. */
+    /** Variante simplifiée acceptant directement une liste de montants en millimes sans étiquettes de mois. */
     public void setMilliValues(List<Long> amounts) {
         items.clear();
         if (amounts != null) {

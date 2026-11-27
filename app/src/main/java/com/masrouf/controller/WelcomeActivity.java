@@ -1,3 +1,25 @@
+/*
+ * ============================================================================
+ * FICHIER : WelcomeActivity.java
+ * MISSION : Point d'entrée principal au lancement de l'application (LAUNCHER
+ *           dans AndroidManifest.xml). Présente deux phases : 1) écran de
+ *           bienvenue avec logo et bouton « Commencer » ; 2) carrousel
+ *           d'introduction en 3 diapositives avant le choix du type de compte
+ *           ou la connexion directe. Nettoie toute session d'onboarding inachevée.
+ * IMPLÉMENTE : AppCompatActivity (activity_welcome.xml) avec ViewPager2 +
+ *              SlideAdapter, indicateurs de pagination dynamiques en Java,
+ *              boutons de langue FR/AR/EN et conservation d'état sur rotation.
+ * EFFET À L'ÉCRAN : Écran splash/bienvenue puis 3 slides illustrées avec points
+ *                   indicateurs, liens « Passer » / « Se connecter » et boutons
+ *                   de sélection de langue.
+ * COMMUNICATIONS :
+ *   ← AndroidManifest.xml (MAIN / LAUNCHER)
+ *   ← MainActivity, SettingsFragment (redirection après déconnexion)
+ *   → LoginActivity (« Se connecter »)
+ *   → ChooseAccountTypeActivity (« Passer » ou fin du carrousel)
+ *   → LocaleController, SessionStore
+ * ============================================================================
+ */
 package com.masrouf.controller;
 
 import android.content.Intent;
@@ -18,6 +40,10 @@ import com.google.android.material.button.MaterialButton;
 
 import java.util.Locale;
 
+/**
+ * Point d'entrée (LAUNCHER dans AndroidManifest.xml) en 2 phases : écran d'accueil puis carrousel
+ * ViewPager2 à 3 diapositives avant la sélection du type de compte ou la connexion.
+ */
 /**
  * WelcomeActivity — entry point with 2 phases:
  *  Phase 1: Welcome splash (logo + "Commencer" button)

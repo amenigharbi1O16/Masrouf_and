@@ -1,3 +1,20 @@
+/*
+ * ============================================================================
+ * FICHIER : ProductPriceHistoryActivity.java
+ * MISSION : Écran affichant l'historique chronologique complet des achats
+ *           d'un produit donné (date, prix total payé, quantité, unité, prix
+ *           unitaire exact et nom du magasin).
+ * IMPLÉMENTE : AppCompatActivity (activity_product_price_history.xml) avec
+ *              RecyclerView interne PriceHistoryAdapter construisant ses cartes
+ *              programmatiquement en Java (topRow + détail + prix unitaire).
+ * EFFET À L'ÉCRAN : En-tête nommé d'après le produit, liste verticale de cartes
+ *                   blanches ou état vide/chargement.
+ * COMMUNICATIONS :
+ *   ← ProductDetailsActivity (extra "PRODUCT_ID" et "PRODUCT_NAME")
+ *   → MasroufViewModel / MasroufRepository.purchaseHistoryForProduct
+ *   ← CurrencyFormatter, SessionStore
+ * ============================================================================
+ */
 package com.masrouf.controller;
 
 import android.content.Intent;

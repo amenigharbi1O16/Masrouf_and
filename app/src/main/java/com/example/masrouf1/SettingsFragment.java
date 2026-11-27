@@ -1,3 +1,31 @@
+/*
+ * ============================================================================
+ * FICHIER : SettingsFragment.java
+ * MISSION : Onglet central « Réglages » unifié regroupant tous les paramètres
+ *           du compte sur un seul écran sans sous-menus cachés : édition nom et
+ *           adresse Gmail (avec validation temps réel), carte dotation pour
+ *           l'Enfant, puces des catégories suivies, accès rapides (budget,
+ *           catégories, calendrier, enfants/analyses ou récompenses, mot de passe,
+ *           manuel d'utilisation, partage résumé, sauvegarde SQLite locale),
+ *           communication (appel/SMS parent ou support), sélecteur de langue
+ *           FR/AR/EN et déconnexion.
+ * IMPLÉMENTE : Fragment utilisant fragment_settings.xml, item_settings_row.xml,
+ *              GmailValidationWatcher, ExecutorService de sauvegarde Room et
+ *              construction dynamique de puces de catégories avec retour à la ligne.
+ * EFFET À L'ÉCRAN : Formulaire profil, badges catégories, liste d'actions
+ *                   configurables selon le rôle (USER / CHILD / PARENT), boutons
+ *                   de langue et bouton de déconnexion.
+ * COMMUNICATIONS :
+ *   ← MainActivity (onglet central tab_settings + ouverture du tiroir)
+ *   → MasroufViewModel / MasroufRepository (loadSettingsData, updateName, updateEmail)
+ *   → MasroufDatabase.backupDatabase (sauvegarde locale masrouf.db.bak)
+ *   → SystemIntents (dialHousehold, shareReceipt, shareText)
+ *   → LocaleController.apply (changement de langue FR/AR/EN)
+ *   → BudgetPeriodActivity, ManageCategoriesActivity, ChildrenManagementActivity,
+ *     FamilyBudgetsAnalyticsActivity, RewardsActivity, ChangePasswordActivity,
+ *     UserManualActivity, WelcomeActivity
+ * ============================================================================
+ */
 package com.example.masrouf1;
 
 import android.content.Intent;
@@ -41,6 +69,11 @@ import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+/**
+ * Onglet central « Réglages » unifié : modification profil (nom, Gmail) et mot de passe,
+ * résumé des catégories actives, préférences (gestion enfants/dotations pour Parent),
+ * Intents implicites (appel, SMS, manuel PDF), langue FR/AR/EN, sauvegarde SQLite locale et déconnexion.
+ */
 /**
  * Complete self-contained Settings (`Réglages`) screen displaying every profile
  * control,
@@ -181,6 +214,7 @@ public final class SettingsFragment extends Fragment {
                 });
     }
 
+    /** Valide localement le nom saisi et l'enregistre en base Room via MasroufRepository.updateName(). */
     private void saveName() {
         String value = nameInput.getText() == null ? "" : nameInput.getText().toString().trim();
         if (value.isEmpty()) {
@@ -212,6 +246,7 @@ public final class SettingsFragment extends Fragment {
                 });
     }
 
+    /** Normalise l'adresse Gmail, contrôle son unicité via Room et rafraîchit le retour visuel en direct. */
     private void saveEmail() {
         String value = InputValidation.normalizeGmail(
                 emailInput.getText() == null ? "" : emailInput.getText().toString());

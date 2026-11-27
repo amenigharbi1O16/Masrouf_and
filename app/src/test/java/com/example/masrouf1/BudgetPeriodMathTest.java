@@ -1,3 +1,16 @@
+/*
+ * ============================================================================
+ * FICHIER : BudgetPeriodMathTest.java
+ * MISSION : Suite de tests unitaires JVM JUnit 4 validant la justesse des
+ *           calculs calendaires (années bissextiles, bornes de mois), la
+ *           détection de chevauchement de périodes, la conversion exacte entre
+ *           points de base (bps) et millimes ainsi que le parsing des montants.
+ * IMPLÉMENTE : 7 méthodes @Test JUnit 4 sans dépendance Android exécutées sur JVM.
+ * EFFET À L'ÉCRAN : Aucun — exécuté en build/CI via Gradle test.
+ * COMMUNICATIONS :
+ *   → BudgetPeriodMath (classe statique testée)
+ * ============================================================================
+ */
 package com.example.masrouf1;
 
 import org.junit.Test;
@@ -9,6 +22,10 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+/**
+ * Suite de tests unitaires JUnit 4 vérifiant les calculs calendaires ISO, la détection de chevauchements,
+ * l'arithmétique bps/millimes sans dérive et le découpage des fenêtres temporelles de comparaison.
+ */
 public final class BudgetPeriodMathTest {
 
     @Test

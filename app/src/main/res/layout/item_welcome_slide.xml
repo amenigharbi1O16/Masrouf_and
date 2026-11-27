@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Diapositive unitaire du carrousel ViewPager2 (WelcomeActivity) : icône sur cercle menthe, titre, texte et 2 points clés -->
 <!-- Single slide for pre-login onboarding ViewPager2 -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"

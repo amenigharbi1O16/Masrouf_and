@@ -1,3 +1,22 @@
+/*
+ * ============================================================================
+ * FICHIER : VoiceSpeechController.java
+ * MISSION : Contrôleur Android unifié de reconnaissance vocale multilingue
+ *           (AUTO FR/AR/EN + mode forcé). Vérifie et demande la permission
+ *           RECORD_AUDIO, pilote Android SpeechRecognizer avec repli automatique
+ *           vers RecognizerIntent si indisponible ou occupé, et gère les états
+ *           IDLE, LISTENING, PROCESSING, RESULT, CANCELLED, ERROR_PERMISSION, ERROR.
+ * IMPLÉMENTE : RecognitionListener complet, détection automatique de langue
+ *              API 33+ (EXTRA_ENABLE_LANGUAGE_DETECTION) et repli script/lexique
+ *              via VoiceParser.detectLanguage(), sans jamais traduire la phrase.
+ * EFFET À L'ÉCRAN : Aucun directement — transmet états, transcriptions partielles
+ *                   et transcription finale verbatim via l'interface Callback.
+ * COMMUNICATIONS :
+ *   ← VoiceTransactionDialogFragment, VoiceFieldHelper
+ *   → Android SpeechRecognizer / RecognizerIntent (API système vocale)
+ *   → VoiceParser.detectLanguage (détection de langue de repli)
+ * ============================================================================
+ */
 package com.masrouf.controller;
 
 import android.Manifest;
@@ -22,6 +41,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Contrôleur Android unifié pour la reconnaissance vocale : vérifie la permission RECORD_AUDIO,
+ * gère Android SpeechRecognizer avec repli RecognizerIntent, suit l'état (IDLE/LISTENING/PROCESSING/RESULT/ERROR)
+ * et supporte la détection automatique de langue (API 33+ ou heuristique de script).
+ */
 /**
  * Unified multilingual speech-recognition controller supporting French, English, and Arabic
  * with automatic language detection (API 33+ platform detection + multi-language hints + script/lexical fallback),

@@ -1,3 +1,24 @@
+/*
+ * ============================================================================
+ * FICHIER : OnboardingActivity.java
+ * MISSION : Assistant de prise en main en 3 étapes affiché lors de la première
+ *           connexion tant que les catégories initiales n'ont pas été choisies :
+ *           Étape 1 (Découverte + exemples), Étape 2 (Sélection personnalisée
+ *           des catégories autorisées), Étape 3 (Récapitulatif et validation).
+ * IMPLÉMENTE : AppCompatActivity (activity_onboarding.xml) avec état restauré
+ *              sur rotation (STEP + SELECTED_KEYS), RecyclerView à en-têtes
+ *              (CategorySelectionAdapter) respectant les restrictions enfant
+ *              et écriture atomique finishOnboarding() dans Room.
+ * EFFET À L'ÉCRAN : Indicateur de progression 01/03 à 03/03, cartes d'exemples,
+ *                   liste interactive de sélection Produits/Dépenses et bouton
+ *                   final « Accéder à l'accueil ».
+ * COMMUNICATIONS :
+ *   ← LoginActivity, MainActivity (gate de vérification compte)
+ *   → MasroufViewModel / MasroufRepository (onboardingCategories, saveOnboarding)
+ *   → SessionStore (save, markOnboardingComplete, clear si abandon étape 1)
+ *   → MainActivity (lancement avec CLEAR_TASK une fois terminé)
+ * ============================================================================
+ */
 package com.masrouf.controller;
 
 import android.content.Intent;
@@ -30,6 +51,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * Parcours d'accueil en 3 étapes après la première connexion :
+ * 1) Découverte avec exemples ; 2) Sélection des catégories autorisées pour ce compte ;
+ * 3) Récapitulatif puis écriture atomique dans user_categories / categories (finishOnboarding).
+ */
 /**
  * OnboardingActivity – Post-login 3-step onboarding:
  *
@@ -392,6 +418,7 @@ public final class OnboardingActivity extends AppCompatActivity {
             if (selectedKeys.contains(cat.key)) chosen.add(cat);
         }
 
+        // Déclenche la transaction Room finale et bascule vers MainActivity sans possibilité de retour sur l'onboarding.
         viewModel.<Boolean>request(
                 repository -> repository.saveOnboarding(userId, chosen),
                 result -> {

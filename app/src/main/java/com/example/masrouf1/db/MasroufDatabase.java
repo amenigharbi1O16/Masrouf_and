@@ -1,3 +1,24 @@
+/*
+ * ============================================================================
+ * FICHIER : MasroufDatabase.java
+ * MISSION : Base de données SQLite locale gérée par Room. Fichier physique
+ *           "masrouf.db", version 11, 18 entités normalisées. Contient
+ *           l'historique complet des 10 migrations incrémentales (v1→v11),
+ *           le callback de peuplement des données de référence (16 catégories
+ *           système + singleton settings) et la sauvegarde vérifiée.
+ * IMPLÉMENTE : @Database Room avec Singleton thread-safe (double-checked
+ *              locking), 10 objets Migration, Callback.onOpen() pour le
+ *              peuplement, backupDatabase() via VACUUM INTO ou WAL checkpoint
+ *              avec vérification d'intégrité PRAGMA integrity_check.
+ * EFFET À L'ÉCRAN : Aucun directement — fournit l'instance MasroufDao
+ *                   utilisée par MasroufRepository et les facades legacy.
+ * COMMUNICATIONS :
+ *   → MasroufDao (interface DAO abstraite exposée)
+ *   ← MasroufApplication (ouverture au démarrage)
+ *   ← MasroufRepository, UserDao, BudgetDao (consommateurs de getInstance())
+ *   ← SystemCategoryCatalog (données de référence pour les migrations)
+ * ============================================================================
+ */
 package com.example.masrouf1.db;
 
 import android.content.Context;
@@ -34,12 +55,18 @@ import com.example.masrouf1.db.MasroufEntities.SettingEntity;
 import com.example.masrouf1.db.MasroufEntities.MoneyRequestEntity;
 import com.example.masrouf1.db.MasroufEntities.PointsLogEntity;
 
+/**
+ * Base de données SQLite locale gérée par Room (fichier "masrouf.db", version 11).
+ * Contient les 18 entités normalisées, l'historique complet des 10 migrations manuelles
+ * et la sauvegarde vérifiée via VACUUM INTO ou WAL checkpoint.
+ */
 @Database(entities = {UserEntity.class, ChildProfileEntity.class, CategoryEntity.class, ProductEntity.class,
         BudgetEntity.class, BudgetLineEntity.class, PurchaseEntity.class, PurchaseItemEntity.class,
         TransactionEntity.class, GoalEntity.class, RewardEntity.class, NotificationEntity.class,
         PriceHistoryEntity.class, SystemCategoryEntity.class, UserCategoryEntity.class, SettingEntity.class,
         MoneyRequestEntity.class, PointsLogEntity.class}, version = 11, exportSchema = false)
 public abstract class MasroufDatabase extends RoomDatabase {
+    // Migrations incrémentales conservant les données existantes d'une version de schéma à la suivante.
     private static final Migration MIGRATION_1_2 = new Migration(1, 2) {
         @Override public void migrate(SupportSQLiteDatabase db) {
             db.execSQL("ALTER TABLE users ADD COLUMN passwordHash TEXT");
@@ -124,6 +151,7 @@ public abstract class MasroufDatabase extends RoomDatabase {
             }
         }
     };
+    // Callback exécuté à chaque ouverture pour peupler le catalogue des 16 catégories système et le singleton settings (id=1).
     private static final Callback REFERENCE_DATA_CALLBACK = new Callback() {
         @Override public void onOpen(SupportSQLiteDatabase db) {
             db.beginTransaction();
@@ -152,6 +180,7 @@ public abstract class MasroufDatabase extends RoomDatabase {
     private static volatile MasroufDatabase instance;
     public abstract MasroufDao masroufDao();
 
+    /** Retourne l'instance Singleton thread-safe de la base Room "masrouf.db". */
     public static MasroufDatabase getInstance(Context context) {
         if (instance == null) {
             synchronized (MasroufDatabase.class) {
@@ -165,7 +194,7 @@ public abstract class MasroufDatabase extends RoomDatabase {
         return instance;
     }
 
-    /** Creates a verified database snapshot in the app's private no-backup directory. Run off the main thread. */
+    /** Crée une sauvegarde vérifiée ("masrouf.db.bak") via VACUUM INTO ou wal_checkpoint + copie transactionnelle. */
     public static File backupDatabase(Context context) throws IOException {
         MasroufDatabase room = getInstance(context.getApplicationContext());
         SupportSQLiteDatabase database = room.getOpenHelper().getWritableDatabase();

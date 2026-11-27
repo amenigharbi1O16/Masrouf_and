@@ -1,3 +1,25 @@
+/*
+ * ============================================================================
+ * FICHIER : BudgetPeriodActivity.java
+ * MISSION : Écran de sélection ou d'édition de la période budgétaire (dates
+ *           de début/fin au format ISO YYYY-MM-DD et plafond global en dinars).
+ *           Génère un calendrier mensuel interactif en Java permettant de
+ *           sélectionner visuellement une plage de jours tout en signalant
+ *           les dates déjà occupées par d'autres budgets et en bloquant les
+ *           périodes passées ou chevauchantes.
+ * IMPLÉMENTE : AppCompatActivity (activity_budget_period.xml) gérant les modes
+ *              création, modification ("MODE"="edit") et consultation lecture
+ *              seule ("READ_ONLY"=true), puis passant START/END/TOTAL à
+ *              AllocateBudgetActivity.
+ * EFFET À L'ÉCRAN : Champs date début/fin, champ budget total, bannières
+ *                   dynamiques d'état, calendrier mensuel cliquable avec points
+ *                   indicateurs et bouton « Répartir par catégorie ».
+ * COMMUNICATIONS :
+ *   ← HomeFragment, CalendarFragment, AnalyticsFragment, SettingsFragment
+ *   → MasroufViewModel / MasroufRepository (budgetsForUser, budget, findOverlappingBudget)
+ *   → AllocateBudgetActivity (passage à l'étape de répartition des enveloppes)
+ * ============================================================================
+ */
 package com.masrouf.controller;
 
 import android.content.Intent;
@@ -35,6 +57,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * Écran de définition ou modification de période budgétaire (date début/fin ISO + plafond global en DT).
+ * Intègre un calendrier mensuel interactif généré en Java (lignes/cellules cliquables), bloque les périodes
+ * passées ou chevauchantes, puis transmet les bornes vers AllocateBudgetActivity.
+ */
 /**
  * Dedicated Budget Period & Calendar Selection page matching React Native (`budget-mois.tsx`):
  * - Defaults to 1st day -> last day of current month (or passed month from CalendarFragment)

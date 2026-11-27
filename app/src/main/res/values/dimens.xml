@@ -1,3 +1,4 @@
+<!-- Jetons de dimensions, espacements, rayons d'arrondi et tailles de texte par défaut (qualifiers sw360dp/sw480dp/sw600dp) -->
 <resources>
     <dimen name="space_xs">4dp</dimen>
     <dimen name="space_sm">8dp</dimen>

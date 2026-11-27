@@ -1,3 +1,24 @@
+/*
+ * ============================================================================
+ * FICHIER : CustomCategoryDialogFragment.java
+ * MISSION : Boîte de dialogue modale permettant soit d'activer une catégorie
+ *           système du catalogue non encore suivie, soit de créer une nouvelle
+ *           catégorie personnalisée (nom avec dictée vocale, pastille couleur
+ *           botanique et pourcentage d'allocation sur 100 %).
+ * IMPLÉMENTE : DialogFragment gonflant dialog_add_category.xml avec onglets
+ *              Produit/Dépense, RadioGroup Proposée/Manuelle, jauge % temps
+ *              réel, VoiceFieldHelper et notification via Listener + FragmentResult.
+ * EFFET À L'ÉCRAN : Fenêtre beige chaleureuse avec sélecteur Produit/Dépense,
+ *                   liste des catégories proposées, palette de 8 pastilles de
+ *                   couleurs et barre de progression d'allocation.
+ * COMMUNICATIONS :
+ *   ← ManageCategoriesActivity, HomeFragment (clic « Ajouter une catégorie »)
+ *   → MasroufViewModel / MasroufRepository (loadManageCategories, categoryAllocation,
+ *     activateProposedCatalogCategory, addCategory)
+ *   → VoiceFieldHelper (dictée vocale du nom de catégorie)
+ *   → CategoryIconResources, SystemCategoryCatalog
+ * ============================================================================
+ */
 package com.masrouf.controller;
 
 import android.app.Dialog;
@@ -45,6 +66,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * Boîte de dialogue modale permettant d'activer une catégorie système non sélectionnée ou de créer
+ * une catégorie personnalisée (avec dictée vocale du nom, pastille couleur botanique et % d'allocation).
+ */
 /**
  * Add Category Modal aligned with React Native CustomCategoryModal.tsx:
  * - Warm off-white/beige background, zero grey, zero purple, crisp black text +

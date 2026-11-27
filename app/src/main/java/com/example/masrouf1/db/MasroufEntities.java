@@ -1,3 +1,25 @@
+/*
+ * ============================================================================
+ * FICHIER : MasroufEntities.java
+ * MISSION : Modèle relationnel Room normalisé définissant les 18 entités
+ *           SQLite de l'application. Tous les montants sont stockés en
+ *           millimes (1 DT = 1000 millimes, type long) pour éviter les
+ *           erreurs d'arrondi flottant.
+ * IMPLÉMENTE : 18 classes statiques @Entity : UserEntity, ChildProfileEntity,
+ *              CategoryEntity, ProductEntity, BudgetEntity, BudgetLineEntity,
+ *              PurchaseEntity, PurchaseItemEntity, TransactionEntity,
+ *              GoalEntity, RewardEntity, NotificationEntity, PriceHistoryEntity,
+ *              SystemCategoryEntity, UserCategoryEntity, SettingEntity,
+ *              MoneyRequestEntity, PointsLogEntity.
+ * EFFET À L'ÉCRAN : Aucun directement — structure de données sous-jacente
+ *                   utilisée par toutes les couches (DAO, Repository, ViewModel).
+ * COMMUNICATIONS :
+ *   ← MasroufDatabase (annotation @Database entities={...})
+ *   ← MasroufDao (paramètres et retours des requêtes Room)
+ *   ← MasroufRepository, MasroufViewModel (manipulation des objets métier)
+ *   ← Adapters, Activities, Fragments (lecture des champs pour affichage)
+ * ============================================================================
+ */
 package com.example.masrouf1.db;
 
 import androidx.room.Entity;
@@ -7,10 +29,12 @@ import androidx.room.Index;
 import androidx.room.PrimaryKey;
 import androidx.annotation.NonNull;
 
+/** Modèle relationnel normalisé Room (18 tables SQLite) ; montants stockés en millimes (1 DT = 1000 millimes). */
 /** Room's normalized offline data model; catalogue rows and per-user selections are separate. */
 public final class MasroufEntities {
     private MasroufEntities() { }
 
+    /** Compte utilisateur (rôle : "user", "parent" ou "child", rattaché à un foyer via householdId). */
     @Entity(tableName = "users", indices = {@Index(value = {"householdId"}), @Index(value = {"email"}, unique = true)})
     public static class UserEntity {
         @PrimaryKey(autoGenerate = true) public long id;
@@ -28,6 +52,7 @@ public final class MasroufEntities {
         public long createdAt;
     }
 
+    /** Lien parent-enfant et dotation mensuelle cumulée pour la gestion familiale. */
     @Entity(tableName = "child_profiles", foreignKeys = {
             @ForeignKey(entity = UserEntity.class, parentColumns = "id", childColumns = "parentUserId", onDelete = ForeignKey.CASCADE),
             @ForeignKey(entity = UserEntity.class, parentColumns = "id", childColumns = "childUserId", onDelete = ForeignKey.CASCADE)},
@@ -44,6 +69,7 @@ public final class MasroufEntities {
         public long createdAt;
     }
 
+    /** Catégorie personnelle utilisée dans les journaux, achats et enveloppes budgétaires (produit ou dépense). */
     @Entity(tableName = "categories", foreignKeys = @ForeignKey(entity = UserEntity.class,
             parentColumns = "id", childColumns = "userId", onDelete = ForeignKey.CASCADE), indices = @Index("userId"))
     public static class CategoryEntity {
@@ -56,6 +82,7 @@ public final class MasroufEntities {
         @ColumnInfo(defaultValue = "0") public int allocationPercent;
     }
 
+    /** Produit référencé dans le catalogue personnel (marque, unité, photo locale et dernier prix unitaire). */
     @Entity(tableName = "products", foreignKeys = @ForeignKey(entity = CategoryEntity.class,
             parentColumns = "id", childColumns = "categoryId", onDelete = ForeignKey.CASCADE), indices = @Index("categoryId"))
     public static class ProductEntity {
@@ -71,6 +98,7 @@ public final class MasroufEntities {
         public long updatedAt;
     }
 
+    /** Période budgétaire d'un utilisateur (ACTIVE ou CLOSED, plafond mensuel et total dépensé). */
     @Entity(tableName = "budgets", foreignKeys = @ForeignKey(entity = UserEntity.class,
             parentColumns = "id", childColumns = "userId", onDelete = ForeignKey.CASCADE), indices = @Index("userId"))
     public static class BudgetEntity {
@@ -86,6 +114,7 @@ public final class MasroufEntities {
         public int pointsAwarded;
     }
 
+    /** Enveloppe budgétaire dédiée à une catégorie sur un budget donné (limite, dépensé et pourcentage planifié en points de base bps). */
     @Entity(tableName = "budget_lines", foreignKeys = {
             @ForeignKey(entity = BudgetEntity.class, parentColumns = "id", childColumns = "budgetId", onDelete = ForeignKey.CASCADE),
             @ForeignKey(entity = CategoryEntity.class, parentColumns = "id", childColumns = "categoryId", onDelete = ForeignKey.CASCADE)},
@@ -99,6 +128,7 @@ public final class MasroufEntities {
         @ColumnInfo(defaultValue = "0") public int plannedPercentBps;
     }
 
+    /** En-tête d'un achat produit (date, total en millimes, magasin et chemin de reçu). */
     @Entity(tableName = "purchases", foreignKeys = @ForeignKey(entity = UserEntity.class,
             parentColumns = "id", childColumns = "userId", onDelete = ForeignKey.CASCADE), indices = @Index("userId"))
     public static class PurchaseEntity {
@@ -110,6 +140,7 @@ public final class MasroufEntities {
         public String receiptPath;
     }
 
+    /** Ligne détaillée d'un achat reliant PurchaseEntity à ProductEntity avec quantité (en millimes) et prix unitaire. */
     @Entity(tableName = "purchase_items", foreignKeys = {
             @ForeignKey(entity = PurchaseEntity.class, parentColumns = "id", childColumns = "purchaseId", onDelete = ForeignKey.CASCADE),
             @ForeignKey(entity = ProductEntity.class, parentColumns = "id", childColumns = "productId", onDelete = ForeignKey.CASCADE)},
@@ -124,6 +155,7 @@ public final class MasroufEntities {
         public long unitPriceMilli;
     }
 
+    /** Écriture financière unitaire (dépense directe, achat, dotation ou don) liée à un budget et une catégorie. */
     @Entity(tableName = "money_transactions", foreignKeys = {
             @ForeignKey(entity = UserEntity.class, parentColumns = "id", childColumns = "userId", onDelete = ForeignKey.CASCADE),
             @ForeignKey(entity = BudgetEntity.class, parentColumns = "id", childColumns = "budgetId", onDelete = ForeignKey.CASCADE)},
@@ -140,6 +172,7 @@ public final class MasroufEntities {
         public long occurredAt;
     }
 
+    /** Objectif d'épargne (notamment suivi sur le tableau de bord Enfant ; création non exposée par formulaire UI). */
     @Entity(tableName = "goals", foreignKeys = @ForeignKey(entity = UserEntity.class,
             parentColumns = "id", childColumns = "userId", onDelete = ForeignKey.CASCADE), indices = @Index("userId"))
     public static class GoalEntity {
@@ -151,6 +184,7 @@ public final class MasroufEntities {
         public long dueAt;
     }
 
+    /** Récompense déblocable par points sur un profil Enfant. */
     @Entity(tableName = "rewards", foreignKeys = @ForeignKey(entity = ChildProfileEntity.class,
             parentColumns = "id", childColumns = "childProfileId", onDelete = ForeignKey.CASCADE), indices = @Index("childProfileId"))
     public static class RewardEntity {
@@ -162,6 +196,7 @@ public final class MasroufEntities {
         public long createdAt;
     }
 
+    /** Notification persistée localement avec clé unique eventKey par utilisateur pour éviter tout doublon. */
     @Entity(tableName = "notifications", foreignKeys = @ForeignKey(entity = UserEntity.class,
             parentColumns = "id", childColumns = "userId", onDelete = ForeignKey.CASCADE), indices = {@Index("userId"), @Index("createdAt"), @Index(value = {"userId", "eventKey"}, unique = true)})
     public static class NotificationEntity {
@@ -175,6 +210,7 @@ public final class MasroufEntities {
         public String eventKey;
     }
 
+    /** Demande d'argent envoyée par un enfant à son parent (statuts : pending, approved, rejected). */
     @Entity(tableName = "money_requests", foreignKeys = {
             @ForeignKey(entity = UserEntity.class, parentColumns = "id", childColumns = "childUserId", onDelete = ForeignKey.CASCADE),
             @ForeignKey(entity = UserEntity.class, parentColumns = "id", childColumns = "parentUserId", onDelete = ForeignKey.CASCADE)},
@@ -191,6 +227,7 @@ public final class MasroufEntities {
         public String responseNote;
     }
 
+    /** Journal d'attribution des points de fidélité avec unicité (userId, eventKey) empêchant un double gain. */
     @Entity(tableName = "points_log", foreignKeys = @ForeignKey(entity = UserEntity.class,
             parentColumns = "id", childColumns = "userId", onDelete = ForeignKey.CASCADE),
             indices = {@Index("userId"), @Index("createdAt"), @Index(value = {"userId", "eventKey"}, unique = true)})
@@ -203,6 +240,7 @@ public final class MasroufEntities {
         public long createdAt;
     }
 
+    /** Historique chronologique du prix unitaire et du magasin lors de chaque achat d'un produit. */
     @Entity(tableName = "price_history", foreignKeys = @ForeignKey(entity = ProductEntity.class,
             parentColumns = "id", childColumns = "productId", onDelete = ForeignKey.CASCADE), indices = {@Index("productId"), @Index("observedAt")})
     public static class PriceHistoryEntity {

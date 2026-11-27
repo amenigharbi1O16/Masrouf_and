@@ -1,3 +1,21 @@
+/*
+ * ============================================================================
+ * FICHIER : UserDao.java
+ * MISSION : Façade asynchrone historique de type MVC-DAO encapsulant les
+ *           opérations utilisateurs et familiales sur MasroufDatabase (connexion,
+ *           inscription, onboarding, création de compte enfant, don d'argent,
+ *           réinitialisation mot de passe, mise à jour email).
+ * IMPLÉMENTE : Classe contrôleur exécutant les appels SQLite Room hors thread
+ *              principal via ExecutorService et renvoyant les résultats au
+ *              thread UI via android.os.Handler(Looper.getMainLooper()).
+ * EFFET À L'ÉCRAN : Aucun directement — transmet les résultats via callbacks
+ *                   Result<T> / AuthResult. Les écrans récents privilégient
+ *                   MasroufViewModel -> MasroufRepository -> MasroufDao.
+ * COMMUNICATIONS :
+ *   → MasroufDatabase / MasroufDao (requêtes et transactions SQLite)
+ *   → PasswordHasher, InputValidation, BudgetNotificationManager
+ * ============================================================================
+ */
 package com.masrouf.controller;
 
 import android.content.Context;
@@ -15,16 +33,25 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-/** MVC-facing asynchronous DAO facade for local account operations. */
+/**
+ * Façade asynchrone historique de type MVC-DAO encapsulant les opérations comptes/famille sur MasroufDatabase.
+ * Exécute chaque requête hors thread principal via IO (ExecutorService) et rappelle le thread UI via Handler.
+ * Note architecturale : les écrans actifs passent aujourd'hui par MasroufViewModel -> MasroufRepository -> MasroufDao.
+ */
 public final class UserDao {
     private static final ExecutorService IO = Executors.newSingleThreadExecutor();
     private final MasroufDatabase database;
     private final Context appContext;
 
+    /** Rappel générique retournant le résultat et un code d'erreur éventuel. */
     public interface Result<T> { void complete(T value, String error); }
+    /** Rappel spécialisé de connexion retournant UserEntity ou null si échec. */
     public interface AuthResult { void complete(UserEntity user); }
+
+    /** @param context contexte Android utilisé pour obtenir le singleton MasroufDatabase. */
     public UserDao(Context context) { appContext=context.getApplicationContext(); database = MasroufDatabase.getInstance(appContext); }
 
+    /** Vérifie l'email Gmail normalisé et le mot de passe PBKDF2 hors thread UI puis renvoie UserEntity. */
     public void authenticate(String email, String password, AuthResult callback) {
         IO.execute(() -> {
             UserEntity user = null;

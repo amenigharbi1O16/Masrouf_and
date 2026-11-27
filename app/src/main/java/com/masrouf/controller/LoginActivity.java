@@ -1,3 +1,26 @@
+/*
+ * ============================================================================
+ * FICHIER : LoginActivity.java
+ * MISSION : Écran de connexion permettant à tous les profils (USER, PARENT,
+ *           CHILD) de s'authentifier via leur adresse Gmail et mot de passe.
+ *           Assure la validation Gmail en direct (FormValidationTextWatcher),
+ *           l'affichage/masquage du mot de passe (PasswordVisibilityHelper),
+ *           la bascule de langue FR/AR/EN et la vérification PBKDF2 en base.
+ * IMPLÉMENTE : AppCompatActivity avec ViewBinding (ActivityLoginBinding),
+ *              LoginClickListener explicite, DevelopmentSeedManager.ensureSeeded()
+ *              en Debug, enregistrement SessionStore et routage conditionnel
+ *              vers OnboardingActivity ou MainActivity.
+ * EFFET À L'ÉCRAN : Formulaire connexion (Gmail, mot de passe, retour visuel
+ *                   temps réel, bannière d'erreur d'identification, boutons
+ *                   de langue et lien vers l'inscription).
+ * COMMUNICATIONS :
+ *   ← WelcomeActivity, ChooseAccountTypeActivity, RegisterActivity (extra "EMAIL")
+ *   → FormValidationTextWatcher, PasswordVisibilityHelper, LoginClickListener
+ *   → MasroufViewModel / MasroufRepository.authenticate (vérification Room)
+ *   → SessionStore.save (enregistrement session)
+ *   → OnboardingActivity (si onboarding incomplet) ou MainActivity (sinon)
+ * ============================================================================
+ */
 package com.masrouf.controller;
 
 import android.content.Intent;
@@ -16,6 +39,10 @@ import com.example.masrouf1.R;
 import com.example.masrouf1.databinding.ActivityLoginBinding;
 import com.example.masrouf1.db.MasroufEntities.UserEntity;
 
+/**
+ * Écran de connexion (ViewBinding ActivityLoginBinding) : valide l'adresse Gmail en temps réel,
+ * authentifie l'utilisateur via PBKDF2 en base Room puis route vers MainActivity ou OnboardingActivity.
+ */
 public final class LoginActivity extends AppCompatActivity {
     private ActivityLoginBinding binding;
     private MasroufViewModel viewModel;
@@ -76,6 +103,11 @@ public final class LoginActivity extends AppCompatActivity {
         return Math.round(value * getResources().getDisplayMetrics().density);
     }
 
+    /**
+     * Valide les identifiants (Gmail strict + mot de passe non vide), exécute l'authentification PBKDF2
+     * asynchrone sur Room via MasroufViewModel, puis enregistre SessionStore et route selon l'état d'onboarding :
+     * -> OnboardingActivity ("USER_ID") si categoriesSelected/onboarded faux, sinon MainActivity (pile vidée).
+     */
     public void performLogin() {
         String address = InputValidation.normalizeGmail(binding.loginEmail.getText().toString());
         String secret = binding.loginPassword.getText().toString();

@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Teinte des cases à cocher et boutons radio (émeraude lorsque coché/sélectionné, noir au repos) -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:color="@color/emerald" android:state_checked="true" />
     <item android:color="@color/emerald" android:state_selected="true" />

@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Carte de sélection de catégorie (icône, nom, statut et coche), gonflée par CategoryAdapter -->
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="88dp" android:layout_margin="5dp" app:cardBackgroundColor="@color/alabaster" app:cardCornerRadius="@dimen/radius_card" app:strokeColor="@color/card_border" app:strokeWidth="@dimen/stroke_card">
     <LinearLayout android:id="@+id/category_item_root" android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center_vertical" android:orientation="horizontal" android:layoutDirection="locale" android:paddingHorizontal="12dp">
         <ImageView android:id="@+id/category_item_icon" android:layout_width="32dp" android:layout_height="32dp" android:contentDescription="@null" android:scaleType="fitCenter" />

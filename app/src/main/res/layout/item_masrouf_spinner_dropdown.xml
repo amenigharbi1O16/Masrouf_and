@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Élément de liste déroulante beige pour Spinner (texte noir lisible sur form_beige, coche émeraude) -->
 <CheckedTextView xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@android:id/text1"
     style="?android:attr/spinnerDropDownItemStyle"

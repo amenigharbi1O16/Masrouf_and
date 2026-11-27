@@ -1,3 +1,4 @@
+<!-- Styles typographiques et widgets réutilisables (libellés de formulaire, boutons Material3, cartes) -->
 <resources>
     <style name="FormFieldLabel">
         <item name="android:layout_width">match_parent</item>

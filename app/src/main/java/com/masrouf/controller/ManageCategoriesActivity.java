@@ -1,3 +1,26 @@
+/*
+ * ============================================================================
+ * FICHIER : ManageCategoriesActivity.java
+ * MISSION : Écran de gestion des catégories suivies par le compte (séparées
+ *           en « Catégories de produits » et « Catégories de dépenses »).
+ *           Permet d'activer/désactiver les catégories du catalogue système ou
+ *           personnalisées, d'en ajouter via CustomCategoryDialogFragment, de
+ *           supprimer les catégories personnalisées non utilisées et d'enregistrer
+ *           les changements de manière transactionnelle sans perdre l'historique.
+ * IMPLÉMENTE : AppCompatActivity (activity_manage_categories.xml) avec
+ *              RecyclerView multi-types (HeaderVH + ItemVH), AlertDialog de
+ *              confirmation de suppression et appel saveManagedCategories().
+ * EFFET À L'ÉCRAN : Liste structurée avec boutons dynamiques Sélectionner /
+ *                   Sélectionné, compteur en temps réel, bouton d'ajout
+ *                   personnalisé et bannière d'avertissement si 0 sélection.
+ * COMMUNICATIONS :
+ *   ← HomeFragment (ActivityResultLauncher), SettingsFragment,
+ *     AllocateBudgetActivity
+ *   → CustomCategoryDialogFragment (création ou activation de catégorie)
+ *   → MasroufViewModel / MasroufRepository (loadManageCategories,
+ *     saveManagedCategories, deleteCustomCategory)
+ * ============================================================================
+ */
 package com.masrouf.controller;
 
 import android.content.Intent;
@@ -33,6 +56,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * Écran de gestion des catégories du compte : affiche les catégories système (produits/dépenses)
+ * et personnalisées, permet l'ajout via CustomCategoryDialogFragment, la suppression sécurisée
+ * si inutilisée et la mise à jour transactionnelle des enveloppes du budget actif.
+ */
 /**
  * Category Management screen (`Gérer` / `gerer-categories.tsx`):
  * - Displays all Product and Expense categories in two separated sections (including Enfants)
@@ -233,6 +261,7 @@ public final class ManageCategoriesActivity extends AppCompatActivity {
 
         ArrayList<Long> catalogList = new ArrayList<>(selectedCatalogIds);
         ArrayList<Long> customList = new ArrayList<>(selectedCustomIds);
+        // Sauvegarde transactionnelle préservant les transactions passées et les budgets déjà clôturés.
         viewModel.<Boolean>request(
                 repository -> repository.saveManagedCategories(userId, catalogList, customList),
                 state -> {

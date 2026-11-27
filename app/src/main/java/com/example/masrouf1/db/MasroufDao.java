@@ -1,3 +1,23 @@
+/*
+ * ============================================================================
+ * FICHIER : MasroufDao.java
+ * MISSION : Interface DAO Room centralisant l'ensemble des requêtes SQL,
+ *           écritures CRUD et transactions ACID multi-tables de la base
+ *           "masrouf.db". Contient les méthodes @Query, @Insert, @Update,
+ *           @Transaction et les méthodes default composées.
+ * IMPLÉMENTE : @Dao Room avec ~90 requêtes SQL, 15+ méthodes @Transaction
+ *              composées (createChildAccount, recordPurchase, recordExpense,
+ *              resolveMoneyRequest, awardPointsOnce, redeemReward, etc.)
+ *              et les opérations LiveData observables.
+ * EFFET À L'ÉCRAN : Aucun directement — fournit les données brutes au
+ *                   MasroufRepository qui les expose au ViewModel.
+ * COMMUNICATIONS :
+ *   ← MasroufDatabase (singleton Room qui génère l'implémentation)
+ *   → MasroufRepository (seul consommateur direct du DAO)
+ *   ← MasroufEntities (toutes les entités manipulées)
+ *   ← MoneyMath (arithmétique exacte dans les transactions composées)
+ * ============================================================================
+ */
 package com.example.masrouf1.db;
 
 import androidx.room.Dao;
@@ -32,6 +52,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
+/** Interface DAO Room centralisant l'ensemble des requêtes SQL, écritures et transactions ACID multi-tables. */
 @Dao
 public interface MasroufDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE) long insert(UserEntity row);
@@ -174,6 +195,7 @@ public interface MasroufDao {
     @Query("SELECT users.name FROM users INNER JOIN child_profiles ON child_profiles.childUserId = users.id WHERE child_profiles.parentUserId = :parentUserId ORDER BY users.name") List<String> childNames(long parentUserId);
     @Query("SELECT SUM(amountMilli) FROM money_transactions WHERE userId = :userId AND kind IN ('expense','donation','purchase') AND occurredAt >= :historyStart GROUP BY strftime('%Y-%m', occurredAt / 1000, 'unixepoch')")
     List<Long> monthlySpendingTotals(long userId, long historyStart);
+    /** Calcule la dépense mensuelle moyenne historique à partir de historyStart avec BigInteger sans perte de précision. */
     default Long averageMonthlySpendMilli(long userId, long historyStart) {
         List<Long> monthlyTotals=monthlySpendingTotals(userId,historyStart);
         if(monthlyTotals.isEmpty()) return null;
@@ -181,6 +203,10 @@ public interface MasroufDao {
         return sum.divide(BigInteger.valueOf(monthlyTotals.size())).longValueExact();
     }
 
+    /**
+     * Transaction atomique créant une demande d'argent enfant en statut "pending"
+     * et générant immédiatement la notification locale destinée au parent.
+     */
     @Transaction
     default long createMoneyRequest(MoneyRequestEntity request,String notificationTitle,String notificationMessage) {
         if(request==null||request.amountMilli<=0||request.childUserId<=0)return -1L;

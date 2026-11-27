@@ -1,3 +1,21 @@
+/*
+ * ============================================================================
+ * FICHIER : AnalyticsSummaryData.java
+ * MISSION : Objet de transfert immuable (DTO) transportant l'instantané complet
+ *           des indicateurs analytiques calculés depuis Room pour un compte
+ *           (Normal User, Child ou Parent).
+ * IMPLÉMENTE : Classe finale immuable contenant deux sous-classes statiques :
+ *              CategoryStat (ventilation par catégorie) et ChildAnalyticsItem
+ *              (statistiques agrégées confidentielles d'un enfant).
+ * EFFET À L'ÉCRAN : Aucun directement — modèle de données affiché par
+ *                   AnalyticsRenderer dans AnalyticsFragment et
+ *                   FamilyBudgetsAnalyticsActivity.
+ * COMMUNICATIONS :
+ *   ← MasroufRepository.loadAnalytics (instanciation depuis SQLite)
+ *   → AnalyticsFragment, FamilyBudgetsAnalyticsActivity (via ViewModel)
+ *   → AnalyticsRenderer (lecture de tous les champs pour rendu visuel)
+ * ============================================================================
+ */
 package com.example.masrouf1;
 
 import com.example.masrouf1.db.MasroufEntities.BudgetEntity;
@@ -7,10 +25,13 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Complete Room-backed analytics snapshot supporting Personal Users, Children (own isolated ledger),
- * and Parents (household overview, category breakdown, 6-month consolidated history, and privacy-safe child stats).
+ * Instantané complet d'analyses budgétaires lu depuis SQLite Room pour AnalyticsFragment (USER / CHILD)
+ * et FamilyBudgetsAnalyticsActivity (PARENT), puis rendu par AnalyticsRenderer.
+ * Regroupe comparatif mensuel, rythme journalier, projection de fin de mois, ventilation par catégorie,
+ * historique 6 mois et progression agrégée confidentielle des enfants pour le Parent.
  */
 public final class AnalyticsSummaryData {
+    /** Statistiques d'une catégorie sur la période (part du total, budget alloué et % consommé). */
     public static final class CategoryStat {
         public final long categoryId;
         public final String name;
@@ -24,6 +45,7 @@ public final class AnalyticsSummaryData {
         public final double consumptionPct;
         public final double shareOfTotal;
 
+        /** Construit la statistique immuable d'une catégorie donnée. */
         public CategoryStat(long categoryId, String name, String catalogKey, String iconName, String colorHex,
                             long allocatedMilli, long spentMilli, boolean hasBudget, int plannedPercent,
                             double consumptionPct, double shareOfTotal) {
@@ -41,6 +63,7 @@ public final class AnalyticsSummaryData {
         }
     }
 
+    /** Progression agrégée d'un enfant (sans exposer ses lignes de transactions privées au parent). */
     public static final class ChildAnalyticsItem {
         public final long childUserId;
         public final String nickname;
@@ -51,6 +74,7 @@ public final class AnalyticsSummaryData {
         public final int percent;
         public final List<PillBarChart.BarItem> sixMonthHistory;
 
+        /** Construit l'élément de suivi analytique d'un enfant pour la vue Parent. */
         public ChildAnalyticsItem(long childUserId, String nickname, String email, long allocatedMilli,
                                   long spentMilli, long remainingMilli, int percent,
                                   List<PillBarChart.BarItem> sixMonthHistory) {
@@ -65,27 +89,48 @@ public final class AnalyticsSummaryData {
         }
     }
 
+    /** Profil du titulaire (USER, CHILD ou PARENT). */
     public final AppRole role;
+    /** Budget actif ou sélectionné pour la période analysée (peut être null). */
     public final BudgetEntity budget;
+    /** Total dépensé sur la période courante (en millimes). */
     public final long currentSpentMilli;
+    /** Total dépensé sur la fenêtre précédente de durée équivalente (en millimes). */
     public final long previousSpentMilli;
+    /** Horodatage de début de la fenêtre de comparaison précédente. */
     public final long prevWindowStartMillis;
+    /** Horodatage de fin de la fenêtre de comparaison précédente. */
     public final long prevWindowEndMillis;
+    /** Sous-total des achats de produits sur la période (en millimes). */
     public final long purchasesTotalMilli;
+    /** Sous-total des dépenses directes sur la période (en millimes). */
     public final long expensesTotalMilli;
+    /** Dépense moyenne quotidienne constatée depuis le début de la période. */
     public final long avgDailySpendMilli;
+    /** Nombre de jours écoulés dans la période courante. */
     public final int daysElapsed;
+    /** Durée totale de la période budgétaire en jours. */
     public final int totalDays;
+    /** Nombre de jours restants avant la clôture de la période. */
     public final int daysRemaining;
+    /** Dépense totale projetée en fin de période selon le rythme actuel. */
     public final long projectedTotalMilli;
+    /** Vrai si la projection reste inférieure ou égale au plafond budgétaire. */
     public final boolean paceSustainable;
+    /** Écart positif entre projection et budget (économies prévues ou dépassement estimé). */
     public final long projectedDiffMilli;
+    /** Liste triée des statistiques de consommation par catégorie. */
     public final List<CategoryStat> categoryStats;
+    /** Catégorie la plus à risque ou ayant dépassé son enveloppe (null si tout va bien). */
     public final CategoryStat attentionCategory;
+    /** Série des 6 derniers mois pour le graphique PillBarChart. */
     public final List<PillBarChart.BarItem> sixMonthHistory;
+    /** Transactions réelles de la période affichées sous le graphique (USER/CHILD). */
     public final List<TransactionRow> periodTransactions;
+    /** Progression agrégée de chaque enfant (remplie uniquement pour le rôle PARENT). */
     public final List<ChildAnalyticsItem> childrenProgress;
 
+    /** Initialise l'instantané complet d'analyse en normalisant les listes éventuellement nulles. */
     public AnalyticsSummaryData(
             AppRole role,
             BudgetEntity budget,

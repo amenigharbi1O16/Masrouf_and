@@ -1,3 +1,27 @@
+/*
+ * ============================================================================
+ * FICHIER : CalendarFragment.java
+ * MISSION : Onglet central « Calendrier » permettant d'explorer les budgets
+ *           sur toute une année civile, de basculer entre les années (< YYYY >),
+ *           de sélectionner un mois dans une grille 2×6, de définir un budget
+ *           comme période de référence du tableau de bord ou de le modifier/consulter,
+ *           et de consulter les transactions du mois sélectionné.
+ * IMPLÉMENTE : Sous-classe de DashboardSectionFragment mêlant inflation XML
+ *              (fragment_calendar.xml, item_calendar_month.xml,
+ *              item_calendar_budget_period.xml) et création dynamique de cartes
+ *              Java MaterialCardView pour les transactions mensuelles.
+ * EFFET À L'ÉCRAN : En-tête année cliquable, grille des 12 mois avec barres de
+ *                   progression vertes/corail, cartes des périodes budgétaires du
+ *                   mois sélectionné et liste des transactions cliquables.
+ * COMMUNICATIONS :
+ *   ← DashboardSectionFragment (coque d'en-tête avec cloche et tiroir)
+ *   → MasroufViewModel / MasroufRepository.loadCalendarYear (données annuelles)
+ *   → SessionStore.setSelectedBudgetId (changement de budget de référence)
+ *   → MainActivity.openCentralTab("home") (retour à l'accueil après sélection)
+ *   → BudgetPeriodActivity (création, modification ou consultation lecture seule)
+ *   → TransactionDetailsActivity (détail d'une transaction mensuelle)
+ * ============================================================================
+ */
 package com.example.masrouf1;
 
 import android.content.Intent;
@@ -25,6 +49,10 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * Onglet central « Calendrier / Historique » : sélecteur d'année, grille annuelle des 12 mois,
+ * liste des périodes budgétaires du mois sélectionné (changement de référence, modification ou consultation).
+ */
 /**
  * Financial Year Calendar & Historical Budget Explorer matching React Native design:
  * - Year selector (< YYYY >)
@@ -310,6 +338,7 @@ public final class CalendarFragment extends DashboardSectionFragment {
         renderMonthTransactions();
     }
 
+    /** Affiche dynamiquement en cartes MaterialCardView cliquables les transactions du mois sélectionné. */
     private void renderMonthTransactions() {
         if (!isAdded() || yearData == null || dayRows == null) return;
         List<TransactionRow> rows = yearData.monthTransactions.containsKey(selectedMonth)
@@ -370,6 +399,7 @@ public final class CalendarFragment extends DashboardSectionFragment {
         }
     }
 
+    /** Ouvre BudgetPeriodActivity pré-remplie avec le mois futur/courant sélectionné dans la grille. */
     private void openCreatePeriodForSelectedMonth() {
         if (BudgetPeriodMath.isPastMonth(selectedYear, selectedMonth, Calendar.getInstance())) return;
         long start = BudgetPeriodMath.startOfMonthMillis(selectedYear, selectedMonth);

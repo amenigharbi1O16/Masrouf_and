@@ -1,3 +1,27 @@
+/*
+ * ============================================================================
+ * FICHIER : VoiceTransactionDialogFragment.java
+ * MISSION : Modale de saisie vocale intelligente ouverte depuis le bouton
+ *           flottant micro (FAB) de MainActivity. Permet de parler en Auto, FR,
+ *           AR ou EN (y compris darija), d'éditer librement la phrase reconnue,
+ *           de tester des phrases exemples multilingues et d'ajuster l'aperçu
+ *           (Achat, Dépense ou Dotation enfant pour Parent) avant confirmation
+ *           manuelle (« Confirmer et enregistrer ») vers Room SQLite.
+ * IMPLÉMENTE : DialogFragment gonflant dialog_voice_transaction.xml, animation
+ *              pulsante ObjectAnimator autour du micro, VoiceSpeechController,
+ *              VoiceParser.parseRich(), DatePickerDialog et écriture Room via
+ *              MasroufViewModel (savePurchase / saveExpense / giveMoney).
+ * EFFET À L'ÉCRAN : Boîte de dialogue beige complet avec sélecteur de langue,
+ *                   micro animé, badge langue détectée, puces d'exemples rapides,
+ *                   carte aperçu éditable et bouton de confirmation final.
+ * COMMUNICATIONS :
+ *   ← MainActivity (clic sur FloatingActionButton voice_transaction_button)
+ *   → VoiceSpeechController (capture micro + permissions)
+ *   → VoiceParser (analyse de phrase en RichResult)
+ *   → MasroufViewModel / MasroufRepository (savePurchase, saveExpense, giveMoney)
+ *   → HomeFragment (FragmentResult "masrouf-voice-saved" pour rafraîchissement)
+ * ============================================================================
+ */
 package com.masrouf.controller;
 
 import android.animation.ObjectAnimator;
@@ -49,6 +73,11 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * Modale de saisie vocale multilingue (Auto FR/AR/EN + Darija) ouverte depuis le bouton micro flottant (FAB).
+ * Pilote VoiceSpeechController + VoiceParser, affiche un aperçu entièrement modifiable (Achat, Dépense ou
+ * Dotation enfant si Parent) sans jamais soumettre automatiquement avant confirmation manuelle.
+ */
 /**
  * Full-featured multilingual Voice Transaction modal matching React Native VoiceTransactionModal.tsx:
  * - Language modes: Auto (default FR/AR/EN detection without manual choice) + FR / AR / EN pills

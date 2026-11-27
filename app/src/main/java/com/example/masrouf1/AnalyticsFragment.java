@@ -1,3 +1,26 @@
+/*
+ * ============================================================================
+ * FICHIER : AnalyticsFragment.java
+ * MISSION : Onglet central « Analyses » (accessible depuis le tiroir latéral
+ *           pour USER/CHILD, ou depuis l'hôte central). Charge de manière
+ *           asynchrone AnalyticsSummaryData depuis Room et délègue tout le
+ *           rendu visuel programmatique à AnalyticsRenderer.
+ * IMPLÉMENTE : Sous-classe de DashboardSectionFragment gérant un indicateur
+ *              de chargement (ProgressBar), un message d'erreur et le
+ *              conteneur vertical rempli dynamiquement selon le rôle.
+ * EFFET À L'ÉCRAN : Tableau analytique complet : carte héroïque budget,
+ *                   conclusions et recommandations, comparaison mensuelle,
+ *                   jauge, graphique 6 mois PillBarChart, ventilation par
+ *                   catégorie, rythme quotidien et détail des transactions.
+ * COMMUNICATIONS :
+ *   ← DashboardSectionFragment (en-tête avec menu ☰, cloche, profil)
+ *   → MasroufViewModel / MasroufRepository.loadAnalytics (calculs SQLite)
+ *   → AnalyticsRenderer.render (construction des cartes et graphiques Java)
+ *   → MainActivity.openCentralTab("calendar") (sélecteur de période)
+ *   → BudgetPeriodActivity (création/modification du budget)
+ *   → TransactionDetailsActivity (ouverture d'une transaction récente)
+ * ============================================================================
+ */
 package com.example.masrouf1;
 
 import android.content.Intent;
@@ -13,14 +36,18 @@ import com.masrouf.controller.SessionStore;
 import com.masrouf.controller.TransactionDetailsActivity;
 
 /**
- * Role-aware Analytics central tab backed strictly by persisted Room data across all three user roles:
- * Normal User, Child (own ledger only), and Parent (household, categories, 6m trend & privacy-safe child stats).
+ * Onglet central « Analyses » (adaptatif selon USER / CHILD / PARENT) héritant de DashboardSectionFragment.
+ * Charge AnalyticsSummaryData hors UI thread et délègue la construction visuelle complète à AnalyticsRenderer.
  */
 public final class AnalyticsFragment extends DashboardSectionFragment {
+    /** Conteneur vertical recevant toutes les cartes analytiques générées par AnalyticsRenderer. */
     private LinearLayout container;
+    /** Indicateur affiché pendant l'agrégation asynchrone des données Room. */
     private ProgressBar loadingView;
+    /** Message d'erreur discret affiché en cas d'échec de chargement SQLite. */
     private TextView errorView;
 
+    /** Adapte le titre d'en-tête entre « Analyses budgétaires » (Parent) et « Analyses » (User/Child). */
     @Override
     protected int pageTitle() {
         return SessionStore.role(requireContext()) == AppRole.PARENT
@@ -28,6 +55,7 @@ public final class AnalyticsFragment extends DashboardSectionFragment {
                 : R.string.nav_analytics;
     }
 
+    /** Construit par programmation le ProgressBar, le TextView d'erreur et le conteneur de cartes. */
     @Override
     protected void createContent(LinearLayout content) {
         loadingView = new ProgressBar(requireContext());
@@ -48,23 +76,27 @@ public final class AnalyticsFragment extends DashboardSectionFragment {
         content.addView(container, cp);
     }
 
+    /** Déclenche le premier chargement analytique dès la création de la vue. */
     @Override
     protected void observeContent() {
         loadAnalytics();
     }
 
+    /** Recharge les indicateurs au retour sur l'Activity (après ajout d'une dépense ou édition du budget). */
     @Override
     public void onResume() {
         super.onResume();
         if (isAdded() && container != null) loadAnalytics();
     }
 
+    /** Recharge les analyses lorsque l'onglet redevient visible après un show/hide dans MainActivity. */
     @Override
     public void onHiddenChanged(boolean hidden) {
         super.onHiddenChanged(hidden);
         if (!hidden && isAdded() && container != null) loadAnalytics();
     }
 
+    /** Exécute loadAnalytics() via ViewModel puis transmet le snapshot et les callbacks à AnalyticsRenderer. */
     private void loadAnalytics() {
         long ownerId = signedInUserId();
         if (ownerId <= 0L) return;
@@ -81,6 +113,7 @@ public final class AnalyticsFragment extends DashboardSectionFragment {
                         if (errorView != null) errorView.setVisibility(View.VISIBLE);
                         return;
                     }
+                    // Construction des vues analytiques avec les trois actions interactives associées.
                     AnalyticsRenderer.render(requireContext(), container, state.data, new AnalyticsRenderer.Actions() {
                         @Override
                         public void onOpenCalendar() {

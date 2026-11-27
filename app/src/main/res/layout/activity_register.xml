@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Écran d'inscription (RegisterActivity) : sélecteur Personnel/Famille, formulaire nom/Gmail/mot de passe + panneau des 5 critères -->
 <!-- RegisterActivity layout matching the screenshot exactly -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"

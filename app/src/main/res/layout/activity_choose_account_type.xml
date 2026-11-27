@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Écran de choix du type de compte (ChooseAccountTypeActivity) : cartes Compte Personnel (user) vs Compte Famille (parent) -->
 <!-- ChooseAccountTypeActivity layout — matching React Native screenshot -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"

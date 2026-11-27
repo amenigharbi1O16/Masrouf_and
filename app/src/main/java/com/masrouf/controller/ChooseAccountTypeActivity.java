@@ -1,3 +1,22 @@
+/*
+ * ============================================================================
+ * FICHIER : ChooseAccountTypeActivity.java
+ * MISSION : Écran intermédiaire d'inscription permettant à l'utilisateur de
+ *           choisir entre un compte Personnel (rôle USER) et un compte Famille
+ *           (rôle PARENT), avec sélecteur de langue FR / AR / EN et lien
+ *           vers la connexion.
+ * IMPLÉMENTE : AppCompatActivity gonflant activity_choose_account_type.xml,
+ *              pilules de langue créées en Java (buildLanguageButtons) et
+ *              Intent explicite avec l'extra "TYPE" vers RegisterActivity.
+ * EFFET À L'ÉCRAN : Deux cartes cliquables (« Personnel » et « Famille »)
+ *                   détaillant les fonctionnalités, flèche retour et boutons FR/AR/EN.
+ * COMMUNICATIONS :
+ *   ← WelcomeActivity (bouton « Créer un compte »)
+ *   → RegisterActivity (extra "TYPE" = "personal" ou "family")
+ *   → LoginActivity (lien « Se connecter »)
+ *   → LocaleController.apply (changement immédiat de langue)
+ * ============================================================================
+ */
 package com.masrouf.controller;
 
 import android.content.Intent;
@@ -11,6 +30,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.masrouf1.LocaleController;
 import com.example.masrouf1.R;
 
+/**
+ * Écran de choix du type de compte (Personnel -> rôle USER, Famille -> rôle PARENT)
+ * transmettant l'extra "TYPE" vers RegisterActivity via un Intent explicite.
+ */
 /**
  * ChooseAccountTypeActivity — Account type selection screen.
  * Shows Personal vs Family account cards with feature lists.
@@ -43,12 +66,14 @@ public final class ChooseAccountTypeActivity extends AppCompatActivity {
         });
     }
 
+    /** Ouvre RegisterActivity en lui passant le type sélectionné ("personal" ou "family") via l'extra "TYPE". */
     private void openRegister(String type) {
         Intent intent = new Intent(this, RegisterActivity.class);
         intent.putExtra("TYPE", type);
         startActivity(intent);
     }
 
+    /** Construit dynamiquement en Java les pilules de sélection de langue FR / AR / EN et relance la locale au clic. */
     private void buildLanguageButtons() {
         LinearLayout row = findViewById(R.id.choose_languages);
         if (row == null) return;

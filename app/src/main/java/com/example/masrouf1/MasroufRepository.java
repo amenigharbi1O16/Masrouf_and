@@ -1,3 +1,25 @@
+/*
+ * ============================================================================
+ * FICHIER : MasroufRepository.java
+ * MISSION : Couche Repository centrale (architecture MVVM) isolant toute la
+ *           logique métier et l'accès SQLite Room du reste de l'application.
+ *           Gère l'authentification, l'inscription, les profils User/Parent/Child,
+ *           les budgets avec enveloppes, les achats/dépenses, l'historique
+ *           des prix, les demandes d'argent, les récompenses, les notifications
+ *           et les analyses agrégées (calendrier, comparaisons mensuelles).
+ * IMPLÉMENTE : Facade synchrone sur MasroufDao avec validation InputValidation,
+ *              hachage PasswordHasher, arithmétique MoneyMath, formatage
+ *              CurrencyFormatter et déclenchement BudgetNotificationManager.
+ * EFFET À L'ÉCRAN : Aucun directement — fournit les données à MasroufViewModel
+ *                   et aux Activities qui les affichent.
+ * COMMUNICATIONS :
+ *   ← MasroufDao (requêtes Room SQL)
+ *   ← InputValidation, PasswordHasher (validation et sécurité)
+ *   ← MoneyMath, CurrencyFormatter (arithmétique et formatage)
+ *   → BudgetNotificationManager (alertes de dépenses et notifications)
+ *   → MasroufViewModel (exposition via LiveData et requêtes ponctuelles)
+ * ============================================================================
+ */
 package com.example.masrouf1;
 
 import android.content.Context;
@@ -44,6 +66,11 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.TreeMap;
 
+/**
+ * Couche Repository centrale isolant toute la logique métier et l'accès SQLite Room :
+ * authentification, gestion des profils User/Parent/Child, budgets, enveloppes, achats,
+ * dépenses, historique des prix, demandes d'argent, récompenses et analyses agrégées.
+ */
 /**
  * Repository boundary for dashboard screens; all records remain in the local
  * Room database.
@@ -177,6 +204,7 @@ public final class MasroufRepository {
         return dao.moneyRequestsForChild(childId);
     }
 
+    /** Envoie une demande d'argent vers le parent associé au compte CHILD et déclenche sa notification. */
     public long requestMoney(long childId, long amountMilli, String reason) {
         UserEntity child = requireUserExists(childId);
         if (!AppRole.CHILD.value().equalsIgnoreCase(child.role) || amountMilli <= 0)

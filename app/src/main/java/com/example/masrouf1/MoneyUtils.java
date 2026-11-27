@@ -1,3 +1,22 @@
+/*
+ * ============================================================================
+ * FICHIER : MoneyUtils.java
+ * MISSION : Utilitaires de conversion et formatage monétaire exact en dinars
+ *           tunisiens. Convertit les saisies textuelles en millimes entiers
+ *           (toMilli) et formate les millimes pour affichage ("1 250,000 DT").
+ * IMPLÉMENTE : Classe utilitaire statique utilisant BigDecimal pour la
+ *              conversion exacte (movePointRight(3)) et DecimalFormat avec
+ *              symboles Locale.FRANCE pour le formatage tunisien.
+ * EFFET À L'ÉCRAN : Format monétaire visible sur chaque TextView affichant
+ *                   un montant dans toute l'application (budgets, dépenses,
+ *                   produits, demandes d'argent, notifications).
+ * COMMUNICATIONS :
+ *   ← Tous les formulaires de saisie (AddExpenseActivity, AddProductActivity,
+ *     BudgetPeriodActivity, MoneyRequestActivity, VoiceParser)
+ *   ← Tous les écrans d'affichage (HomeFragment, CalendarFragment, etc.)
+ *   ← CurrencyFormatter (délègue à formatMilli pour l'affichage)
+ * ============================================================================
+ */
 package com.example.masrouf1;
 
 import java.math.BigDecimal;
@@ -6,11 +25,19 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.Locale;
 
+/** Utilitaires de conversion et formatage monétaire exact en dinars tunisiens (millimes -> "1 250,000 DT") sans flottants. */
 /** Money conversion and display helpers. All persisted values are integer millimes. */
 public final class MoneyUtils {
     private MoneyUtils() { }
 
-    /** Parses a dinar amount with at most three decimals into integer millimes. */
+    /**
+     * Convertit une chaîne saisie en dinars (ex. "12,5" ou "1 250.000") en millimes entiers exacts.
+     * Appelée par les formulaires (dépense, produit, budget, demande) et le parseur vocal.
+     *
+     * @param amount Montant textuel avec au plus 3 décimales (virgule ou point acceptés, espaces nettoyés).
+     * @return Valeur entière exacte en millimes (1 DT = 1000 millimes).
+     * @throws NumberFormatException Si la chaîne est vide ou invalide.
+     */
     public static long toMilli(String amount) {
         String normalized = amount == null ? "" : amount.trim()
                 .replace("\u00a0", "").replace("\u202f", "").replace("\u2009", "")
@@ -20,7 +47,12 @@ public final class MoneyUtils {
                 .movePointRight(3).longValueExact();
     }
 
-    /** Formats millimes in French notation with grouping and exactly three decimals. */
+    /**
+     * Formate un entier en millimes selon l'affichage tunisien français ("1 250,000 DT") pour les vues TextView.
+     *
+     * @param amountMilli Montant en millimes stocké en base Room.
+     * @return Chaîne formatée avec séparateur de milliers espace, virgule, 3 décimales et suffixe " DT".
+     */
     public static String formatMilli(long amountMilli) {
         DecimalFormatSymbols symbols = new DecimalFormatSymbols(Locale.FRANCE);
         symbols.setGroupingSeparator(' ');

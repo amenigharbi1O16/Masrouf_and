@@ -1,3 +1,24 @@
+/*
+ * ============================================================================
+ * FICHIER : RegisterActivity.java
+ * MISSION : Écran de création de compte (Personnel -> rôle USER, Famille ->
+ *           rôle PARENT). Propose le basculement Personnel/Famille, une bannière
+ *           explicative famille, un sélecteur de langue FR/AR/EN, la validation
+ *           Gmail en temps réel et une checklist dynamique des 5 critères de
+ *           robustesse du mot de passe avant enregistrement PBKDF2 dans Room.
+ * IMPLÉMENTE : AppCompatActivity (activity_register.xml) avec deux TextWatcher
+ *              (FormValidationTextWatcher + PasswordRulesWatcher),
+ *              PasswordVisibilityHelper et redirection vers LoginActivity.
+ * EFFET À L'ÉCRAN : Onglets Personnel/Famille, formulaire à 4 champs avec retour
+ *                   visuel direct sur email et mot de passe, bouton d'inscription
+ *                   activé uniquement lorsque tous les contrôles sont valides.
+ * COMMUNICATIONS :
+ *   ← ChooseAccountTypeActivity, LoginActivity (extra "TYPE")
+ *   → MasroufViewModel / MasroufRepository.register (insertion SQLite)
+ *   → LoginActivity (pré-remplissage "EMAIL" après création réussie)
+ *   → LocaleController, InputValidation, FormValidationTextWatcher
+ * ============================================================================
+ */
 package com.masrouf.controller;
 
 import android.content.Intent;
@@ -24,6 +45,10 @@ import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
+/**
+ * Écran d'inscription créant un compte USER ("personal") ou PARENT ("family") avec contrôle Gmail,
+ * jauge des 5 critères du mot de passe en direct et bascule de langue FR/AR/EN.
+ */
 /**
  * RegisterActivity — matches screenshot design exactly:
  *  - Language toggle (FR/AR/EN) at top right
@@ -122,6 +147,10 @@ public final class RegisterActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Bascule dynamiquement le rôle sélectionné lors de l'inscription ("personal" -> USER, "family" -> PARENT).
+     * Met à jour le style des onglets XML tabPersonal/tabFamily et affiche ou masque la bannière famille.
+     */
     private void applyAccountType(String type) {
         accountType = type;
         boolean isFamily = "family".equals(type);
@@ -139,6 +168,10 @@ public final class RegisterActivity extends AppCompatActivity {
         familyInfoBanner.setVisibility(isFamily ? View.VISIBLE : View.GONE);
     }
 
+    /**
+     * Valide les champs (nom non vide, Gmail strict, mot de passe fort, confirmation identique),
+     * exécute MasroufRepository.register() de manière asynchrone et redirige vers LoginActivity en pré-remplissant l'extra "EMAIL".
+     */
     private void register() {
         String fullName = editName.getText() == null ? "" : editName.getText().toString().trim();
         String email = InputValidation.normalizeGmail(editEmail.getText() == null ? "" : editEmail.getText().toString());
@@ -176,6 +209,7 @@ public final class RegisterActivity extends AppCompatActivity {
         );
     }
 
+    /** Active ou désactive le bouton d'inscription selon la validité instantanée des quatre champs. */
     private void refreshSubmit() {
         String name = editName.getText() == null ? "" : editName.getText().toString().trim();
         String email = editEmail.getText() == null ? "" : editEmail.getText().toString();
@@ -188,6 +222,7 @@ public final class RegisterActivity extends AppCompatActivity {
         submitBtn.setEnabled(ready);
     }
 
+    /** Met à jour visuellement la checklist des 5 règles de robustesse du mot de passe pendant la saisie. */
     private void refreshPasswordRules(String value) {
         boolean[] valid = InputValidation.passwordRules(value);
         TextView[] rows = {ruleLength, ruleUppercase, ruleLowercase, ruleNumber, ruleSymbol};

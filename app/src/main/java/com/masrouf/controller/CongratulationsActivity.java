@@ -1,3 +1,14 @@
+/*
+ * ============================================================================
+ * FICHIER : CongratulationsActivity.java
+ * MISSION : Écran de célébration affiché à l'utilisateur lorsqu'une période budgétaire est clôturée avec succès.
+ * IMPLÉMENTE : AppCompatActivity associée au layout activity_congratulations.xml.
+ * EFFET À L'ÉCRAN : Affiche message personnalisé, carte des points gagnés (si > 0), carte des économies (si > 0),
+ *                   et boutons « Retour à l'accueil » et « Voir mes points » (RewardsActivity).
+ * COMMUNICATIONS : Ouverte par NotificationsActivity au clic sur une notification "budget_closed" ;
+ *                  lit les Extras "POINTS_EARNED", "SAVINGS_MILLI" et "MESSAGE".
+ * ============================================================================
+ */
 package com.masrouf.controller;
 
 import android.content.Intent;
@@ -15,19 +26,13 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
 
 /**
- * ACTIVITÉ : CongratulationsActivity
- * RÔLE : Écran de félicitations affiché après qu'un utilisateur a terminé
- *         une période budgétaire avec succès ou a atteint un objectif.
- *
- * PARAMÈTRES ATTENDUS EN EXTRA :
- *   - "POINTS_EARNED" (int) : points gagnés lors de cette période
- *   - "SAVINGS_MILLI" (long) : montant économisé en millimes (optionnel)
- *   - "MESSAGE" (String) : message personnalisé (optionnel)
- *
- * CORRESPONDANCE REACT NATIVE : src/app/felicitations.tsx
+ * ACTIVITÉ : CongratulationsActivity — Écran de félicitations post-clôture budgétaire.
  */
 public final class CongratulationsActivity extends AppCompatActivity {
 
+    /**
+     * Gonfle activity_congratulations.xml, lit les extras facultatifs et câble la navigation vers Accueil ou Récompenses.
+     */
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -77,7 +82,7 @@ public final class CongratulationsActivity extends AppCompatActivity {
         }
     }
 
-    /** Retour à l'écran d'accueil en vidant la pile de navigation. */
+    /** Retour à l'écran d'accueil en vidant les activités intermédiaires de la pile de navigation. */
     private void goHome() {
         Intent intent = new Intent(this, com.example.masrouf1.MainActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);

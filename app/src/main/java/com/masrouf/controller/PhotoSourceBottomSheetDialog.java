@@ -1,3 +1,13 @@
+/*
+ * ============================================================================
+ * FICHIER : PhotoSourceBottomSheetDialog.java
+ * MISSION : Feuille modale BottomSheet permettant d'ajouter ou changer la photo d'un produit (Caméra ou Galerie).
+ * IMPLÉMENTE : BottomSheetDialogFragment construit 100 % en Java + Intents implicites ACTION_IMAGE_CAPTURE / ACTION_PICK.
+ * EFFET À L'ÉCRAN : Affiche deux boutons MaterialButton empilés (« Caméra », « Galerie ») et copie l'image choisie
+ *                   dans cache/photos/ avant de notifier AddProductActivity via Listener.onPhotoSelected(path).
+ * COMMUNICATIONS : Ouvert par AddProductActivity -> file_paths.xml (FileProvider) -> FragmentResult & Listener.
+ * ============================================================================
+ */
 package com.masrouf.controller;
 
 import android.app.Activity;
@@ -20,12 +30,18 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 
-/** Offers the two native Android photo sources without requesting broad storage access. */
+/**
+ * Feuille modale BottomSheetDialogFragment construite 100 % en Java pour AddProductActivity.
+ */
 public final class PhotoSourceBottomSheetDialog extends BottomSheetDialogFragment {
+    /** Rappel vers l'Activity appelante recevant le chemin absolu du fichier image copié. */
     public interface Listener { void onPhotoSelected(String path); }
+    // Codes de requête distincts pour différencier retour appareil photo et retour galerie.
     private static final int CAMERA=923, GALLERY=924;
+    // Chemin temporaire préparé avant le lancement de l'appareil photo.
     private String cameraPath;
 
+    /** Construit dynamiquement le contenu de la modale avec deux MaterialButton verticaux. */
     @NonNull @Override public android.app.Dialog onCreateDialog(@Nullable Bundle state) {
         android.app.Dialog dialog=super.onCreateDialog(state);
         LinearLayout choices=new LinearLayout(requireContext()); choices.setOrientation(LinearLayout.VERTICAL); choices.setPadding(dp(20),dp(12),dp(20),dp(20));
@@ -34,6 +50,8 @@ public final class PhotoSourceBottomSheetDialog extends BottomSheetDialogFragmen
         camera.setOnClickListener(v->openCamera()); gallery.setOnClickListener(v->openGallery()); dialog.setContentView(choices);
         return dialog;
     }
+
+    /** Crée un fichier cible sous cache/photos, génère son URI FileProvider et lance l'appareil photo natif. */
     private void openCamera() {
         try {
             File folder=new File(requireContext().getCacheDir(),"photos"); if(!folder.exists()&&!folder.mkdirs()) throw new IllegalStateException();
@@ -44,11 +62,15 @@ public final class PhotoSourceBottomSheetDialog extends BottomSheetDialogFragmen
             startActivityForResult(intent,CAMERA);
         } catch(Exception error) { Toast.makeText(requireContext(),R.string.photo_unavailable,Toast.LENGTH_SHORT).show(); }
     }
+
+    /** Ouvre le sélecteur d'images Android (ACTION_PICK) après vérification de disponibilité d'une application cible. */
     private void openGallery() {
         Intent pick=new Intent(Intent.ACTION_PICK,MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
         if(pick.resolveActivity(requireContext().getPackageManager())!=null) startActivityForResult(pick,GALLERY);
         else Toast.makeText(requireContext(),R.string.photo_unavailable,Toast.LENGTH_SHORT).show();
     }
+
+    /** Reçoit l'image capturée ou choisie, vérifie son existence, notifie l'hôte et ferme la modale. */
     @Override public void onActivityResult(int requestCode,int resultCode,@Nullable Intent data) {
         super.onActivityResult(requestCode,resultCode,data);
         if(resultCode!=Activity.RESULT_OK) return;
@@ -59,8 +81,11 @@ public final class PhotoSourceBottomSheetDialog extends BottomSheetDialogFragmen
         Bundle result=new Bundle(); result.putString("photoPath",path);
         getParentFragmentManager().setFragmentResult("masrouf-photo-selected",result); dismiss();
     }
+
+    /** Copie localement l'image issue de l'URI galerie afin de garantir sa lisibilité durable sans permission permanente. */
     private String copyGallery(Uri source){
         try{File folder=new File(requireContext().getCacheDir(),"photos");if(!folder.exists()&&!folder.mkdirs())return null;File target=new File(folder,"gallery-"+System.currentTimeMillis()+".jpg");try(InputStream in=requireContext().getContentResolver().openInputStream(source);FileOutputStream out=new FileOutputStream(target)){if(in==null)return null;byte[] buffer=new byte[8192];int n;while((n=in.read(buffer))!=-1)out.write(buffer,0,n);}return target.getAbsolutePath();}catch(Exception ignored){return null;}
     }
+
     private int dp(int value) { return (int)(value*getResources().getDisplayMetrics().density+.5f); }
 }

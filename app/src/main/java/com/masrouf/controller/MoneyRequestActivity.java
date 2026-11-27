@@ -1,3 +1,22 @@
+/*
+ * ============================================================================
+ * FICHIER : MoneyRequestActivity.java
+ * MISSION : Écran réservé exclusivement au profil Enfant (AppRole.CHILD) pour
+ *           envoyer une demande d'argent à son parent associé (montant + motif
+ *           avec dictée vocale inline) et suivre l'historique des demandes
+ *           (en attente, acceptées ou refusées).
+ * IMPLÉMENTE : Sous-classe de BaseFeatureActivity avec contrôle d'accès strict
+ *              sur AppRole.CHILD, validation MoneyInput, VoiceFieldHelper sur
+ *              les deux champs et RecyclerView alimenté par MoneyRequestAdapter.
+ * EFFET À L'ÉCRAN : Formulaire beige avec boutons micro, message de confirmation
+ *                   ou d'erreur et liste chronologique des demandes envoyées.
+ * COMMUNICATIONS :
+ *   ← HomeFragment (bouton « Demander de l'argent » visible uniquement en mode Child)
+ *   → MasroufViewModel / MasroufRepository (requestMoney, moneyRequestsForChild)
+ *   → VoiceFieldHelper (dictée vocale montant et raison)
+ *   → MoneyRequestAdapter (affichage des cartes de demandes)
+ * ============================================================================
+ */
 package com.masrouf.controller;
 
 import android.os.Bundle;
@@ -15,6 +34,12 @@ import com.example.masrouf1.R;
 import com.example.masrouf1.ui.AlertBannerView;
 import com.google.android.material.button.MaterialButton;
 
+/**
+ * Écran réservé exclusivement au profil Enfant (AppRole.CHILD) : garde d'accès au onCreate().
+ * Mission : saisir et envoyer une demande d'argent vers son Parent (MasroufRepository.requestMoney)
+ * avec saisie vocale assistée (VoiceFieldHelper), et afficher l'historique via MoneyRequestAdapter.
+ * Effet à l'écran : affiche confirmation émeraude/corail et actualise la liste des statuts (pending/accepted/rejected).
+ */
 public final class MoneyRequestActivity extends BaseFeatureActivity {
     private MasroufViewModel viewModel;
     private VoiceFieldHelper voiceFieldHelper;

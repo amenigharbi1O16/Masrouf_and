@@ -1,3 +1,28 @@
+/*
+ * ============================================================================
+ * FICHIER : AnalyticsRenderer.java
+ * MISSION : Générateur visuel 100 % programmatique (vues Java créées par code)
+ *           rendant le tableau complet d'analyses budgétaires selon le profil :
+ *           - USER / CHILD : carte héroïque, conclusion et recommandation,
+ *             comparaison temporelle, jauge de consommation, graphique 6 mois
+ *             PillBarChart, détail par catégorie, rythme quotidien, alerte
+ *             catégorie et historique des achats/dépenses de la période.
+ *           - PARENT : budget mensuel familial, dépassement d'enveloppes,
+ *             graphique 6 mois familial, progression agrégée confidentielle des
+ *             enfants (sans exposer leurs achats privés) et graphique enfant.
+ * IMPLÉMENTE : Méthodes factory statiques construisant MaterialCardView,
+ *              ProgressBar horizontales, PillBarChart, badges arrondis
+ *              GradientDrawable, boutons et séparateurs sans fichier XML dédié.
+ * EFFET À L'ÉCRAN : Ensemble des cartes, barres, icônes et graphiques affichés
+ *                   dans AnalyticsFragment et FamilyBudgetsAnalyticsActivity.
+ * COMMUNICATIONS :
+ *   ← AnalyticsFragment (USER / CHILD / PARENT central tab)
+ *   ← FamilyBudgetsAnalyticsActivity (écran Parent dédié depuis le tiroir)
+ *   ← AnalyticsSummaryData (données Room agrégées)
+ *   → PillBarChart, BudgetPeriodMath, CurrencyFormatter, MoneyMath,
+ *     CategoryIconResources
+ * ============================================================================
+ */
 package com.example.masrouf1;
 
 import android.content.Context;
@@ -23,6 +48,10 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * Générateur visuel 100 % programmatique (vues Java : MaterialCardView, ProgressBar, PillBarChart, TextView)
+ * rendant le tableau d'analyses pour Normal User, Child ou Parent (enveloppes, tendance 6 mois, enfants).
+ */
 /**
  * Shared programmatic renderer for role-specific Analytics screens (Normal User, Child, Parent),
  * faithfully matching React Native's `analyses.tsx` and `(admin)/budget-analyses.tsx`.

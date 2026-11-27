@@ -1,3 +1,29 @@
+/*
+ * ============================================================================
+ * FICHIER : MainActivity.java
+ * MISSION : Activity hôte principale après connexion. Vérifie la session Room,
+ *           affiche le tableau de bord à 5 onglets (Fragments persistants),
+ *           configure le Side Drawer adapté au profil (Parent vs Normal/Enfant),
+ *           les boutons de langue FR/AR/EN et le FAB de saisie vocale.
+ * IMPLÉMENTE : Vérification asynchrone du compte SQLite, navigation par
+ *              show/hide de Fragments, DrawerLayout, boutons de langue créés
+ *              en Java (vues programmatiques), déconnexion et demande de
+ *              permission POST_NOTIFICATIONS (Android 13+).
+ * EFFET À L'ÉCRAN : Écran principal avec barre d'onglets inférieure, tiroir
+ *                   latéral (menu, badge profil, nom utilisateur, déconnexion),
+ *                   bouton flottant micro et écran de chargement temporaire.
+ * COMMUNICATIONS :
+ *   ← SessionStore (lecture/écriture de la session SharedPreferences)
+ *   ← MasroufDatabase / MasroufDao (vérification du compte en base Room)
+ *   → HomeFragment, ProductsFragment, CalendarFragment, AnalyticsFragment,
+ *     SettingsFragment (onglets centraux)
+ *   → AppDrawer / AdminDrawer (menus du tiroir latéral)
+ *   → VoiceTransactionDialogFragment (modal de transaction vocale)
+ *   → WelcomeActivity, OnboardingActivity (redirections si session invalide)
+ *   → ChildrenManagementActivity, FamilyBudgetsAnalyticsActivity,
+ *     RewardsActivity, NotificationsActivity (destinations du tiroir)
+ * ============================================================================
+ */
 package com.example.masrouf1;
 
 import android.Manifest;
@@ -34,6 +60,11 @@ import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+/**
+ * Activity hôte principale après connexion : vérifie la session en base Room (gate),
+ * gère les 5 onglets centraux via Fragments persistants, configure le Side Drawer (Parent ou Perso/Enfant),
+ * les boutons de langue FR/AR/EN dynamiques et le bouton flottant (FAB) de saisie vocale.
+ */
 /** Personal-account, child, and parent dashboard host. */
 public final class MainActivity extends AppCompatActivity {
     public static final String EXTRA_CENTRAL_TAB = "com.example.masrouf1.CENTRAL_TAB";
@@ -47,6 +78,7 @@ public final class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // Intercepte le bouton Retour système : ferme d'abord le Drawer, sinon revient à l'onglet Accueil avant de quitter.
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
@@ -67,6 +99,7 @@ public final class MainActivity extends AppCompatActivity {
             openWelcome();
             return;
         }
+        // Conteneur Java racine combinant le layout XML activity_dashboard_host et un écran d'attente opaque pendant la vérification SQLite.
         FrameLayout shell = new FrameLayout(this);
         View dashboard = LayoutInflater.from(this).inflate(R.layout.activity_dashboard_host, shell, false);
         shell.addView(dashboard, new FrameLayout.LayoutParams(-1, -1));
@@ -77,6 +110,7 @@ public final class MainActivity extends AppCompatActivity {
         loading.setBackgroundColor(getColor(R.color.cream));
         shell.addView(loading, new FrameLayout.LayoutParams(-1, -1));
         setContentView(shell);
+        // Vérification asynchrone en base : compte existant, catégories sélectionnées et onboarding terminé.
         ACCOUNT_GATE.execute(() -> {
             UserEntity account;
             try {
@@ -131,6 +165,7 @@ public final class MainActivity extends AppCompatActivity {
         }
 
         String activeDest = destinationForTab(activeTab);
+        // Choisit le tiroir latéral selon le profil : AdminDrawer (Parent) ou AppDrawer (Normal User / Child).
         if (activeRole == AppRole.PARENT) {
             personalPanel.setVisibility(View.GONE);
             adminPanel.setVisibility(View.VISIBLE);
@@ -166,6 +201,7 @@ public final class MainActivity extends AppCompatActivity {
         buildLanguageButtons(activeRole == AppRole.PARENT ? R.id.admin_language_buttons : R.id.personal_language_buttons,
                 activeRole == AppRole.PARENT);
 
+        // Déconnexion : vide SessionStore et réinitialise la pile d'Activities vers WelcomeActivity.
         findViewById(activeRole == AppRole.PARENT ? R.id.admin_logout : R.id.personal_logout).setOnClickListener(v -> {
             SessionStore.clear(this);
             Intent welcome = new Intent(this, com.masrouf.controller.WelcomeActivity.class)
@@ -173,8 +209,10 @@ public final class MainActivity extends AppCompatActivity {
             startActivity(welcome);
         });
 
+        // Bouton flottant micro ouvrant le modal de transaction vocale multilingue (FR/AR/EN/Darija).
         FloatingActionButton voice = findViewById(R.id.voice_transaction_button);
         voice.setOnClickListener(v -> new VoiceTransactionDialogFragment().show(getSupportFragmentManager(), "voice-transaction"));
+        // Demande unique de permission POST_NOTIFICATIONS requise à partir d'Android 13 (API 33).
         if (Build.VERSION.SDK_INT >= 33 && ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
             android.content.SharedPreferences permissionState = getSharedPreferences("masrouf_notification_permission", MODE_PRIVATE);
             if (!permissionState.getBoolean("requested", false)) {
@@ -240,6 +278,7 @@ public final class MainActivity extends AppCompatActivity {
         }
     }
 
+    /** Affiche l'onglet demandé (show/hide des Fragments déjà instanciés pour préserver leur état). */
     private void showCentralTab(int tabId) {
         FragmentManager manager = getSupportFragmentManager();
         String tag = "central-tab-" + tabId;
@@ -276,6 +315,7 @@ public final class MainActivity extends AppCompatActivity {
         return R.id.tab_settings;
     }
 
+    /** Construit par programmation (vues Java) les trois boutons de changement de langue FR / AR / EN. */
     private void buildLanguageButtons(int rowId, boolean darkDrawer) {
         LinearLayout row = findViewById(rowId);
         if (row == null) return;

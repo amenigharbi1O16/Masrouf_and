@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Détail en lecture seule d'une transaction (TransactionDetailsActivity) : libellé, montant, type, date et note -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical">
     <TextView android:id="@+id/transaction_detail_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/forest" android:textSize="20sp" android:textStyle="bold" />
     <TextView android:id="@+id/transaction_detail_amount" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:textColor="@color/forest" android:textSize="24sp" android:textStyle="bold" />

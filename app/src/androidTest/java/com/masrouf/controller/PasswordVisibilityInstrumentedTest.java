@@ -1,3 +1,20 @@
+/*
+ * ============================================================================
+ * FICHIER : PasswordVisibilityInstrumentedTest.java
+ * MISSION : Tests instrumentés UI vérifiant le comportement exact de
+ *           PasswordVisibilityHelper sur tous les écrans contenant un mot de
+ *           passe (Login, Register, ChangePassword, dialogue d'ajout enfant) :
+ *           œil fermé par défaut, œil ouvert si visible, préservation du texte
+ *           et du curseur, et vérification pixel-à-pixel de la ressource drawable.
+ * IMPLÉMENTE : Suite @RunWith(AndroidJUnit4.class) utilisant ActivityScenario
+ *              et comparaison de silhouettes bitmap sur TextInputLayout.
+ * EFFET À L'ÉCRAN : Lance temporairement les écrans concernés sur appareil/émulateur
+ *                   pendant l'exécution de connectedAndroidTest.
+ * COMMUNICATIONS :
+ *   → PasswordVisibilityHelper, LoginActivity, RegisterActivity,
+ *     ChangePasswordActivity
+ * ============================================================================
+ */
 package com.masrouf.controller;
 
 import static org.junit.Assert.assertEquals;

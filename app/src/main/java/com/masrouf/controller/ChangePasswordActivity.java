@@ -1,3 +1,21 @@
+/*
+ * ============================================================================
+ * FICHIER : ChangePasswordActivity.java
+ * MISSION : Écran permettant à tout utilisateur connecté (USER, PARENT, CHILD)
+ *           de modifier son mot de passe après vérification de l'ancien mot de
+ *           passe et validation en temps réel des 5 règles de sécurité.
+ * IMPLÉMENTE : AppCompatActivity gonflant activity_change_password.xml,
+ *              PasswordVisibilityHelper, TextWatcher dynamique affichant les
+ *              règles en vert/corail et hachage PBKDF2 via MasroufRepository.
+ * EFFET À L'ÉCRAN : Formulaire à 3 champs (actuel, nouveau, confirmation) avec
+ *                   icônes œil afficher/masquer, liste de 5 règles colorées en
+ *                   direct et cartes d'erreur ou de succès avec retour auto (2 s).
+ * COMMUNICATIONS :
+ *   ← SettingsFragment (ligne « Changer le mot de passe »)
+ *   → MasroufViewModel / MasroufRepository.changePassword
+ *   → InputValidation, PasswordVisibilityHelper, SessionStore
+ * ============================================================================
+ */
 package com.masrouf.controller;
 
 import android.content.Intent;

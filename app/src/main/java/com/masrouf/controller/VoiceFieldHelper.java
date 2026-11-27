@@ -1,3 +1,24 @@
+/*
+ * ============================================================================
+ * FICHIER : VoiceFieldHelper.java
+ * MISSION : Assistant réutilisable reliant un bouton micro inline (ImageButton)
+ *           à n'importe quel champ EditText des formulaires (dépense, produit,
+ *           recherche, ajout enfant, demande d'argent, catégorie personnalisée).
+ * IMPLÉMENTE : Gestion du cycle d'écoute via VoiceSpeechController, permission
+ *              RECORD_AUDIO, teinte verte émeraude sur le bouton actif, bannière
+ *              d'état AlertBannerView et insertion intelligente (extraction
+ *              numérique si champ chiffré, sinon texte verbatim au curseur).
+ * EFFET À L'ÉCRAN : Colore le micro actif, affiche l'état d'écoute/erreur dans
+ *                   la bannière ou un Toast, puis remplit le champ ciblé sans
+ *                   jamais soumettre le formulaire automatiquement.
+ * COMMUNICATIONS :
+ *   ← ProductsFragment, AddExpenseActivity, AddProductActivity,
+ *     ChildrenManagementActivity, MoneyRequestActivity, CustomCategoryDialogFragment
+ *   → VoiceSpeechController (reconnaissance vocale Android SpeechRecognizer)
+ *   → VoiceParser (extraction d'un montant numérique pour champs chiffrés)
+ *   → AlertBannerView (affichage du statut d'écoute)
+ * ============================================================================
+ */
 package com.masrouf.controller;
 
 import android.content.Context;
@@ -19,6 +40,10 @@ import com.example.masrouf1.ui.AlertBannerView;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Assistant réutilisable liant un bouton micro inline (ImageButton) à un champ EditText dans les formulaires
+ * (dépense, produit, ajout enfant, demande d'argent, catégorie personnalisée).
+ */
 /**
  * Reusable per-form speech-to-field helper binding inline microphone buttons directly to inputs.
  * Handles runtime permission, listening/processing/result/cancelled/error visual feedback, and
@@ -115,6 +140,7 @@ public final class VoiceFieldHelper {
         }
     }
 
+    /** Insère la transcription vocale dans le champ cible (ou extrait le montant numérique si champ chiffré). */
     private void applyTranscript(@NonNull EditText target, @NonNull String finalText) {
         boolean numericOnly = (target.getInputType() & android.text.InputType.TYPE_MASK_CLASS)
                 == android.text.InputType.TYPE_CLASS_NUMBER;

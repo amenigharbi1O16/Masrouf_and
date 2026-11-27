@@ -1,3 +1,30 @@
+/*
+ * ============================================================================
+ * FICHIER : HomeFragment.java
+ * MISSION : Onglet central « Accueil » adaptatif selon les trois profils
+ *           réels (USER, PARENT, CHILD). Affiche le mot d'accueil, le sélecteur
+ *           de période, la BudgetCardView principale, la bannière d'état/alerte
+ *           budgétaire (vert/ambre/rouge), les enveloppes de catégories
+ *           (CategoryProgressCardView avec « Voir tout »), les raccourcis
+ *           d'action (achat, dépense, demande d'argent enfant), les 5 dernières
+ *           transactions et les synthèses Parent (enfants) / Enfant (dotation/objectif).
+ * IMPLÉMENTE : Fragment utilisant fragment_home.xml, observation LiveData de
+ *              MasroufViewModel.home(), ActivityResultLauncher vers
+ *              ManageCategoriesActivity, et FragmentResultListeners (catégories
+ *              et saisie vocale).
+ * EFFET À L'ÉCRAN : Tableau de bord d'accueil complet avec carte héroïque,
+ *                   jauge colorée, cartes d'enveloppes cliquables et journal
+ *                   des opérations récentes.
+ * COMMUNICATIONS :
+ *   ← MainActivity (onglet par défaut tab_home, ouverture du tiroir, succès)
+ *   → MasroufViewModel / MasroufRepository.loadHome (HomeDashboardData)
+ *   → AddProductActivity, AddExpenseActivity, BudgetPeriodActivity,
+ *     AllocateBudgetActivity, ManageCategoriesActivity,
+ *     ChildrenManagementActivity, MoneyRequestActivity,
+ *     EditPurchaseActivity, EditExpenseActivity, CustomCategoryDialogFragment
+ *   → BudgetCardView, AlertBannerView, CategoryProgressCardView
+ * ============================================================================
+ */
 package com.masrouf.controller;
 
 import android.app.Activity;
@@ -38,6 +65,12 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * Écran d'accueil adaptatif selon le profil (Normal User, Parent ou Child).
+ * Observe HomeDashboardData via MasroufViewModel : met à jour la BudgetCardView principale,
+ * les bannières d'alerte (80 %, 100 %, dépassement), les enveloppes CategoryProgressCardView,
+ * les transactions récentes et les sections spécifiques Parent (suivi agrégé des enfants) ou Enfant (objectif/allocations).
+ */
 /** Role-aware home: child history remains private; parents receive SQL aggregates only. */
 public final class HomeFragment extends Fragment {
     private static final int DEFAULT_VISIBLE_CATEGORIES = 4;
@@ -225,6 +258,7 @@ public final class HomeFragment extends Fragment {
         int visibleCount = (total > DEFAULT_VISIBLE_CATEGORIES && !categoriesExpanded)
                 ? DEFAULT_VISIBLE_CATEGORIES
                 : total;
+        // Instancie dynamiquement en Java chaque carte d'enveloppe CategoryProgressCardView dans le conteneur LinearLayout.
         for (int i = 0; i < visibleCount; i++) {
             HomeCategoryProgress row = allCategoryProgress.get(i);
             com.example.masrouf1.ui.CategoryProgressCardView card =
@@ -312,6 +346,7 @@ public final class HomeFragment extends Fragment {
         }
     }
 
+    /** Évalue les seuils budgétaires (settings.greenUntil/orangeFrom/redFrom) pour teinter la jauge et afficher AlertBannerView. */
     private void renderBudget(BudgetEntity budget, long childrenAllocated, long parentSpent,
                               long childBalance, long childTotalAllowance, SettingEntity settings) {
         long spent = budget == null ? (parentMode ? Math.max(0L, parentSpent) : 0L) : Math.max(0L, budget.spentMilli);
@@ -531,6 +566,7 @@ public final class HomeFragment extends Fragment {
         }
     }
 
+    /** Redirige vers l'écran de détail/édition correspondant selon que l'écriture est un achat produit ou une dépense. */
     private void openTransaction(TransactionRow row) {
         Class<?> destination = "purchase".equals(row.kind) ? EditPurchaseActivity.class : EditExpenseActivity.class;
         startActivity(new Intent(requireContext(), destination)

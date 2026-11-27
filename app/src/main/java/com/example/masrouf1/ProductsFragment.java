@@ -1,3 +1,27 @@
+/*
+ * ============================================================================
+ * FICHIER : ProductsFragment.java
+ * MISSION : Onglet central « Produits » affichant le catalogue personnel des
+ *           articles achetés persistés dans SQLite Room. Offre la recherche
+ *           texte en temps réel, la dictée vocale inline (FR/AR/EN/Darija),
+ *           le filtrage par puces ChipGroup (catégories de type "product"),
+ *           le tri alphabétique ou par prix croissant et l'ajout d'achat.
+ * IMPLÉMENTE : Sous-classe de DashboardSectionFragment s'appuyant sur
+ *              fragment_products.xml, RecyclerView + ProductCatalogAdapter,
+ *              VoiceFieldHelper, TextWatcher et ChipGroup dynamique.
+ * EFFET À L'ÉCRAN : Bannière de période active (« Changer > »), champ recherche
+ *                   avec bouton micro, bouton « Ajouter un achat », puces de
+ *                   catégories, compteur + bouton tri et liste de cartes produit.
+ * COMMUNICATIONS :
+ *   ← DashboardSectionFragment (barre supérieure ☰ + cloche + profil)
+ *   → MasroufViewModel / MasroufRepository (productCatalog, categories, budget)
+ *   → ProductCatalogAdapter (liaison des lignes produit cliquables)
+ *   → AddProductActivity (bouton « Ajouter un achat »)
+ *   → ProductDetailsActivity (clic sur une fiche produit)
+ *   → MainActivity.openCentralTab("calendar") (clic sur la bannière période)
+ *   → VoiceFieldHelper (dictée vocale dans la barre de recherche)
+ * ============================================================================
+ */
 package com.example.masrouf1;
 
 import android.content.Intent;
@@ -35,6 +59,11 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * Onglet central « Produits » affichant le catalogue personnel persisté dans Room :
+ * recherche texte + dictée vocale inline, puces ChipGroup de filtrage par catégorie produit,
+ * tri alphabétique ou par prix et accès aux fiches ProductDetailsActivity.
+ */
 /**
  * Room-backed searchable product catalog ("Produits") aligned with React Native:
  * - Active period pill banner ("Changer >")
@@ -193,6 +222,7 @@ public final class ProductsFragment extends DashboardSectionFragment {
         periodLabel.setText(getString(R.string.products_active_period_prefix, range));
     }
 
+    /** Reconstruit dynamiquement les puces ChipGroup de filtrage pour les seules catégories de type "product". */
     private void buildFilters(List<CategoryEntity> categories) {
         if (filters == null) return;
         long previousSelected = 0L;
@@ -218,6 +248,7 @@ public final class ProductsFragment extends DashboardSectionFragment {
         filters.check(idToCheck);
     }
 
+    /** Instancie en Java une puce Material Chip cochable mémorisant l'ID de catégorie dans {@code setTag()}. */
     private Chip createFilterChip(String label, long categoryId) {
         Chip chip = new Chip(requireContext());
         chip.setId(View.generateViewId());
@@ -233,6 +264,7 @@ public final class ProductsFragment extends DashboardSectionFragment {
         return chip;
     }
 
+    /** Applique le filtre texte (nom/marque), le filtre catégorie et le tri (A-Z ou prix) puis rafraîchit ProductCatalogAdapter. */
     private void applyFilter() {
         if (adapter == null || search == null) return;
         String query = search.getText() == null ? "" : search.getText().toString().trim().toLowerCase(Locale.ROOT);

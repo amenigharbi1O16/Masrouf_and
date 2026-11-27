@@ -1,3 +1,25 @@
+/*
+ * ============================================================================
+ * FICHIER : VoiceParser.java
+ * MISSION : Analyseur syntaxique déterministe 100 % hors ligne pour les phrases
+ *           dictées ou saisies en français, arabe tunisien (script arabe),
+ *           darija/arabizi (3/7/5/9) et anglais. Détecte la langue, extrait
+ *           montant en millimes, libellé propre sans traduction, type
+ *           d'opération (purchase/expense/child_allowance), catégorie correspondante,
+ *           magasin, quantité/unité et prénom de l'enfant.
+ * IMPLÉMENTE : Expressions régulières Unicode, conversion de chiffres arabes
+ *              orientaux et lexique multilingue (Result / RichResult), vérifiés
+ *              par les tests unitaires VoiceParserTest.
+ * EFFET À L'ÉCRAN : Aucun directement — pré-remplit les champs de la fiche
+ *                   aperçu dans VoiceTransactionDialogFragment et les champs
+ *                   numériques dans VoiceFieldHelper.
+ * COMMUNICATIONS :
+ *   ← VoiceTransactionDialogFragment (parseRich, detectLanguage)
+ *   ← VoiceSpeechController (detectLanguage sur transcription)
+ *   ← VoiceFieldHelper (parse pour champs numériques)
+ *   ← VoiceParserTest (tests unitaires multilingues JUnit)
+ * ============================================================================
+ */
 package com.masrouf.controller;
 
 import androidx.annotation.NonNull;
@@ -12,6 +34,11 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Analyseur syntaxique déterministe hors ligne pour la dictée vocale (français, arabe, darija/arabizi, anglais).
+ * Détecte la langue, extrait montant (en millimes), type d'opération, catégorie, magasin, quantité/unité et enfant
+ * tout en conservant le libellé original sans traduction automatique.
+ */
 /**
  * Deterministic multilingual voice parser for French, English, Tunisian/Standard Arabic & mixed speech.
  * Preserves original wording, Arabic characters, French accents, and numbers without translation.
@@ -105,6 +132,7 @@ public final class VoiceParser {
 
     private VoiceParser() { }
 
+    /** Convertit les chiffres d'arabizi tunisien (3, 7, 5, 9 accolés aux lettres) en lettres arabes pour l'extraction. */
     public static String toArabicScript(String input) {
         String source = input == null ? "" : input.trim();
         if (source.isEmpty()) return "";
@@ -115,7 +143,7 @@ public final class VoiceParser {
                 .replaceAll("(?<=[A-Za-z])9|9(?=[A-Za-z])", "ق");
     }
 
-    /** Detects primary language ("fr", "ar", "en", or "mixed") without translating text. */
+    /** Détecte la langue principale de l'énoncé ("fr", "ar", "en" ou "mixed") sans jamais traduire le texte saisi. */
     @NonNull
     public static String detectLanguage(@Nullable String input) {
         if (input == null || input.trim().isEmpty()) return "fr";

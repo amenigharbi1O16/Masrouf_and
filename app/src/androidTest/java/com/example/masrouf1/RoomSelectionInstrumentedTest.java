@@ -1,3 +1,19 @@
+/*
+ * ============================================================================
+ * FICHIER : RoomSelectionInstrumentedTest.java
+ * MISSION : Suite complète de tests instrumentés Android vérifiant la base
+ *           SQLite Room en conditions réelles : isolation des sélections par
+ *           utilisateur, restriction des catégories Child, atomicité dépenses/
+ *           achats/historique des prix, rejet des chevauchements de budgets,
+ *           déduction des dotations sur l'enveloppe Enfants, demandes d'argent
+ *           et déclenchement sans doublon des notifications d'alerte.
+ * IMPLÉMENTE : Classe de test @RunWith(AndroidJUnit4.class) créant une base
+ *              isolée "masrouf-room-selection-test.db" supprimée après chaque test.
+ * EFFET À L'ÉCRAN : Aucun — s'exécute sur émulateur/appareil via connectedAndroidTest.
+ * COMMUNICATIONS :
+ *   → MasroufDatabase, MasroufDao, MasroufRepository, SystemCategoryCatalog
+ * ============================================================================
+ */
 package com.example.masrouf1;
 
 import android.content.Context;

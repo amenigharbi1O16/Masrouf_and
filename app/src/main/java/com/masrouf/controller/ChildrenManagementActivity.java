@@ -1,3 +1,30 @@
+/*
+ * ============================================================================
+ * FICHIER : ChildrenManagementActivity.java
+ * MISSION : Écran complet réservé exclusivement au profil PARENT permettant de :
+ *           1) créer des comptes Enfants avec email Gmail, mot de passe, téléphone
+ *              parent et dotation initiale ;
+ *           2) suivre la consommation de chaque enfant et de l'enveloppe « Enfants » ;
+ *           3) effectuer des dons d'argent supplémentaires (avec avertissement et
+ *              confirmation si dépassement d'enveloppe/budget mensuel) ;
+ *           4) réinitialiser le mot de passe d'un enfant et partager ses identifiants ;
+ *           5) appeler ou envoyer un SMS via Intents implicites ;
+ *           6) accepter ou refuser les demandes d'argent envoyées par les enfants.
+ * IMPLÉMENTE : AppCompatActivity (activity_children_management.xml) avec garde
+ *              de rôle PARENT, RecyclerView (ChildAdapter), modales AlertDialog
+ *              (dialog_add_child.xml, dialog_give_money.xml, mot de passe en Java),
+ *              dictée vocale (VoiceFieldHelper) et SystemIntents.
+ * EFFET À L'ÉCRAN : En-tête avec cloche à badge, carte synthèse enveloppe Enfants,
+ *                   file des demandes d'argent en attente (Accepter/Refuser),
+ *                   cartes détaillées par enfant et boîtes de dialogue modales.
+ * COMMUNICATIONS :
+ *   ← MainActivity / AdminDrawer / HomeFragment / SettingsFragment (PARENT)
+ *   → MasroufViewModel / MasroufRepository (familyChildren, giftEnvelope,
+ *     createChildAccount, giveMoney, resetChildPassword, resolveMoneyRequest)
+ *   → SystemIntents (dial, sendSms, copyToClipboard)
+ *   → NotificationsActivity, MainActivity (navigation depuis l'en-tête)
+ * ============================================================================
+ */
 package com.masrouf.controller;
 
 import android.content.Intent;
@@ -51,6 +78,11 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * Écran réservé au profil PARENT : gestion complète des comptes enfants (création avec dotation
+ * initiale, don d'argent supplémentaire déduit de l'enveloppe Enfants/budget mensuel,
+ * réinitialisation de mot de passe, appel/SMS via Intents implicites, validation/refus des demandes d'argent).
+ */
 /**
  * Parent household & children management screen ("Enfants") aligned with RN reference:
  * - Header w/ back navigation, notification bell w/ unread badge, and profile icon

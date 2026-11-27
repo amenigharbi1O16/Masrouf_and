@@ -1,3 +1,28 @@
+/*
+ * ============================================================================
+ * FICHIER : AllocateBudgetActivity.java
+ * MISSION : Écran de répartition du budget par enveloppes de catégories :
+ *           pré-remplit les lignes depuis les dépenses du mois précédent (M-1)
+ *           ou les pourcentages recommandés du catalogue, synchronise de façon
+ *           bidirectionnelle pourcentage (%) et montant (DT) sans boucle
+ *           infinie, autorise une réserve non allouée (< 100 %), mais bloque
+ *           tout dépassement (> 100 %) avant de sauvegarder le budget et ses
+ *           BudgetLineEntity dans SQLite Room.
+ * IMPLÉMENTE : AppCompatActivity (activity_allocate_budget.xml) gérant les modes
+ *              création, modification, répartition enfant (IS_CHILD) et lecture
+ *              seule (READ_ONLY pour budgets clôturés), avec arithmétique en
+ *              millimes et points de base (bps).
+ * EFFET À L'ÉCRAN : Bandeau récapitulatif Total / Somme allouée / Non alloué,
+ *                   boutons « Gérer » et « Répartir 100 % », lignes éditables
+ *                   par catégorie et bannière d'erreur si dépassement > 100 %.
+ * COMMUNICATIONS :
+ *   ← BudgetPeriodActivity, HomeFragment (IS_CHILD), CalendarFragment
+ *   → ManageCategoriesActivity (via ActivityResultLauncher pour ajouter/retirer)
+ *   → MasroufViewModel / MasroufRepository (loadBudgetAllocation, createBudget,
+ *     updateBudget, replaceChildEnvelopes)
+ *   → MainActivity (redirection accueil avec bannière de confirmation)
+ * ============================================================================
+ */
 package com.masrouf.controller;
 
 import android.content.Intent;
@@ -42,6 +67,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+/**
+ * Écran de répartition du budget par catégorie : pré-remplit depuis le mois précédent (M-1) ou le catalogue,
+ * synchronise de façon bidirectionnelle pourcentage (%) et montant (DT) en millimes/points de base (bps),
+ * autorise une somme < 100 % mais bloque tout dépassement > 100 % avant enregistrement dans Room.
+ */
 /**
  * Budget Repartition Screen matching React Native (`allocation-budget.tsx`):
  * - Pre-distributes across selected categories using M-1 spend or predefined catalog percentages

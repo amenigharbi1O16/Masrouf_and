@@ -1,7 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    Manifest principal de Masrouf Android natif :
+    - Déclare la visibilité des Intents implicites (<queries>) pour Android 11+ (Caméra, Galerie, Téléphone, SMS, PDF).
+    - Déclare les 4 permissions (Notifications Android 13+, Service premier plan dataSync, Microphone).
+    - Enregistre les 29 Activities (WelcomeActivity comme point d'entrée LAUNCHER), le Receiver, le Service mensuel et le FileProvider.
+-->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Visibilité des applications externes ciblées par SystemIntents et PhotoSourceBottomSheetDialog -->
     <queries>
         <intent>
             <action android:name="android.media.action.IMAGE_CAPTURE" />
@@ -24,6 +31,7 @@
         </intent>
     </queries>
 
+    <!-- Permissions système : notifications locales (API 33+), service premier plan et dictée vocale -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
@@ -77,6 +85,7 @@
         <activity android:name=".RewardsActivity" android:exported="false" />
         <activity android:name=".NotificationsActivity" android:exported="false" />
         <activity android:name=".SettingsActivity" android:exported="false" />
+        <!-- Composants temps réel/arrière-plan : récepteur local d'allocation, service mensuel de clôture et FileProvider PDF/photos -->
         <receiver android:name=".BudgetAllocationReceiver" android:exported="false" />
         <service android:name="com.masrouf.service.BudgetEvaluationService" android:exported="false" android:foregroundServiceType="dataSync" />
         <provider

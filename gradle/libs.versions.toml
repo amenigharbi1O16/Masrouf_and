@@ -1,33 +1,49 @@
+# ============================================================================
+# FICHIER : gradle/libs.versions.toml
+# MISSION : Catalogue centralisé (Gradle Version Catalog) fixant exactement les versions des plugins et bibliothèques.
+# COMMUNICATIONS : Lu automatiquement par Gradle via l'alias `libs.*` dans app/build.gradle.kts et build.gradle.kts.
+# ============================================================================
 [versions]
+# Plugin Gradle Android (compile et assemble Java 11 + XML + ViewBinding)
 agp = "9.4.1"
+# Bibliothèques de tests unitaires et instrumentés UI
 junit = "4.13.2"
 junitVersion = "1.3.0"
 espressoCore = "3.7.0"
+# Socle AndroidX UI et thèmes
 appcompat = "1.8.0"
 material = "1.14.0"
 activityKtx = "1.13.0"
 constraintlayout = "2.2.2"
+# Persistance SQLite Room et planification WorkManager
 room = "2.6.1"
 work = "2.9.0"
+# Compatibilité notifications/fichiers et listes/carrousel
 core = "1.15.0"
 viewpager2 = "1.1.0"
 recyclerview = "1.4.0"
 
 [libraries]
+# Dépendances de test
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
+# Bibliothèques UI et compatibilité
 appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 activity-ktx = { group = "androidx.activity", name = "activity-ktx", version.ref = "activityKtx" }
 constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
+# Base de données SQLite locale via Room
 room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
 room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
+# Tâche périodique d'arrière-plan hors ligne
 work-runtime = { group = "androidx.work", name = "work-runtime", version.ref = "work" }
 core = { group = "androidx.core", name = "core", version.ref = "core" }
+# Carrousel ViewPager2 et listes RecyclerView
 viewpager2 = { group = "androidx.viewpager2", name = "viewpager2", version.ref = "viewpager2" }
 recyclerview = { group = "androidx.recyclerview", name = "recyclerview", version.ref = "recyclerview" }
 
 [plugins]
+# Plugin principal de l'application Android
 android-application = { id = "com.android.application", version.ref = "agp" }
 

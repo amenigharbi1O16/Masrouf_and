@@ -1,3 +1,26 @@
+/*
+ * ============================================================================
+ * FICHIER : AddProductActivity.java
+ * MISSION : Écran formulaire d'enregistrement d'un achat produit : nom, marque,
+ *           photo facultative (caméra ou galerie via PhotoSourceBottomSheetDialog),
+ *           catégorie produit, prix total, quantité, unité de mesure, calcul en
+ *           temps réel du prix unitaire, magasin et date (DatePickerDialog).
+ * IMPLÉMENTE : Sous-classe de BaseFeatureActivity gonflant activity_add_product.xml,
+ *              avec FormPriceTextWatcher, VoiceFieldHelper sur 4 champs, calcul
+ *              exact en millimes (MoneyMath.pricePerUnitMilli) et enregistrement
+ *              atomique multi-tables dans Room.
+ * EFFET À L'ÉCRAN : Formulaire complet avec aperçu instantané du prix unitaire,
+ *                   bannière d'absence de budget, boutons micro par champ et
+ *                   sélecteur d'unité / catégorie.
+ * COMMUNICATIONS :
+ *   ← HomeFragment, ProductsFragment (bouton « Ajouter un achat » / voix)
+ *   → PhotoSourceBottomSheetDialog (caméra/galerie via FragmentResult)
+ *   → FormPriceTextWatcher (calcul temps réel du prix unitaire)
+ *   → VoiceFieldHelper (dictée nom, marque, prix, magasin)
+ *   → MasroufViewModel / MasroufRepository (productForm, savePurchase)
+ *   → ConfirmationActivity (confirmation après écriture SQLite)
+ * ============================================================================
+ */
 package com.masrouf.controller;
 
 import android.app.DatePickerDialog;
@@ -34,6 +57,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+/**
+ * Formulaire d'ajout d'un achat produit : saisit nom, marque, photo optionnelle (PhotoSourceBottomSheetDialog),
+ * catégorie produit, prix total, quantité et unité, calcule en direct le prix unitaire (FormPriceTextWatcher)
+ * et met à jour atomiquement products, purchases, purchase_items, price_history, budget_lines et budgets.
+ */
 public final class AddProductActivity extends BaseFeatureActivity implements PhotoSourceBottomSheetDialog.Listener {
     private static final String STATE_CATEGORY_ID = "ap_cat_id";
     private static final String STATE_DATE_MILLIS = "ap_date";

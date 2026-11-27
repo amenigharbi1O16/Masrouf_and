@@ -1,3 +1,25 @@
+/*
+ * ============================================================================
+ * FICHIER : DashboardSectionFragment.java
+ * MISSION : Classe de base abstraite des 4 onglets centraux secondaires
+ *           (Produits, Calendrier, Analyses, Paramètres). Construit une coque
+ *           visuelle unifiée 100 % en Java (ScrollView crème + barre supérieure
+ *           avec bouton menu ☰, titre, cloche à badge rouge et icône profil).
+ * IMPLÉMENTE : Template Method Pattern avec les hooks pageTitle(),
+ *              createContent(LinearLayout) et observeContent(), ainsi que la
+ *              mise à jour du badge de notifications non lues à l'ouverture
+ *              et au retour (onViewCreated / onResume).
+ * EFFET À L'ÉCRAN : En-tête supérieur cohérent sur Produits, Calendrier,
+ *                   Analyses et Paramètres avec pastille rouge « 99+ » sur la
+ *                   cloche lorsque des alertes ne sont pas encore lues.
+ * COMMUNICATIONS :
+ *   ← ProductsFragment, CalendarFragment, AnalyticsFragment, SettingsFragment
+ *   → MainActivity.openMenu / onDrawerDestination("settings")
+ *   → NotificationsActivity (clic sur la cloche)
+ *   → MasroufViewModel / MasroufRepository.unreadNotificationCount
+ *   ← SessionStore.userId
+ * ============================================================================
+ */
 package com.example.masrouf1;
 
 import android.content.Intent;
@@ -19,20 +41,28 @@ import androidx.fragment.app.Fragment;
 
 import com.masrouf.controller.SessionStore;
 
+/**
+ * Fragment de base abstrait construisant intégralement en Java la coque d'en-tête (bouton menu ☰, titre,
+ * cloche de notifications avec badge rouge et raccourci Paramètres) des onglets centraux secondaires.
+ */
 /** Shared programmatic shell for the non-home central tabs with bell badge & profile navigation. */
 public abstract class DashboardSectionFragment extends Fragment {
     protected LinearLayout page;
     protected MasroufViewModel viewModel;
     private TextView notificationBadge;
 
+    /** Convertit une dimension en dp vers pixels réels d'écran pour les vues créées en Java. */
     protected int dp(int value) {
         return (int) (value * getResources().getDisplayMetrics().density + .5f);
     }
 
+    /** Retourne l'identifiant de ressource string du titre affiché dans l'en-tête du onglet. */
     protected abstract int pageTitle();
 
+    /** Construit le contenu métier de l'onglet en l'ajoutant au conteneur vertical {@code content}. */
     protected abstract void createContent(LinearLayout content);
 
+    /** Hook appelé après création de la vue pour attacher les observateurs LiveData / ViewModel. */
     protected void observeContent() { }
 
     @Override
@@ -55,6 +85,10 @@ public abstract class DashboardSectionFragment extends Fragment {
         refreshHeaderBadge();
     }
 
+    /**
+     * Construit entièrement par programmation (Java-based Views) l'ossature ScrollView + barre d'en-tête
+     * (bouton hamburger ☰, titre, cloche + badge FrameLayout rouge, icône profil) puis appelle {@link #createContent}.
+     */
     @Nullable
     @Override
     public View onCreateView(@NonNull android.view.LayoutInflater inflater, @Nullable ViewGroup parent, @Nullable Bundle state) {
@@ -141,6 +175,7 @@ public abstract class DashboardSectionFragment extends Fragment {
         return scroll;
     }
 
+    /** Interroge Room via MasroufViewModel pour mettre à jour la pastille rouge de notifications non lues (jusqu'à "99+"). */
     protected void refreshHeaderBadge() {
         if (notificationBadge == null || viewModel == null || !isAdded()) return;
         long uid = signedInUserId();
@@ -156,6 +191,7 @@ public abstract class DashboardSectionFragment extends Fragment {
         });
     }
 
+    /** Crée un TextView standard stylé en couleur ink_secondary pour les fragments enfants. */
     protected TextView text(String value) {
         TextView view = new TextView(requireContext());
         view.setText(value);
@@ -165,10 +201,12 @@ public abstract class DashboardSectionFragment extends Fragment {
         return view;
     }
 
+    /** Retourne l'identifiant du compte actuellement authentifié depuis SessionStore. */
     protected long signedInUserId() {
         return SessionStore.userId(requireContext());
     }
 
+    /** Exécute une mise à jour visuelle sur le thread UI si le Fragment est toujours attaché. */
     protected void ui(Runnable action) {
         if (getActivity() != null) {
             getActivity().runOnUiThread(() -> {

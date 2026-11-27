@@ -1,3 +1,23 @@
+/*
+ * ============================================================================
+ * FICHIER : BudgetPeriodMath.java
+ * MISSION : Utilitaires purs de calcul de périodes budgétaires, bornes
+ *           calendaires exactes (début/fin de journée et de mois en ms),
+ *           validation/formatage ISO (YYYY-MM-DD), conversion points de base
+ *           (basis points bps : 0..10000) et parsing de montants budgétaires.
+ * IMPLÉMENTE : Classe statique sans dépendance Android Context, utilisant
+ *              Calendar, BigDecimal, BigInteger et Pattern ISO_DATE pour garantir
+ *              des tests unitaires JVM déterministes (BudgetPeriodMathTest).
+ * EFFET À L'ÉCRAN : Formate les plages de dates ("01–30 NOV 2026"), calcule les
+ *                   fenêtres précédentes d'analyse, les montants d'enveloppes
+ *                   et les étiquettes compactes ("28", "12.5") du PillBarChart.
+ * COMMUNICATIONS :
+ *   ← CalendarFragment, BudgetPeriodActivity, AllocateBudgetActivity
+ *   ← MasroufRepository (loadCalendarYear, loadAnalytics, clôture de période)
+ *   ← AnalyticsRenderer (étiquettes de plages et graphiques)
+ *   ← BudgetPeriodMathTest (suite de tests unitaires JUnit)
+ * ============================================================================
+ */
 package com.example.masrouf1;
 
 import java.math.BigDecimal;
@@ -176,6 +196,7 @@ public final class BudgetPeriodMath {
         return scaled.intValueExact();
     }
 
+    /** Formate un entier en points de base (10000 = 100 %) vers une chaîne lisible ("25", "12.5", "3.25"). */
     public static String formatPercentFromBps(int bps) {
         int safe = Math.max(0, bps);
         if (safe % 100 == 0) return String.valueOf(safe / 100);
@@ -184,8 +205,7 @@ public final class BudgetPeriodMath {
     }
 
     /**
-     * Flexibly parses any entered budget/amount string (supporting commas, spaces, trailing "DT",
-     * whole numbers, or arbitrary decimals rounded HALF_UP to millimes) without arbitrary ceilings.
+     * Convertit une chaîne monétaire (espaces, virgule, point, suffixe "DT") en millimes entiers arrondis HALF_UP.
      */
     public static long parseSignedOrUnsignedBudgetMilli(String raw) {
         if (raw == null) throw new NumberFormatException("empty");

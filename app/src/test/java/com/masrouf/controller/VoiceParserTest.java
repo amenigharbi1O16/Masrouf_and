@@ -1,3 +1,11 @@
+/*
+ * ============================================================================
+ * FICHIER : VoiceParserTest.java
+ * MISSION : Tests unitaires JVM vérifiant le parseur vocal déterministe multilingue (Darija, Arabe, Français, Anglais).
+ * IMPLÉMENTE : Tests JUnit 4 sur VoiceParser.parse(), detectLanguage(), toArabicScript() et parseRich().
+ * COMMUNICATIONS : Teste directement com.masrouf.controller.VoiceParser sans dépendance réseau.
+ * ============================================================================
+ */
 package com.masrouf.controller;
 
 import org.junit.Test;
@@ -9,7 +17,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Suite de tests unitaires JUnit 4 vérifiant l'analyseur vocal multilingue VoiceParser.
+ */
 public final class VoiceParserTest {
+    /** Vérifie l'extraction des nombres parlés en darija tunisienne ("alfin", "khamsa", "achra", "alf meyya"). */
     @Test
     public void parsesPurchaseWithSpokenTunisianAmount() {
         VoiceParser.Result result = VoiceParser.parse("chrit khobz b alfin");
@@ -22,6 +34,7 @@ public final class VoiceParserTest {
         assertEquals(2100L, VoiceParser.parse("alfin w mya").amountMilli);
     }
 
+    /** Vérifie la détection des dons, des dotations nommées à un enfant et la translittération arabizi. */
     @Test
     public void parsesDonationAndChildAllowanceAndArabizi() {
         assertEquals("donation", VoiceParser.parse("sadaqa 2 DT").type);
@@ -32,12 +45,14 @@ public final class VoiceParserTest {
         assertEquals("dfaعt 10.500 DT", VoiceParser.toArabicScript("dfa3t 10.500 DT"));
     }
 
+    /** Vérifie le marquage d'ambiguïté lorsqu'aucun montant ou plusieurs montants concurrents sont énoncés. */
     @Test
     public void flagsMissingOrCompetingNumbersAsAmbiguous() {
         assertTrue(VoiceParser.parse("chrit khobz").ambiguous);
         assertTrue(VoiceParser.parse("chrit khobz 2 kg b 3 DT").ambiguous);
     }
 
+    /** Vérifie la détection de langue (FR/AR/EN/mixed), la préservation verbatim du libellé et le ciblage catégorie. */
     @Test
     public void detectsMultilingualLanguagesWithoutTranslatingText() {
         assertEquals("fr", VoiceParser.detectLanguage("J'ai acheté des baskets à 21"));

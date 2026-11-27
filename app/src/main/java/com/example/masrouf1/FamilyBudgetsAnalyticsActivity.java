@@ -1,3 +1,14 @@
+/*
+ * ============================================================================
+ * FICHIER : FamilyBudgetsAnalyticsActivity.java
+ * MISSION : Écran d'analyses budgétaires familiales strictement réservé au profil PARENT.
+ * IMPLÉMENTE : AppCompatActivity (layout activity_family_budgets_analytics.xml) avec garde de rôle au onCreate().
+ * EFFET À L'ÉCRAN : Affiche un spinner de chargement puis injecte dans family_analytics_container le rendu Java
+ *                   complet généré par AnalyticsRenderer (jauge foyer, enveloppes, 6 mois et barres enfants).
+ * COMMUNICATIONS : Ouvert via AdminDrawer ; interroge MasroufRepository.loadAnalytics() via MasroufViewModel
+ *                  et redirige au clic vers MainActivity ("calendar") ou BudgetPeriodActivity.
+ * ============================================================================
+ */
 package com.example.masrouf1;
 
 import android.content.Intent;
@@ -15,9 +26,7 @@ import com.masrouf.controller.BudgetPeriodActivity;
 import com.masrouf.controller.SessionStore;
 
 /**
- * Parent-only Budgets & Analyses screen mirroring React Native `(admin)/budget-analyses.tsx`:
- * Household monthly hero gauge + Adjust CTA, Category Breakdown with overrun pills,
- * 6-month Parent+Household Pill Chart, Individual Child Progress cards, and Child Historical Pill Chart.
+ * Écran d'analyses budgétaires familiales réservé exclusivement au profil Parent.
  */
 public final class FamilyBudgetsAnalyticsActivity extends AppCompatActivity {
     private MasroufViewModel viewModel;
@@ -25,9 +34,11 @@ public final class FamilyBudgetsAnalyticsActivity extends AppCompatActivity {
     private ProgressBar loadingView;
     private TextView errorView;
 
+    /** Vérifie le rôle PARENT, configure la barre d'outils MaterialToolbar et initialise MasroufViewModel. */
     @Override
     protected void onCreate(Bundle state) {
         super.onCreate(state);
+        // Bloque tout utilisateur non-PARENT tentant d'ouvrir directement cet écran familial.
         if (SessionStore.role(this) != AppRole.PARENT) {
             finish();
             return;
@@ -44,12 +55,14 @@ public final class FamilyBudgetsAnalyticsActivity extends AppCompatActivity {
                 .get(MasroufViewModel.class);
     }
 
+    /** Recharge systématiquement les agrégats familiaux à chaque retour sur l'écran. */
     @Override
     protected void onResume() {
         super.onResume();
         loadAggregates();
     }
 
+    /** Lit AnalyticsSummaryData sur le thread IO puis confie toute la construction visuelle à AnalyticsRenderer. */
     private void loadAggregates() {
         long parentId = SessionStore.userId(this);
         long preferredId = SessionStore.selectedBudgetId(this, parentId);
@@ -65,6 +78,7 @@ public final class FamilyBudgetsAnalyticsActivity extends AppCompatActivity {
                         if (errorView != null) errorView.setVisibility(View.VISIBLE);
                         return;
                     }
+                    // Délègue le rendu complet et les actions de navigation vers Calendrier ou BudgetPeriodActivity.
                     AnalyticsRenderer.render(this, container, state.data, new AnalyticsRenderer.Actions() {
                         @Override
                         public void onOpenCalendar() {
